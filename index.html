@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STACHUS: PROJECT CLASSIFIED</title>
+    <title>STACHUS: PROJECT CLASSIFIED V6</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -491,7 +491,7 @@
             mapCtx.globalAlpha = 1.0; 
         }
 
-        // ================= 3D RECONSTRUCTION LOGIC (V5 FIXED) =================
+        // ================= 3D RECONSTRUCTION LOGIC (V6 FIXED & BIGGER) =================
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse;
         let targetRotationY = 0, targetRotationX = 0; 
         let isDragging = false; 
@@ -503,7 +503,6 @@
 
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
         
-        // ------------------ CRITICAL FIX: SUBMIT LOGIC ------------------
         function submitMemory() { 
             const input = document.getElementById('memory-input'); 
             const val = input.value; 
@@ -512,17 +511,15 @@
             const btn = document.querySelector('.submit-btn'); 
             btn.innerText = "SAVING..."; 
             
-            // FEEDBACK UI
             const container = document.getElementById('particles-container'); 
             const particle = document.createElement('div'); 
             particle.classList.add('floating-text'); 
             particle.innerText = "MEMORY UPLOADED"; 
             particle.style.left = '50%'; particle.style.top = '30%'; 
-            particle.style.color = '#ff0055'; // RED ALERT
+            particle.style.color = '#00ff41';
             container.appendChild(particle); 
             setTimeout(() => { particle.remove(); }, 3000);
             
-            // EXECUTE IMMEDIATELY (NO TIMEOUT DELAY)
             activateMemory(val); 
             
             btn.innerText = "INJECT"; 
@@ -535,7 +532,6 @@
             const isMobile = window.innerWidth < 768;
 
             scene = new THREE.Scene(); 
-            // FOG: KEEP IT LOW
             scene.fog = new THREE.FogExp2(0x020202, 0.005);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -691,7 +687,6 @@
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             geometry.setAttribute('randomDirection', new THREE.Float32BufferAttribute(randomDirs, 3));
 
-            // V5.0: KEEP ORIGINAL SIZE (0.7), BUT HIGH OPACITY & CLEAR FOG
             const material = new THREE.PointsMaterial({ 
                 size: 0.7, 
                 vertexColors: true, 
@@ -704,13 +699,11 @@
             pointsMesh = new THREE.Points(geometry, material); scene.add(pointsMesh); pointsMesh.position.y = -15;
         }
 
-        // ------------------ SAFE STORAGE WRAPPER (Mobile Fix) ------------------
         function safeSave(key, value) {
             try {
                 localStorage.setItem(key, value);
             } catch (e) {
                 console.warn("Storage quota exceeded or disabled (Private Mode)", e);
-                // Even if we can't save to disk, the app should continue running in memory
             }
         }
 
@@ -744,11 +737,14 @@
             if(confirm("WARNING: SYSTEM PURGE?")) { localStorage.removeItem('stachus_memories'); while(memoryGroup.children.length > 0){ memoryGroup.remove(memoryGroup.children[0]); } }
         };
 
+        // ================= V6 FIX: BIGGER CRYSTALS =================
         function createMemoryCrystal(text, x, y, z, colorHex) {
-            const geo = new THREE.IcosahedronGeometry(1.5, 0);
+            // 增大尺寸 (原 1.5 -> 2.5)
+            const geo = new THREE.IcosahedronGeometry(2.5, 0);
             const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.8 });
             const mesh = new THREE.Mesh(geo, mat);
-            const glowGeo = new THREE.SphereGeometry(0.8, 16, 16);
+            // 增大发光球 (原 0.8 -> 1.3)
+            const glowGeo = new THREE.SphereGeometry(1.3, 16, 16);
             const glowMat = new THREE.MeshBasicMaterial({ color: colorHex });
             const glowMesh = new THREE.Mesh(glowGeo, glowMat);
             mesh.add(glowMesh);
@@ -756,19 +752,40 @@
             memoryGroup.add(mesh);
         }
 
+        // ================= V6 FIX: POSITION INSIDE MODEL & RANDOM COLOR =================
         window.activateMemory = function(text) {
-            // V5.0 FIX: NO RANDOM SEARCH. FORCE SPAWN.
-            // Spawning directly in front of the center view (z=20 is closer to camera)
-            const bestX = 0;
-            const bestY = 0;
-            const bestZ = 20; 
+            if(!pointsMesh) return;
+            const positions = pointsMesh.geometry.attributes.position.array;
+            const pointCount = positions.length / 3;
+            let candidates = [];
 
-            const highlightColor = 0xff0055; // Neon Red for new item
-            createMemoryCrystal(text, bestX, bestY, bestZ, highlightColor);
-            saveMemories(text, bestX, bestY, bestZ, highlightColor);
+            // 寻找模型主体部分的所有点 (高度在 -10 到 10 之间)
+            for(let i=0; i < pointCount; i++) {
+                const x = positions[i*3];
+                const y = positions[i*3+1];
+                const z = positions[i*3+2];
+                if(y > -10 && y < 10) {
+                    candidates.push({x, y, z});
+                }
+            }
+
+            let targetPos;
+            if(candidates.length > 0) {
+                // 从候选点中随机选一个
+                targetPos = candidates[Math.floor(Math.random() * candidates.length)];
+            } else {
+                // 保底位置 (几乎不会触发)
+                targetPos = { x: 0, y: -5, z: 20 };
+            }
+
+            // 随机生成好看的亮色
+            const randomColor = Math.random() * 0xffffff;
+
+            createMemoryCrystal(text, targetPos.x, targetPos.y, targetPos.z, randomColor);
+            saveMemories(text, targetPos.x, targetPos.y, targetPos.z, randomColor);
             
-            // Force focus
-            autoFocusTargetY = -Math.atan2(bestX, bestZ);
+            // 自动对焦到这个点
+            autoFocusTargetY = -Math.atan2(targetPos.x, targetPos.z);
             isAutoRotating = true; 
         };
 
