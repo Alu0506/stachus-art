@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STACHUS: THE ABSENCE (MOBILE OPTIMIZED)</title>
+    <title>STACHUS: THE ABSENCE (FINAL FIX)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,8 +28,9 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; cursor: crosshair; }
-        /* 禁止移动端缩放和默认触摸行为 */
-        body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; touch-action: none; }
+        
+        /* 🔴 修复点 1：删掉了这里的 touch-action: none，恢复网页滚动 */
+        body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; }
         body.fullscreen-mode { overflow: hidden !important; }
 
         /* HUD & Scanline */
@@ -80,12 +81,12 @@
         .marker:hover, .marker:active { background: var(--alert-red); transform: rotate(45deg) scale(1.2); box-shadow: 0 0 30px var(--alert-red), 0 0 10px #fff inset; }
         @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
         .marker-label { position: absolute; left: 40px; top: -10px; font-size: 10px; font-family: var(--font-mono); color: var(--alert-red); background: #000; border: 1px solid var(--alert-red); padding: 2px 5px; white-space: nowrap; opacity: 1; transition: 0.3s; transform: rotate(-45deg); pointer-events: none; }
-        /* Mobile: always show label slightly */
         @media(max-width: 768px) { .marker-label { opacity: 0.7; } }
 
         /* PART 4: 3D RECONSTRUCTION (UPDATED) */
-        #reconstruction { height: 100vh; width: 100%; background: #000; position: relative; border-top: 1px solid #222; overflow: hidden; display: block; padding: 0; touch-action: none; /* 重要：防止手机滑动时滚屏 */ }
-        #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
+        /* 🔴 修复点 2：把 touch-action: none 加到了 3D 容器上，而不是全局。 */
+        #reconstruction { height: 100vh; width: 100%; background: #000; position: relative; border-top: 1px solid #222; overflow: hidden; display: block; padding: 0; }
+        #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; touch-action: none; /* 这里加，防止旋转模型时页面滚动 */ }
         #three-container:active { cursor: grabbing; }
 
         #recon-console {
@@ -205,10 +206,10 @@
         <section id="void" class="section" style="padding:0;">
             <div id="map-bg"></div>
             <canvas id="map-canvas"></canvas>
-            <div class="marker" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"><div class="marker-label">01: THE LOOP</div></div>
-            <div class="marker" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"><div class="marker-label">02: FLUID GHOST</div></div>
-            <div class="marker" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"><div class="marker-label">03: IDENTITY WAR</div></div>
-            <div class="marker" style="top: 75%; left: 60%;" onclick="event.stopPropagation(); openTerminal(3)"><div class="marker-label">04: DELETED WALL</div></div>
+            <div id="user-cursor">
+                <div class="radar-ping"></div>
+                <div class="user-label">YOU</div>
+            </div>
         </section>
 
         <section id="reconstruction">
@@ -265,39 +266,47 @@
             if(visualBlock) visualBlock.style.transform = `translateY(${window.scrollY * 0.05}px)`;
         });
 
-        // ================= TERMINAL DATA =================
+        // ================= TERMINAL DATA (WITH GPS) =================
         const archives = [
             {
                 id: "ERR_ARCHIVE_A",
                 title: "THE UNDERGROUND LOOP",
                 img: "./1.jpg", 
-                human: "\"I've worked down here for fifteen years. Sometimes it feels like there is no day or night...\"",
-                history: "Fact: Built in 1970, Stachus Passagen was Europe's largest underground mall.",
-                ai: "SYSTEM ERROR 1970-XX // LOCATION: Sub-level 2 // All exits are fake screens."
+                lat: 48.139200, lng: 11.565500, 
+                cssTop: '45%', cssLeft: '20%',
+                human: "\"I've worked down here for fifteen years...\"",
+                history: "Fact: Built in 1970, Europe's largest underground mall.",
+                ai: "SYSTEM ERROR 1970-XX // All exits are fake screens."
             },
             {
                 id: "ERR_ARCHIVE_B",
                 title: "THE FLUID GHOST",
                 img: "./2.jpg",
-                human: "\"If you come here at 4 AM, the fountain sounds different. Like whispering.\"",
-                history: "Fact: The fountain was constructed in 1972 for the Olympics.",
-                ai: "FLUID MEMORY ANALYSIS // SOURCE: 18th-Century Residual Emotion."
+                lat: 48.139050, lng: 11.566100,
+                cssTop: '50%', cssLeft: '48%',
+                human: "\"If you come here at 4 AM, the fountain sounds different...\"",
+                history: "Fact: Constructed in 1972 for the Olympics.",
+                ai: "FLUID MEMORY ANALYSIS // Source: 18th-Century Emotion."
             },
             {
                 id: "ERR_ARCHIVE_C",
                 title: "IDENTITY WAR",
                 img: "./3.jpg",
-                human: "\"Karl? Who is Karl? This is Stachus. 'Karl' is just a name forced on us...\"",
-                history: "Fact: Renamed 'Karlsplatz' in 1797, but locals stubbornly use 'Stachus'.",
-                ai: "IDENTITY CONFLICT // CURRENT LAYER: Karlsplatz (Official). BASE CODE: Stachus (Deep)."
+                lat: 48.138950, lng: 11.566800,
+                cssTop: '60%', cssLeft: '75%',
+                human: "\"Karl? Who is Karl? This is Stachus...\"",
+                history: "Fact: Renamed 'Karlsplatz' in 1797.",
+                ai: "IDENTITY CONFLICT // BASE CODE: Stachus (Deep)."
             },
             {
                 id: "ERR_ARCHIVE_D",
                 title: "THE DELETED WALL",
                 img: "./4.jpg",
-                human: "\"The old maps show a wall here. But now I only see shops...\"",
-                history: "Fact: Medieval fortifications were demolished in the 18th century.",
-                ai: "DEFENSE SYSTEM: OFFLINE // GHOST WALL RESIDUE DETECTED."
+                lat: 48.138600, lng: 11.566500,
+                cssTop: '75%', cssLeft: '60%',
+                human: "\"The old maps show a wall here...\"",
+                history: "Fact: Medieval fortifications demolished in 18th century.",
+                ai: "DEFENSE SYSTEM: OFFLINE // GHOST WALL DETECTED."
             }
         ];
 
@@ -320,7 +329,74 @@
             document.body.classList.remove('fullscreen-mode');
         }
 
-        // ================= MAP CANVAS LOGIC =================
+        // ================= MARKERS & GPS LOGIC =================
+        const markersContainer = document.getElementById('void');
+        const markerElements = [];
+        
+        // Init Markers (Hidden)
+        archives.forEach((data, index) => {
+            const el = document.createElement('div');
+            el.className = 'marker'; 
+            el.style.top = data.cssTop; el.style.left = data.cssLeft;
+            el.innerHTML = `<div class="marker-label">${data.title}</div>`;
+            el.onclick = (e) => { e.stopPropagation(); openTerminal(index); };
+            markersContainer.appendChild(el);
+            markerElements.push(el);
+        });
+
+        // GPS Math
+        function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
+            const R = 6371000; 
+            const dLat = (lat2 - lat1) * (Math.PI/180);
+            const dLon = (lon2 - lon1) * (Math.PI/180);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*(Math.PI/180)) * Math.cos(lat2*(Math.PI/180)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+            return R * c; 
+        }
+
+        // GPS Config
+        const MAP_BOUNDS = { topLat: 48.139650, bottomLat: 48.138450, leftLng: 11.564600, rightLng: 11.567100 };
+        const userCursor = document.getElementById('user-cursor');
+        const TRIGGER_DISTANCE = 20;
+
+        function initGPS() {
+            if (!navigator.geolocation) {
+                document.getElementById('coords').innerText = "ERR: NO GPS";
+                return;
+            }
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    document.getElementById('coords').innerText = `LAT:${userLat.toFixed(5)} LON:${userLng.toFixed(5)}`;
+
+                    // Update User Cursor
+                    const xPercent = (userLng - MAP_BOUNDS.leftLng) / (MAP_BOUNDS.rightLng - MAP_BOUNDS.leftLng);
+                    const yPercent = (MAP_BOUNDS.topLat - userLat) / (MAP_BOUNDS.topLat - MAP_BOUNDS.bottomLat);
+                    if (xPercent >= -0.1 && xPercent <= 1.1 && yPercent >= -0.1 && yPercent <= 1.1) {
+                        userCursor.style.display = 'block';
+                        userCursor.style.left = (xPercent * 100) + '%';
+                        userCursor.style.top = (yPercent * 100) + '%';
+                    }
+
+                    // Check Distances for Markers
+                    archives.forEach((data, index) => {
+                        const dist = getDistanceFromLatLonInM(userLat, userLng, data.lat, data.lng);
+                        const markerEl = markerElements[index];
+                        if (dist < TRIGGER_DISTANCE) {
+                            if (!markerEl.classList.contains('revealed')) markerEl.classList.add('revealed');
+                        } else {
+                            markerEl.classList.remove('revealed'); // Auto hide when far
+                        }
+                    });
+                },
+                (error) => { console.warn("GPS ERROR", error); },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            );
+        }
+        initGPS();
+
+        // ================= MAP CANVAS ANIMATION =================
         const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); let trails = []; let mouseX = -1000, mouseY = -1000; 
         window.addEventListener('resize', resizeMap); function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; } resizeMap(); loopMap();
         document.getElementById('void').addEventListener('mousemove', (e) => { 
@@ -347,15 +423,12 @@
             mapCtx.globalAlpha = 1.0; 
         }
 
-        // ================= 3D RECONSTRUCTION LOGIC (UPDATED FOR MOBILE) =================
+        // ================= 3D RECONSTRUCTION LOGIC =================
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse;
-        // 旋转相关变量
         let targetRotationY = 0, targetRotationX = 0; 
         let isDragging = false; 
         let previousMousePosition = { x: 0, y: 0 };
-        // 自动旋转速度 (顺时针)
         const autoRotateSpeed = -0.002; 
-        // 累计的旋转量
         let totalRotationY = 0;
 
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
@@ -376,7 +449,6 @@
             camera.position.set(0, 35, 60); camera.lookAt(0, 10, 0); 
             
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            // UPDATED: Fix fuzzy rendering on mobile
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
             renderer.setSize(window.innerWidth, window.innerHeight); container.appendChild(renderer.domElement);
 
@@ -387,102 +459,65 @@
 
             window.addEventListener('keydown', (e) => { if ((e.key === 'Delete' || e.key === 'Backspace') && hoveredObject) removeMemory(hoveredObject); });
             
-            // --- UPDATED INTERACTION FOR MOBILE & DESKTOP ---
-            // Common handler for start interaction
             function onStart(x, y) {
                 isDragging = true;
                 previousMousePosition = { x: x, y: y };
-                
-                // Update mouse for raycaster (for tap selection)
                 const rect = container.getBoundingClientRect();
                 mouse.x = ((x - rect.left) / rect.width) * 2 - 1; 
                 mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
-                
-                // Mobile tooltip positioning fix (offset so finger doesn't cover)
                 const tooltip = document.getElementById('memory-3d-tooltip');
                 tooltip.style.left = x + 10 + 'px'; 
                 tooltip.style.top = y - 40 + 'px';
             }
-            
             function onMove(x, y) {
-                // Raycasting update
                 const rect = container.getBoundingClientRect();
                 mouse.x = ((x - rect.left) / rect.width) * 2 - 1; 
                 mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
-
                 if (isDragging) {
                     const deltaMove = { x: x - previousMousePosition.x, y: y - previousMousePosition.y };
                     targetRotationY += deltaMove.x * 0.005; 
                     targetRotationX += deltaMove.y * 0.005;
                     previousMousePosition = { x: x, y: y };
                 }
-                
-                // Desktop tooltip update
                 if (!isDragging && window.matchMedia("(min-width: 768px)").matches) {
                     const tooltip = document.getElementById('memory-3d-tooltip');
                     tooltip.style.left = x + 20 + 'px'; tooltip.style.top = y + 20 + 'px';
                 }
             }
-
-            // Mouse Events
             container.addEventListener('mousedown', (e) => { onStart(e.clientX, e.clientY); });
             document.addEventListener('mouseup', () => { isDragging = false; });
             document.addEventListener('mousemove', (e) => { onMove(e.clientX, e.clientY); });
-
-            // Touch Events (New!)
-            container.addEventListener('touchstart', (e) => {
-                const touch = e.touches[0];
-                onStart(touch.clientX, touch.clientY);
-            }, {passive: false});
-
-            container.addEventListener('touchmove', (e) => {
-                // Prevent scrolling while rotating
-                if(isDragging) e.preventDefault(); 
-                const touch = e.touches[0];
-                onMove(touch.clientX, touch.clientY);
-            }, {passive: false});
-
+            container.addEventListener('touchstart', (e) => { onStart(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
+            container.addEventListener('touchmove', (e) => { if(isDragging) e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
             container.addEventListener('touchend', () => { isDragging = false; });
-
 
             function animate() {
                 requestAnimationFrame(animate);
-                
-                // Explosion factor logic
                 const distToCenter = Math.min(Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y), 1.0);
                 const threshold = 0.2; 
                 let explosionFactor = 0;
-                if(distToCenter > threshold) {
-                    explosionFactor = (distToCenter - threshold) / (1.0 - threshold);
-                }
-                explosionFactor = Math.pow(explosionFactor, 2) * 1.5; 
+                if(distToCenter > threshold) explosionFactor = Math.pow((distToCenter - threshold) / (1.0 - threshold), 2) * 1.5; 
 
-                if(!isDragging) {
-                    targetRotationY += autoRotateSpeed;
-                }
+                if(!isDragging) targetRotationY += autoRotateSpeed;
                 if(pointsMesh) {
                     pointsMesh.rotation.y += (targetRotationY - pointsMesh.rotation.y) * 0.1;
                     pointsMesh.rotation.x += (targetRotationX - pointsMesh.rotation.x) * 0.1;
                     memoryGroup.rotation.copy(pointsMesh.rotation); 
-
                     const positions = pointsMesh.geometry.attributes.position.array;
                     const initials = pointsMesh.geometry.attributes.initialPosition.array;
                     const randomDirs = pointsMesh.geometry.attributes.randomDirection.array;
-
                     for(let i = 0; i < positions.length; i += 3) {
                         const ox = initials[i]; const oy = initials[i+1]; const oz = initials[i+2];
                         const randX = randomDirs[i]; const randY = randomDirs[i+1]; const randZ = randomDirs[i+2];
                         const flyDist = 300 * explosionFactor;
                         const time = Date.now() * 0.001;
                         const breath = 0.5 * Math.sin(time + ox);
-
                         positions[i] = ox + (randX * flyDist) + breath;
                         positions[i+1] = oy + (randY * flyDist) + breath;
                         positions[i+2] = oz + (randZ * flyDist) + breath;
                     }
                     pointsMesh.geometry.attributes.position.needsUpdate = true;
                 }
-
                 memoryGroup.children.forEach((mesh, i) => {
                      mesh.rotation.x += 0.01; mesh.rotation.y += 0.02;
                      if (mesh.userData.initialPos) {
@@ -494,13 +529,9 @@
                          mesh.position.z = init.z + dir.z * flyDist;
                      }
                 });
-
-                // Raycaster Logic
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObjects(memoryGroup.children, true);
                 const tooltip = document.getElementById('memory-3d-tooltip');
-                
-                // Logic updated: works for both hover (desktop) and tap (mobile)
                 if (intersects.length > 0) {
                     let crystalMesh = intersects[0].object;
                     while(crystalMesh.parent && crystalMesh.parent !== memoryGroup) { crystalMesh = crystalMesh.parent; }
@@ -518,7 +549,7 @@
                 camera.aspect = window.innerWidth / window.innerHeight; 
                 camera.updateProjectionMatrix(); 
                 renderer.setSize(window.innerWidth, window.innerHeight); 
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Resize update
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
             });
         }
 
@@ -535,12 +566,10 @@
                 const v = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5));
                 v.normalize(); return v;
             }
-
             function addPoint(x, y, z) { 
                 positions.push(x, y, z); initials.push(x, y, z); colors.push(0.8, 0.8, 0.85); 
                 const dir = getRandomDir(); randomDirs.push(dir.x, dir.y, dir.z);
             }
-
             for(let i=0; i<2500; i++) { const a = (Math.random() - 0.5) * 0.5; const h = groundLevel + Math.random() * 25; const d = Math.random() * 8; if (Math.abs(a) < 0.08 && h < -5) continue; const r = baseRadius - d - 2; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); }
             const wallCount = 4000;
             for(let i=0; i<wallCount; i++) { const side = Math.random() > 0.5 ? 1 : -1; const a = (0.28 + Math.random() * (Math.PI/1.7 - 0.28)) * side; const h = groundLevel + Math.random() * 35; const t = Math.random() * 4; const r = baseRadius + t; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); }
