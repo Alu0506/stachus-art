@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STACHUS: THE ABSENCE (FINAL FIX)</title>
+    <title>STACHUS: THE ABSENCE (FINAL MOBILE)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,10 +28,10 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; cursor: crosshair; }
-        
-        /* 🔴 修复点 1：删掉了这里的 touch-action: none，恢复网页滚动 */
         body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; }
-        body.fullscreen-mode { overflow: hidden !important; }
+        
+        /* MOBILE FIX 1: 防止3D操作时的整页滚动 */
+        body.no-scroll { overflow: hidden; } 
 
         /* HUD & Scanline */
         #hud-layer { 
@@ -49,13 +49,17 @@
         @keyframes scan { 0% {top: -10%;} 100% {top: 110%;} }
 
         .hud-data { position: absolute; font-family: var(--font-mono); font-size: 10px; color: var(--accent-green); letter-spacing: 1px; opacity: 0.8; }
-        .data-tl { top: 20px; left: 40px; } .data-br { bottom: 20px; right: 40px; text-align: right; }
+        .data-tl { top: 20px; left: 40px; max-width: 200px; } /* 防止手机上文字太宽 */
+        .data-br { bottom: 20px; right: 40px; text-align: right; }
 
         .section { min-height: 100vh; width: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; z-index: 2; }
 
         /* PART 1: HERO */
         #hero { z-index: 10; background: radial-gradient(circle at center, #111 0%, #000 80%); }
         .hero-title { font-family: var(--font-serif); font-size: 9vw; font-weight: 400; color: #fff; letter-spacing: -2px; mix-blend-mode: exclusion; }
+        /* Mobile: Increase font size slightly */
+        @media (max-width: 768px) { .hero-title { font-size: 15vw; } }
+
         .hero-glitch { animation: glitch-text-hero 3s infinite alternate-reverse; }
         @keyframes glitch-text-hero { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
         .hero-subtitle { margin-top: 2rem; font-family: var(--font-mono); font-size: 1rem; letter-spacing: 4px; text-transform: uppercase; color: #888; border-top: 1px solid #333; padding-top: 1.5rem; text-align: center;}
@@ -63,17 +67,41 @@
 
         /* PART 2: CONCEPT */
         #concept { background: #000; overflow: hidden; border-top: 1px solid #222; }
-        .parallax-container { display: flex; gap: 10%; max-width: 1100px; align-items: center; width: 100%; flex-direction: column-reverse; /* Mobile friendly */ }
+        .parallax-container { display: flex; gap: 10%; max-width: 1100px; align-items: center; width: 100%; flex-direction: column-reverse; } /* Mobile Default */
         @media(min-width: 768px) { .parallax-container { flex-direction: row; } }
         
-        .text-block { flex: 1; padding: 2rem; border-left: 2px solid var(--alert-red); }
+        .text-block { flex: 1; padding: 2rem; border-left: 2px solid var(--alert-red); width: 100%; }
         .text-block h2 { font-family: var(--font-serif); font-size: 2.5rem; margin-bottom: 2rem; color: #fff; }
         .text-block p { font-family: var(--font-mono); color: #bbb; line-height: 1.8; font-size: 0.9rem; }
         .visual-block { flex: 1; height: 40vh; width: 100%; background-image: url('https://images.unsplash.com/photo-1470723710355-171b443c6589?q=80&w=2070'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(110%); opacity: 0.6; }
         @media(min-width: 768px) { .visual-block { height: 60vh; } }
 
-        /* PART 3: MAP */
-        #void { height: 100vh; width: 100%; position: relative; background-color: #000; cursor: crosshair; overflow: hidden; padding: 0; }
+        /* PART 3: MAP (MOBILE FIX 2: 完美适配 4:3 地图) */
+        #void { 
+            /* 默认高度占满屏幕 */
+            height: 100vh; 
+            width: 100%; 
+            position: relative; 
+            background-color: #000; 
+            cursor: crosshair; 
+            overflow: hidden; 
+            padding: 0; 
+        }
+
+        /* 手机端地图适配逻辑 */
+        @media (max-width: 768px) {
+            #void {
+                /* 关键：把容器高度设为自动，由宽高比决定 */
+                height: auto;
+                /* 强制容器保持 4:3 的比例 (宽度100%)，这样地图就能完整显示且坐标准确 */
+                aspect-ratio: 4 / 3;
+                /* 上下留点黑边，或者让它在屏幕中间 */
+                margin: 20vh 0; 
+                border-top: 1px solid var(--alert-red);
+                border-bottom: 1px solid var(--alert-red);
+            }
+        }
+
         #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4) sepia(20%); z-index: 1; }
         #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         
@@ -81,27 +109,46 @@
         .marker:hover, .marker:active { background: var(--alert-red); transform: rotate(45deg) scale(1.2); box-shadow: 0 0 30px var(--alert-red), 0 0 10px #fff inset; }
         @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
         .marker-label { position: absolute; left: 40px; top: -10px; font-size: 10px; font-family: var(--font-mono); color: var(--alert-red); background: #000; border: 1px solid var(--alert-red); padding: 2px 5px; white-space: nowrap; opacity: 1; transition: 0.3s; transform: rotate(-45deg); pointer-events: none; }
-        @media(max-width: 768px) { .marker-label { opacity: 0.7; } }
+        @media(max-width: 768px) { .marker-label { opacity: 0.8; font-size: 9px; } }
 
-        /* PART 4: 3D RECONSTRUCTION (UPDATED) */
-        /* 🔴 修复点 2：把 touch-action: none 加到了 3D 容器上，而不是全局。 */
+        /* USER CURSOR */
+        #user-cursor { position: absolute; width: 10px; height: 10px; background: #00ff41; border-radius: 50%; transform: translate(-50%, -50%); z-index: 50; display: none; pointer-events: none; box-shadow: 0 0 10px #00ff41; transition: top 1s, left 1s; }
+        .radar-ping { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; border: 1px solid #00ff41; border-radius: 50%; opacity: 0; animation: ping 2s infinite; }
+        .user-label { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); color: #00ff41; font-family: 'Share Tech Mono', monospace; font-size: 10px; white-space: nowrap; }
+
+        /* PART 4: 3D RECONSTRUCTION */
         #reconstruction { height: 100vh; width: 100%; background: #000; position: relative; border-top: 1px solid #222; overflow: hidden; display: block; padding: 0; }
-        #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; touch-action: none; /* 这里加，防止旋转模型时页面滚动 */ }
+        /* 这里的 touch-action 很重要 */
+        #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; touch-action: none; }
         #three-container:active { cursor: grabbing; }
 
+        /* MOBILE FIX 3: 解决 UI 重叠 */
         #recon-console {
-            position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+            position: absolute; 
+            /* 默认电脑端在上方 */
+            top: 10%; 
+            left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 500px; z-index: 50; pointer-events: auto;
             text-align: center;
             background: rgba(0, 10, 0, 0.8); border: 1px solid var(--accent-green);
             padding: 20px; backdrop-filter: blur(5px);
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+            transition: 0.3s;
         }
+        /* 手机端改到底部，避开 HUD */
+        @media (max-width: 768px) {
+            #recon-console {
+                top: auto;
+                bottom: 10%; /* 放在手指容易够到的地方 */
+                padding: 15px;
+            }
+        }
+
         #recon-console h2 { font-family: var(--font-serif); font-size: 1.5rem; color: #fff; margin-bottom: 1rem; letter-spacing: 2px; text-transform: uppercase;}
         #recon-console p { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green); margin-bottom: 15px;}
         
         .input-area { display: flex; border-bottom: 1px solid var(--accent-green); margin-top: 10px; background: rgba(0,255,65,0.05); }
-        input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-family: var(--font-mono); }
+        input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-family: var(--font-mono); font-size: 16px; /* Prevent IOS zoom */ }
         .submit-btn { background: transparent; color: var(--accent-green); border: none; cursor: pointer; padding: 0 20px; font-weight: bold; font-family: var(--font-mono); transition:0.3s;}
         .submit-btn:hover, .submit-btn:active { background: var(--accent-green); color: #000; box-shadow: 0 0 15px var(--accent-green);}
         #purge-btn { margin-top: 10px; font-size: 10px; color: #666; cursor: pointer; display: inline-block; border: 1px solid #333; padding: 5px; font-family: var(--font-mono); transition:0.3s;}
@@ -203,7 +250,7 @@
             </div>
         </section>
         
-        <section id="void" class="section" style="padding:0;">
+        <section id="void" class="section">
             <div id="map-bg"></div>
             <canvas id="map-canvas"></canvas>
             <div id="user-cursor">
@@ -333,7 +380,6 @@
         const markersContainer = document.getElementById('void');
         const markerElements = [];
         
-        // Init Markers (Hidden)
         archives.forEach((data, index) => {
             const el = document.createElement('div');
             el.className = 'marker'; 
@@ -344,7 +390,6 @@
             markerElements.push(el);
         });
 
-        // GPS Math
         function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
             const R = 6371000; 
             const dLat = (lat2 - lat1) * (Math.PI/180);
@@ -354,7 +399,6 @@
             return R * c; 
         }
 
-        // GPS Config
         const MAP_BOUNDS = { topLat: 48.139650, bottomLat: 48.138450, leftLng: 11.564600, rightLng: 11.567100 };
         const userCursor = document.getElementById('user-cursor');
         const TRIGGER_DISTANCE = 20;
@@ -370,7 +414,6 @@
                     const userLng = position.coords.longitude;
                     document.getElementById('coords').innerText = `LAT:${userLat.toFixed(5)} LON:${userLng.toFixed(5)}`;
 
-                    // Update User Cursor
                     const xPercent = (userLng - MAP_BOUNDS.leftLng) / (MAP_BOUNDS.rightLng - MAP_BOUNDS.leftLng);
                     const yPercent = (MAP_BOUNDS.topLat - userLat) / (MAP_BOUNDS.topLat - MAP_BOUNDS.bottomLat);
                     if (xPercent >= -0.1 && xPercent <= 1.1 && yPercent >= -0.1 && yPercent <= 1.1) {
@@ -379,14 +422,13 @@
                         userCursor.style.top = (yPercent * 100) + '%';
                     }
 
-                    // Check Distances for Markers
                     archives.forEach((data, index) => {
                         const dist = getDistanceFromLatLonInM(userLat, userLng, data.lat, data.lng);
                         const markerEl = markerElements[index];
                         if (dist < TRIGGER_DISTANCE) {
                             if (!markerEl.classList.contains('revealed')) markerEl.classList.add('revealed');
                         } else {
-                            markerEl.classList.remove('revealed'); // Auto hide when far
+                            markerEl.classList.remove('revealed');
                         }
                     });
                 },
@@ -397,8 +439,21 @@
         initGPS();
 
         // ================= MAP CANVAS ANIMATION =================
-        const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); let trails = []; let mouseX = -1000, mouseY = -1000; 
-        window.addEventListener('resize', resizeMap); function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; } resizeMap(); loopMap();
+        const mapCanvas = document.getElementById('map-canvas'); 
+        const mapCtx = mapCanvas.getContext('2d'); 
+        let trails = []; let mouseX = -1000, mouseY = -1000; 
+        
+        // MOBILE FIX 2 (Part 2): 监听 Canvas 大小以匹配新的 4:3 容器
+        window.addEventListener('resize', resizeMap); 
+        function resizeMap() { 
+            const container = document.getElementById('void');
+            mapCanvas.width = container.offsetWidth; 
+            mapCanvas.height = container.offsetHeight; 
+        } 
+        // Init slightly delayed to ensure layout is ready
+        setTimeout(resizeMap, 100);
+        loopMap();
+
         document.getElementById('void').addEventListener('mousemove', (e) => { 
             const rect = mapCanvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top; 
             trails.push({ x: mouseX + (Math.random()-0.5)*10, y: mouseY + (Math.random()-0.5)*10, life: 1.0, size: Math.random() * 4 + 2, color: '#ff0000' }); 
@@ -429,7 +484,10 @@
         let isDragging = false; 
         let previousMousePosition = { x: 0, y: 0 };
         const autoRotateSpeed = -0.002; 
-        let totalRotationY = 0;
+        
+        // MOBILE FIX 4: 自动对焦目标旋转
+        let isAutoRotating = false; 
+        let autoFocusTargetY = 0; 
 
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
         function submitMemory() { 
@@ -446,7 +504,14 @@
             const container = document.getElementById('three-container');
             scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x020202, 0.012);
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 35, 60); camera.lookAt(0, 10, 0); 
+            
+            // MOBILE FIX 1: 手机端把摄像机拉远 (z=110)，电脑端保持 60
+            if(window.innerWidth < 768) {
+                camera.position.set(0, 50, 110);
+            } else {
+                camera.position.set(0, 35, 60); 
+            }
+            camera.lookAt(0, 10, 0); 
             
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
@@ -461,6 +526,7 @@
             
             function onStart(x, y) {
                 isDragging = true;
+                isAutoRotating = false; // 用户一摸屏幕，就停止自动对焦
                 previousMousePosition = { x: x, y: y };
                 const rect = container.getBoundingClientRect();
                 mouse.x = ((x - rect.left) / rect.width) * 2 - 1; 
@@ -498,11 +564,23 @@
                 let explosionFactor = 0;
                 if(distToCenter > threshold) explosionFactor = Math.pow((distToCenter - threshold) / (1.0 - threshold), 2) * 1.5; 
 
-                if(!isDragging) targetRotationY += autoRotateSpeed;
+                // Rotation Logic: 
+                if (isAutoRotating) {
+                    // MOBILE FIX 4: 自动平滑旋转到新记忆点
+                    // Lerp towards autoFocusTargetY
+                    targetRotationY += (autoFocusTargetY - targetRotationY) * 0.05;
+                    // 如果非常接近目标，停止特殊模式，转为普通旋转
+                    if(Math.abs(targetRotationY - autoFocusTargetY) < 0.01) isAutoRotating = false;
+                } else if(!isDragging) {
+                    targetRotationY += autoRotateSpeed;
+                }
+
                 if(pointsMesh) {
                     pointsMesh.rotation.y += (targetRotationY - pointsMesh.rotation.y) * 0.1;
                     pointsMesh.rotation.x += (targetRotationX - pointsMesh.rotation.x) * 0.1;
                     memoryGroup.rotation.copy(pointsMesh.rotation); 
+                    
+                    // Particle System Update
                     const positions = pointsMesh.geometry.attributes.position.array;
                     const initials = pointsMesh.geometry.attributes.initialPosition.array;
                     const randomDirs = pointsMesh.geometry.attributes.randomDirection.array;
@@ -518,6 +596,8 @@
                     }
                     pointsMesh.geometry.attributes.position.needsUpdate = true;
                 }
+                
+                // Memory Crystals Animation
                 memoryGroup.children.forEach((mesh, i) => {
                      mesh.rotation.x += 0.01; mesh.rotation.y += 0.02;
                      if (mesh.userData.initialPos) {
@@ -529,6 +609,8 @@
                          mesh.position.z = init.z + dir.z * flyDist;
                      }
                 });
+
+                // Raycaster
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObjects(memoryGroup.children, true);
                 const tooltip = document.getElementById('memory-3d-tooltip');
@@ -546,6 +628,11 @@
             }
             animate();
             window.addEventListener('resize', () => { 
+                // Resize logic including camera position update
+                const isMobile = window.innerWidth < 768;
+                camera.position.set(0, isMobile ? 50 : 35, isMobile ? 110 : 60); 
+                camera.lookAt(0, 10, 0);
+                
                 camera.aspect = window.innerWidth / window.innerHeight; 
                 camera.updateProjectionMatrix(); 
                 renderer.setSize(window.innerWidth, window.innerHeight); 
@@ -630,6 +717,14 @@
                     const randomColor = Math.random() * 0xffffff;
                     createMemoryCrystal(text, x, y, z, randomColor);
                     saveMemories(text, x, y, z, randomColor);
+                    
+                    // MOBILE FIX 4: 计算旋转角度，让这个新点对准镜头
+                    // Math.atan2(x, z) 给出点相对于中心的角度
+                    // 我们要把整个场景旋转，使得这个点转到摄像机正前方(Z轴正方向)
+                    // 所以目标旋转角应该是 -Math.atan2(x, z)
+                    autoFocusTargetY = -Math.atan2(x, z);
+                    isAutoRotating = true; // 开启自动旋转模式
+                    
                     return;
                 }
                 attempts++;
