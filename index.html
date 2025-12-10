@@ -3,121 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STACHUS: PROJECT CLASSIFIED V7</title>
+    <title>STACHUS: CLASSIFIED PROTOCOL</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
-        /* ================= GLOBAL ================= */
-        ::-webkit-scrollbar { width: 4px; background: #000; }
-        ::-webkit-scrollbar-thumb { background: #ff0055; border-radius: 2px; }
-        
+        /* ================= GLOBAL SETTINGS ================= */
         :root { 
-            --bg-color: #020202; 
+            --bg-color: #050505; 
             --text-main: #e0e0e0; 
-            --font-serif: 'Playfair Display', serif;       
-            --font-sans: 'Inter', sans-serif;              
+            --font-title: 'Black Ops One', cursive;
             --font-mono: 'Space Mono', monospace;          
             --font-tech: 'Share Tech Mono', monospace;     
+            --font-serif: 'Playfair Display', serif;
             --accent-green: #00ff41; 
             --alert-red: #ff0055; 
             --neon-blue: #00f7ff;    
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; cursor: crosshair; }
-        body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; }
-        
-        /* HUD LAYER */
+        body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; scroll-behavior: smooth; }
+        body.fullscreen-mode { overflow: hidden !important; }
+
+        /* ================= LOADER ================= */
+        #loader {
+            position: fixed; inset: 0; background: #000; z-index: 99999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 1s ease-out;
+        }
+        .loader-text {
+            font-family: var(--font-tech); font-size: 20px; color: var(--accent-green);
+            margin-bottom: 10px; animation: blink 0.5s infinite;
+        }
+        .loader-bar {
+            width: 200px; height: 2px; background: #333; position: relative;
+        }
+        .loader-progress {
+            position: absolute; top: 0; left: 0; height: 100%; background: var(--accent-green);
+            width: 0%; animation: load-progress 2.5s ease-in-out forwards;
+        }
+        @keyframes load-progress { 0% {width: 0%;} 40% {width: 30%;} 70% {width: 80%;} 100% {width: 100%;} }
+
+        /* ================= HUD LAYER ================= */
         #hud-layer { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             pointer-events: none; z-index: 99; 
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            opacity: 1; 
+            background-size: 100% 3px, 3px 100%;
         }
-        .hud-line { position: absolute; background: rgba(255,255,255,0.1); }
-        .hud-top { top: 40px; left: 40px; right: 40px; height: 1px; } .hud-bottom { bottom: 40px; left: 40px; right: 40px; height: 1px; }
-        .hud-left { top: 40px; bottom: 40px; left: 40px; width: 1px; } .hud-right { top: 40px; bottom: 40px; right: 40px; width: 1px; }
-        
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.3); opacity: 0.5; animation: scan 4s linear infinite; }
+        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.3); opacity: 0.5; animation: scan 6s linear infinite; }
         @keyframes scan { 0% {top: -10%;} 100% {top: 110%;} }
+        
+        .hud-corner { position: absolute; width: 30px; height: 30px; border: 2px solid #555; opacity: 0.5; }
+        .tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+        .tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+        .bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+        .br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
 
-        /* HUD & DROPDOWN */
-        .hud-container {
-            position: absolute; top: 20px; left: 40px;
-            pointer-events: auto; z-index: 100;
+        .hud-data { position: absolute; font-family: var(--font-tech); font-size: 10px; color: var(--accent-green); letter-spacing: 1px; opacity: 0.8; }
+        .data-tl { top: 25px; left: 60px; } 
+        .data-br { bottom: 25px; right: 60px; text-align: right; }
+
+        /* ================= GAME SLIDES (PPT STYLE) ================= */
+        .game-section { 
+            min-height: 100vh; width: 100%; position: relative; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            padding: 2rem; z-index: 2; text-align: center;
+            border-bottom: 1px solid #111;
         }
-        .hud-trigger {
-            font-family: var(--font-tech); font-size: 12px; color: var(--accent-green);
-            border: 1px solid var(--accent-green); padding: 5px 10px;
-            background: rgba(0, 20, 0, 0.8); cursor: pointer; letter-spacing: 2px;
-            text-transform: uppercase; display: inline-block; transition: 0.2s;
-            animation: border-flicker 3s infinite;
+
+        /* Slide 1: Cover */
+        #slide-cover { background: radial-gradient(circle at center, #111 0%, #000 90%); }
+        .glitch-title { 
+            font-family: var(--font-title); font-size: 12vw; color: #fff; 
+            text-transform: uppercase; letter-spacing: -2px; line-height: 0.9;
+            text-shadow: 4px 4px 0px rgba(255, 0, 85, 0.5);
+            animation: glitch-skew 3s infinite linear alternate-reverse;
         }
-        .hud-trigger:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 10px var(--accent-green); }
-        .hud-trigger::before { content: "[ + ] "; }
-        .hud-trigger.active::before { content: "[ - ] "; }
+        @keyframes glitch-skew { 0% { transform: skew(0deg); } 20% { transform: skew(-2deg); } 40% { transform: skew(2deg); } 60% { transform: skew(-1deg); } 80% { transform: skew(1deg); } 100% { transform: skew(0deg); } }
+        
+        .mission-info { text-align: left; border-left: 3px solid var(--accent-green); padding-left: 20px; margin: 2rem 0; color: #888; font-size: 1.2rem;}
+        .highlight { color: var(--accent-green); background: rgba(0, 255, 65, 0.1); padding: 0 5px; }
 
-        .hud-details {
-            margin-top: 10px; font-family: var(--font-mono); font-size: 10px; color: #bbb;
-            background: rgba(0, 0, 0, 0.9); border-left: 2px solid var(--alert-red); padding: 10px;
-            display: none; max-width: 250px; backdrop-filter: blur(5px); line-height: 1.6;
+        /* Slide 2: Briefing */
+        #slide-briefing { background: #050505; }
+        .section-title { font-family: var(--font-tech); font-size: 2rem; color: var(--alert-red); margin-bottom: 2rem; border-bottom: 2px solid var(--alert-red); display: inline-block; padding-bottom: 5px; }
+        
+        .box-container { display: flex; gap: 2rem; margin-bottom: 3rem; flex-wrap: wrap; justify-content: center;}
+        .data-box { border: 1px solid #333; padding: 20px; background: rgba(255,255,255,0.03); max-width: 400px; text-align: left; position: relative;}
+        .data-box h3 { font-family: var(--font-tech); margin-bottom: 10px; color: var(--alert-red); }
+        .stamp { 
+            border: 4px solid var(--alert-red); color: var(--alert-red); 
+            font-family: var(--font-title); font-size: 2rem; 
+            padding: 10px 20px; transform: rotate(-10deg); opacity: 0.7; 
+            position: absolute; bottom: 10%; right: 10%;
         }
-        .hud-details.visible { display: block; animation: slide-down 0.3s ease-out; }
-        .hud-label { color: var(--alert-red); font-weight: bold; display: block; margin-top: 5px; letter-spacing: 1px; }
-        .hud-value { color: var(--neon-blue); text-shadow: 0 0 2px var(--neon-blue); }
 
-        @keyframes border-flicker { 0%, 100% { border-color: var(--accent-green); opacity: 1; } 50% { border-color: transparent; opacity: 0.7; } 52% { border-color: var(--accent-green); opacity: 1; } }
-        @keyframes slide-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Slide 3: Mechanics */
+        #slide-mechanics { background: #020202; }
+        .mech-title { color: var(--neon-blue); border-color: var(--neon-blue); }
+        .gps-mockup { 
+            border: 2px dashed var(--neon-blue); padding: 30px; width: 80%; max-width: 500px; 
+            margin: 2rem auto; position: relative; background: rgba(0, 247, 255, 0.05);
+        }
+        .gps-coords { font-family: var(--font-tech); font-size: 1.5rem; color: var(--accent-green); margin-bottom: 10px;}
 
-        .data-br { position: absolute; bottom: 20px; right: 40px; text-align: right; font-family: var(--font-mono); font-size: 10px; color: var(--accent-green); }
+        /* BUTTONS */
+        .action-btn {
+            margin-top: 30px;
+            font-family: var(--font-tech); font-size: 1.2rem;
+            color: #000; background: var(--accent-green);
+            border: none; padding: 15px 40px; cursor: pointer;
+            letter-spacing: 2px; text-transform: uppercase;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            transition: all 0.3s; position: relative; z-index: 50;
+        }
+        .action-btn:hover { background: #fff; box-shadow: 0 0 20px var(--accent-green); transform: translateY(-2px); }
+        .action-btn.alert { background: var(--alert-red); color: #fff; }
+        .action-btn.alert:hover { background: #fff; color: var(--alert-red); box-shadow: 0 0 20px var(--alert-red); }
+        
+        .scroll-down-hint { font-size: 0.8rem; color: #444; margin-top: 10px; animation: blink 1s infinite;}
 
-        .section { min-height: 100vh; width: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; z-index: 2; }
-
-        /* HERO */
-        #hero { z-index: 10; background: radial-gradient(circle at center, #111 0%, #000 80%); }
-        .hero-title { font-family: var(--font-serif); font-size: 9vw; font-weight: 400; color: #fff; letter-spacing: -2px; mix-blend-mode: exclusion; }
-        @media (max-width: 768px) { .hero-title { font-size: 15vw; } }
-
-        .hero-glitch { animation: glitch-text-hero 3s infinite alternate-reverse; }
-        @keyframes glitch-text-hero { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
-        .hero-subtitle { margin-top: 2rem; font-family: var(--font-mono); font-size: 1rem; letter-spacing: 4px; text-transform: uppercase; color: #888; border-top: 1px solid #333; padding-top: 1.5rem; text-align: center;}
-        .scroll-indicator { position: absolute; bottom: 60px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 4px; color: #555; animation: blink 1s infinite; }
-
-        /* CONCEPT */
-        #concept { background: #000; overflow: hidden; border-top: 1px solid #222; }
-        .parallax-container { display: flex; gap: 10%; max-width: 1100px; align-items: center; width: 100%; flex-direction: column-reverse; } 
-        @media(min-width: 768px) { .parallax-container { flex-direction: row; } }
-        .text-block { flex: 1; padding: 2rem; border-left: 2px solid var(--alert-red); width: 100%; }
-        .text-block h2 { font-family: var(--font-serif); font-size: 2.5rem; margin-bottom: 2rem; color: #fff; }
-        .text-block p { font-family: var(--font-mono); color: #bbb; line-height: 1.8; font-size: 0.9rem; }
-        .visual-block { flex: 1; height: 40vh; width: 100%; background-image: url('https://images.unsplash.com/photo-1470723710355-171b443c6589?q=80&w=2070'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(110%); opacity: 0.6; }
-        @media(min-width: 768px) { .visual-block { height: 60vh; } }
-
-        /* MAP */
-        #void { height: 100vh; width: 100%; position: relative; background-color: #000; cursor: crosshair; overflow: hidden; padding: 0; }
-        @media (max-width: 768px) { #void { height: auto; aspect-ratio: 4 / 3; margin: 20vh 0; border-top: 1px solid var(--alert-red); border-bottom: 1px solid var(--alert-red); } }
-
+        /* ================= ORIGINAL PARTS ================= */
+        /* PART 3: MAP (VOID) */
+        #void { height: 100vh; width: 100%; position: relative; background-color: #000; overflow: hidden; padding: 0; }
         #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4) sepia(20%); z-index: 1; }
         #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         
         .marker { position: absolute; width: 30px; height: 30px; z-index: 30; cursor: pointer; background: rgba(255, 0, 85, 0.2); border: 1px solid var(--alert-red); box-shadow: 0 0 15px var(--alert-red); transform: rotate(45deg); transition: 0.3s; animation: pulse-marker 2s infinite; }
-        .marker:hover, .marker:active { background: var(--alert-red); transform: rotate(45deg) scale(1.2); box-shadow: 0 0 30px var(--alert-red), 0 0 10px #fff inset; }
+        .marker:hover { background: var(--alert-red); transform: rotate(45deg) scale(1.2); box-shadow: 0 0 30px var(--alert-red), 0 0 10px #fff inset; }
         @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        .marker-label { position: absolute; left: 40px; top: -10px; font-size: 10px; font-family: var(--font-mono); color: var(--alert-red); background: #000; border: 1px solid var(--alert-red); padding: 2px 5px; white-space: nowrap; opacity: 1; transition: 0.3s; transform: rotate(-45deg); pointer-events: none; }
-        @media(max-width: 768px) { .marker-label { opacity: 0.8; font-size: 9px; } }
+        .marker-label { position: absolute; left: 40px; top: -10px; font-size: 10px; font-family: var(--font-mono); color: var(--alert-red); background: #000; border: 1px solid var(--alert-red); padding: 2px 5px; white-space: nowrap; opacity: 0; transition: 0.3s; transform: rotate(-45deg); pointer-events: none; }
+        .marker:hover .marker-label { opacity: 1; }
 
-        /* USER CURSOR */
-        #user-cursor { position: absolute; width: 10px; height: 10px; background: #00ff41; border-radius: 50%; transform: translate(-50%, -50%); z-index: 50; display: none; pointer-events: none; box-shadow: 0 0 10px #00ff41; transition: top 1s, left 1s; }
-        .radar-ping { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; border: 1px solid #00ff41; border-radius: 50%; opacity: 0; animation: ping 2s infinite; }
-        .user-label { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); color: #00ff41; font-family: 'Share Tech Mono', monospace; font-size: 10px; white-space: nowrap; }
-
-        /* RECONSTRUCTION */
+        /* PART 4: 3D RECONSTRUCTION */
         #reconstruction { height: 100vh; width: 100%; background: #000; position: relative; border-top: 1px solid #222; overflow: hidden; display: block; padding: 0; }
-        #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; touch-action: none; }
+        #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
         #three-container:active { cursor: grabbing; }
 
         #recon-console {
@@ -127,21 +151,20 @@
             background: rgba(0, 10, 0, 0.8); border: 1px solid var(--accent-green);
             padding: 20px; backdrop-filter: blur(5px);
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
-            transition: 0.3s;
         }
-
         #recon-console h2 { font-family: var(--font-serif); font-size: 1.5rem; color: #fff; margin-bottom: 1rem; letter-spacing: 2px; text-transform: uppercase;}
         #recon-console p { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green); margin-bottom: 15px;}
         
         .input-area { display: flex; border-bottom: 1px solid var(--accent-green); margin-top: 10px; background: rgba(0,255,65,0.05); }
-        input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-family: var(--font-mono); font-size: 16px; }
+        input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-family: var(--font-mono); }
         .submit-btn { background: transparent; color: var(--accent-green); border: none; cursor: pointer; padding: 0 20px; font-weight: bold; font-family: var(--font-mono); transition:0.3s;}
-        .submit-btn:hover, .submit-btn:active { background: var(--accent-green); color: #000; box-shadow: 0 0 15px var(--accent-green);}
+        .submit-btn:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 15px var(--accent-green);}
         #purge-btn { margin-top: 10px; font-size: 10px; color: #666; cursor: pointer; display: inline-block; border: 1px solid #333; padding: 5px; font-family: var(--font-mono); transition:0.3s;}
         #purge-btn:hover { color: var(--alert-red); border-color: var(--alert-red); background: rgba(255,0,85,0.1); }
 
         #particles-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 60; }
         .floating-text { position: absolute; color: var(--accent-green); font-size: 0.8rem; animation: floatUp 4s linear forwards; font-family: var(--font-mono); }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.5); } }
 
         #memory-3d-tooltip { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -174,19 +197,14 @@
             width: 90vw; height: 85vh; background: #050505; border: 2px solid var(--alert-red);
             display: flex; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(255, 0, 85, 0.2);
             transform: perspective(1000px) rotateX(2deg) rotateY(-1deg); border-radius: 10px;
-            flex-direction: column; 
         }
-        @media(min-width: 768px) { .terminal-window { flex-direction: row; } }
-        
         .terminal-window::before { content: "SYSTEM CRITICAL // DATA CORRUPTION DETECTED"; position: absolute; top: 0; left: 0; width: 100%; background: var(--alert-red); color: #000; font-family: var(--font-tech); font-size: 10px; padding: 2px; text-align: center; animation: flicker 0.5s infinite; z-index: 20; }
         @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; background: var(--neon-blue); } }
 
         .close-terminal { position: absolute; top: 30px; right: 30px; color: var(--alert-red); border: 2px solid var(--alert-red); padding: 10px 20px; font-family: var(--font-tech); font-size: 14px; cursor: pointer; z-index: 100; background: #000; transition: 0.2s; }
         .close-terminal:hover { background: var(--alert-red); color: #000; box-shadow: 0 0 20px var(--alert-red); }
 
-        .terminal-visual { flex: 1.2; position: relative; overflow: hidden; border-right: 3px double var(--alert-red); filter: contrast(120%) brightness(0.9); height: 30vh; }
-        @media(min-width: 768px) { .terminal-visual { height: auto; border-right: 3px double var(--alert-red); border-bottom: none; } }
-
+        .terminal-visual { flex: 1.2; position: relative; overflow: hidden; border-right: 3px double var(--alert-red); filter: contrast(120%) brightness(0.9); }
         .glitch-img-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
         .glitch-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(150%) brightness(0.7) sepia(30%); transition: all 0.3s cubic-bezier(0.1, 0.7, 1.0, 0.1); opacity: 0.8; mix-blend-mode: luminosity; }
         .terminal-visual::after { content: ""; position: absolute; inset: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClIorXAAAAHlBMVEUAAAD///////////////////////////////////8f+B7AAAAAEHRSTlMABg8dHiQvMzY4PkxTVF1+c/4AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAASUlEQVQ4jWNgGAVDBQylMGiAMY0yplEw2AAjCjEIA6YmGGBiYqJgZ2JiZGRgZGRmZsZUZmZgYAAxGUDKGEQYGBgYmBgYGAAAVaYFqQ56270AAAAASUVORK5CYII='); opacity: 0.2; pointer-events: none; animation: noise-shift 0.2s infinite steps(4); z-index: 5;}
@@ -197,68 +215,82 @@
         .terminal-data { flex: 1; padding: 50px 30px; overflow-y: auto; font-family: var(--font-mono); background: #020202; background-image: linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px); background-size: 20px 20px; background-position: -5px -5px; }
         .data-header { border-bottom: 4px solid var(--alert-red); padding-bottom: 20px; margin-bottom: 30px; transform: rotate(-1deg); }
         .data-id { color: var(--alert-red); font-family: var(--font-tech); font-size: 14px; letter-spacing: 4px; animation: flicker 1s infinite; }
-        .data-title { font-family: var(--font-tech); font-size: 2rem; color: #fff; margin: 10px 0; text-transform: uppercase; letter-spacing: -2px; }
+        .data-title { font-family: var(--font-tech); font-size: 3rem; color: #fff; margin: 10px 0; text-transform: uppercase; letter-spacing: -2px; }
         .data-block { margin-bottom: 40px; padding: 20px; border: 1px dashed #333; position: relative; transform: rotate(0.5deg); background: rgba(255,255,255,0.02); }
         .data-block:nth-child(even) { transform: rotate(-0.8deg); background: rgba(0,0,0,0.3); border-color: var(--alert-red); }
         .block-label { font-family: var(--font-tech); font-size: 12px; color: var(--accent-green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--accent-green); display: inline-block;}
-        .human-text { color: #ccc; font-family: var(--font-serif); font-size: 1rem; line-height: 1.5; font-style: italic; white-space: pre-wrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        .history-text { color: #fff; font-family: var(--font-sans); font-size: 0.8rem; line-height: 1.4; border-left: 3px solid #555; padding-left: 10px; background: rgba(255,255,255,0.05); }
+        .human-text { color: #ccc; font-family: var(--font-serif); font-size: 1.1rem; line-height: 1.5; font-style: italic; white-space: pre-wrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .history-text { color: #fff; font-family: var(--font-sans); font-size: 0.9rem; line-height: 1.4; border-left: 3px solid #555; padding-left: 10px; background: rgba(255,255,255,0.05); }
         .ai-block { border: 2px solid var(--alert-red); background: rgba(255, 0, 85, 0.15); color: var(--alert-red); font-family: var(--font-tech); font-size: 0.9rem; }
         .ai-text { animation: text-flicker 0.1s infinite alternate; }
         @keyframes text-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; transform: translateX(1px); } }
         @keyframes blink { 0%,100% {opacity:1} 50% {opacity:0.3} }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.5); } }
-
     </style>
 </head>
 <body>
 
-    <div id="hud-layer">
-        <div class="hud-line hud-top"></div><div class="hud-line hud-bottom"></div><div class="hud-line hud-left"></div><div class="hud-line hud-right"></div><div class="scan-line"></div>
-        
-        <div class="hud-container">
-            <div class="hud-trigger" onclick="toggleHud()">CLASSIFIED_INTEL</div>
-            <div class="hud-details" id="hud-details">
-                <span class="hud-label">>>> PROJECT NAME:</span>
-                <span class="hud-value">STACHUS_ABSENCE_PROTOCOL</span><br>
-                <span class="hud-label">>>> OPERATIVE:</span>
-                <span class="hud-value">RUNXUAN LIU</span><br>
-                <span class="hud-label">>>> MISSION:</span>
-                <span class="hud-value">ARTISTIC PROJECT 1</span><br>
-                <span class="hud-label">>>> SUPERVISOR:</span>
-                <span class="hud-value">PROF. DR. COSENTINO</span><br>
-                <span class="hud-label">>>> SYSTEM STATUS:</span>
-                <span class="hud-value" style="color:#00ff41">STABLE (LOCAL_LAYER)</span>
-            </div>
-        </div>
+    <div id="loader">
+        <div class="loader-text">SYSTEM BOOTING...</div>
+        <div class="loader-bar"><div class="loader-progress"></div></div>
+    </div>
 
-        <div class="hud-data data-br">COORDS: <span id="coords">WAITING...</span></div>
+    <div id="hud-layer">
+        <div class="hud-corner tl"></div><div class="hud-corner tr"></div><div class="hud-corner bl"></div><div class="hud-corner br"></div>
+        <div class="scan-line"></div>
+        <div class="hud-data data-tl">OPERATIVE: 007<br>MISSION: ACTIVE<br>STATUS: DEPLOYED</div>
+        <div class="hud-data data-br">LAT/LON: <span id="coords">WAITING GPS...</span></div>
     </div>
 
     <main id="main-content">
-        <section id="hero" class="section">
-            <h1 class="hero-title hero-glitch"> STACHUS GLITCH</h1>
-            <div class="hero-subtitle">The Unreliable Guide to the Absence of Urban Memory.</div>
-            <div class="scroll-indicator">[ SCROLL TO BEGIN ]</div>
+        
+        <section id="slide-cover" class="game-section">
+            <h1 class="glitch-title">PROJECT<br>STACHUS</h1>
+            <div class="mission-info">
+                <p>TARGET: KARLSPLATZ_VOID</p>
+                <p>OBJECTIVE: <span class="highlight">RECOVER MEMORY</span></p>
+                <p>CLEARANCE: TOP SECRET</p>
+            </div>
+            <button class="action-btn" onclick="goToSection('slide-briefing')">INITIALIZE SYSTEM</button>
+            <div class="scroll-down-hint">[ OR SCROLL DOWN ]</div>
         </section>
 
-        <section id="concept" class="section">
-            <div class="parallax-container">
-                <div class="text-block">
-                    <h2>The Reconstruction</h2>
-                    <p>This project confronts the void of urban memory: Is absence a state failure, or a radical, open invitation for possibility? <br><br>We launch a literary act of resistance using digital satire and AI's absurdity. Subjective whispers are weaponized to dismantle the sterile, official monument.<br><br>The meaning is intentionally surrendered to the user—the ultimate cartographer of the city's self-erasure.</p>
+        <section id="slide-briefing" class="game-section">
+            <h2 class="section-title">MISSION BRIEFING</h2>
+            <div class="box-container">
+                <div class="data-box">
+                    <h3>OFFICIAL DIRECTIVE</h3>
+                    <p>"Citizens report anomalies at Stachus. The police department requests immediate deletion of these hallucinations."</p>
                 </div>
-                <div class="visual-block"></div>
+                <div class="data-box" style="border-color: var(--alert-red);">
+                    <h3 style="color: var(--alert-red);">WARNING</h3>
+                    <p>Official narrative may be compromised. Proceed with caution. The 'glitches' might be real memories.</p>
+                </div>
             </div>
+            <div class="stamp">CLASSIFIED</div>
+            <button class="action-btn alert" onclick="goToSection('slide-mechanics')">ACCEPT MISSION</button>
         </section>
-        
-        <section id="void" class="section">
+
+        <section id="slide-mechanics" class="game-section">
+            <h2 class="section-title mech-title">LBS INTERFACE ACTIVE</h2>
+            <p style="color: #888;">Connecting to Satellite...</p>
+            <div class="gps-mockup">
+                <div style="position: absolute; top: -10px; left: 10px; background: #000; padding: 0 10px; color: var(--neon-blue); font-size: 0.8rem;">GPS SIGNAL: STRONG</div>
+                <div class="gps-coords">LAT: 48.13920 | LON: 11.56550</div>
+                <p style="font-size: 0.9rem; color: #bbb; margin-top: 20px;">
+                    Move physically to intercept signal.<br>
+                    <span style="color: var(--accent-green);">> TARGET LOCKED <</span>
+                </p>
+            </div>
+            <button class="action-btn" onclick="goToSection('void')">ENTER THE VOID</button>
+        </section>
+
+        <section id="void" class="game-section" style="padding:0;">
             <div id="map-bg"></div>
             <canvas id="map-canvas"></canvas>
-            <div id="user-cursor">
-                <div class="radar-ping"></div>
-                <div class="user-label">YOU</div>
-            </div>
+            <div class="marker" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"><div class="marker-label">01: THE LOOP</div></div>
+            <div class="marker" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"><div class="marker-label">02: FLUID GHOST</div></div>
+            <div class="marker" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"><div class="marker-label">03: IDENTITY WAR</div></div>
+            <div class="marker" style="top: 75%; left: 60%;" onclick="event.stopPropagation(); openTerminal(3)"><div class="marker-label">04: DELETED WALL</div></div>
         </section>
 
         <section id="reconstruction">
@@ -309,69 +341,29 @@
     </div>
 
     <script>
-        document.addEventListener('mousemove', (e) => { document.getElementById('coords').innerText = (e.clientX).toFixed(0) + ", " + (e.clientY).toFixed(0); });
-        window.addEventListener('scroll', () => {
-            const visualBlock = document.querySelector('.visual-block');
-            if(visualBlock) visualBlock.style.transform = `translateY(${window.scrollY * 0.05}px)`;
+        // ================= LOADER & NAV =================
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
+            }, 2500); // 2.5s loading time
         });
 
-        // ================= HUD TOGGLE =================
-        function toggleHud() {
-            const details = document.getElementById('hud-details');
-            const trigger = document.querySelector('.hud-trigger');
-            if(details.style.display === 'block') {
-                details.style.display = 'none';
-                details.classList.remove('visible');
-                trigger.classList.remove('active');
-            } else {
-                details.style.display = 'block';
-                setTimeout(() => details.classList.add('visible'), 10);
-                trigger.classList.add('active');
+        function goToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+            if(id === 'void') {
+                setTimeout(resizeMap, 500); // Ensure map resizes correctly after scrolling
             }
         }
 
-        // ================= TERMINAL DATA =================
+        document.addEventListener('mousemove', (e) => { document.getElementById('coords').innerText = (e.clientX).toFixed(0) + ", " + (e.clientY).toFixed(0); });
+
+        // ================= TERMINAL DATA & LOGIC =================
         const archives = [
-            {
-                id: "ERR_ARCHIVE_A",
-                title: "THE UNDERGROUND LOOP",
-                img: "./1.jpg", 
-                lat: 48.139200, lng: 11.565500, 
-                cssTop: '45%', cssLeft: '20%',
-                human: "\"I've worked down here for fifteen years...\"",
-                history: "Fact: Built in 1970, Europe's largest underground mall.",
-                ai: "SYSTEM ERROR 1970-XX // All exits are fake screens."
-            },
-            {
-                id: "ERR_ARCHIVE_B",
-                title: "THE FLUID GHOST",
-                img: "./2.jpg",
-                lat: 48.139050, lng: 11.566100,
-                cssTop: '50%', cssLeft: '48%',
-                human: "\"If you come here at 4 AM, the fountain sounds different...\"",
-                history: "Fact: Constructed in 1972 for the Olympics.",
-                ai: "FLUID MEMORY ANALYSIS // Source: 18th-Century Emotion."
-            },
-            {
-                id: "ERR_ARCHIVE_C",
-                title: "IDENTITY WAR",
-                img: "./3.jpg",
-                lat: 48.138950, lng: 11.566800,
-                cssTop: '60%', cssLeft: '75%',
-                human: "\"Karl? Who is Karl? This is Stachus...\"",
-                history: "Fact: Renamed 'Karlsplatz' in 1797.",
-                ai: "IDENTITY CONFLICT // BASE CODE: Stachus (Deep)."
-            },
-            {
-                id: "ERR_ARCHIVE_D",
-                title: "THE DELETED WALL",
-                img: "./4.jpg",
-                lat: 48.138600, lng: 11.566500,
-                cssTop: '75%', cssLeft: '60%',
-                human: "\"The old maps show a wall here...\"",
-                history: "Fact: Medieval fortifications demolished in 18th century.",
-                ai: "DEFENSE SYSTEM: OFFLINE // GHOST WALL DETECTED."
-            }
+            { id: "ERR_ARCHIVE_A", title: "THE UNDERGROUND LOOP", img: "./1.jpg", human: "\"I've worked down here for fifteen years...\"", history: "Fact: Built in 1970, Stachus Passagen was Europe's largest underground mall.", ai: "SYSTEM ERROR 1970-XX // All exits are fake screens." },
+            { id: "ERR_ARCHIVE_B", title: "THE FLUID GHOST", img: "./2.jpg", human: "\"If you come here at 4 AM, the fountain sounds different...\"", history: "Fact: The fountain was constructed in 1972 for the Olympics.", ai: "FLUID MEMORY ANALYSIS // SOURCE: 18th-Century Emotion." },
+            { id: "ERR_ARCHIVE_C", title: "IDENTITY WAR", img: "./3.jpg", human: "\"Karl? Who is Karl? This is Stachus...\"", history: "Fact: Renamed 'Karlsplatz' in 1797.", ai: "IDENTITY CONFLICT // BASE CODE: Stachus (Deep)." },
+            { id: "ERR_ARCHIVE_D", title: "THE DELETED WALL", img: "./4.jpg", human: "\"The old maps show a wall here...\"", history: "Fact: Medieval fortifications demolished in 18th century.", ai: "DEFENSE SYSTEM: OFFLINE // GHOST WALL DETECTED." }
         ];
 
         const termStage = document.getElementById('fullscreen-stage');
@@ -393,80 +385,14 @@
             document.body.classList.remove('fullscreen-mode');
         }
 
-        // ================= MARKERS =================
-        const markersContainer = document.getElementById('void');
-        const markerElements = [];
-        
-        archives.forEach((data, index) => {
-            const el = document.createElement('div');
-            el.className = 'marker'; 
-            el.style.top = data.cssTop; el.style.left = data.cssLeft;
-            el.innerHTML = `<div class="marker-label">${data.title}</div>`;
-            el.onclick = (e) => { e.stopPropagation(); openTerminal(index); };
-            markersContainer.appendChild(el);
-            markerElements.push(el);
-        });
-
-        function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
-            const R = 6371000; 
-            const dLat = (lat2 - lat1) * (Math.PI/180);
-            const dLon = (lon2 - lon1) * (Math.PI/180);
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*(Math.PI/180)) * Math.cos(lat2*(Math.PI/180)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-            return R * c; 
-        }
-
-        const MAP_BOUNDS = { topLat: 48.139650, bottomLat: 48.138450, leftLng: 11.564600, rightLng: 11.567100 };
-        const userCursor = document.getElementById('user-cursor');
-        const TRIGGER_DISTANCE = 20;
-
-        function initGPS() {
-            if (!navigator.geolocation) {
-                document.getElementById('coords').innerText = "ERR: NO GPS";
-                return;
-            }
-            navigator.geolocation.watchPosition(
-                (position) => {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    document.getElementById('coords').innerText = `LAT:${userLat.toFixed(5)} LON:${userLng.toFixed(5)}`;
-                    const xPercent = (userLng - MAP_BOUNDS.leftLng) / (MAP_BOUNDS.rightLng - MAP_BOUNDS.leftLng);
-                    const yPercent = (MAP_BOUNDS.topLat - userLat) / (MAP_BOUNDS.topLat - MAP_BOUNDS.bottomLat);
-                    if (xPercent >= -0.1 && xPercent <= 1.1 && yPercent >= -0.1 && yPercent <= 1.1) {
-                        userCursor.style.display = 'block';
-                        userCursor.style.left = (xPercent * 100) + '%';
-                        userCursor.style.top = (yPercent * 100) + '%';
-                    }
-                    archives.forEach((data, index) => {
-                        const dist = getDistanceFromLatLonInM(userLat, userLng, data.lat, data.lng);
-                        const markerEl = markerElements[index];
-                        if (dist < TRIGGER_DISTANCE) {
-                            if (!markerEl.classList.contains('revealed')) markerEl.classList.add('revealed');
-                        } else {
-                            markerEl.classList.remove('revealed');
-                        }
-                    });
-                },
-                (error) => { console.warn("GPS ERROR", error); },
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-            );
-        }
-        initGPS();
-
-        // ================= MAP CANVAS =================
-        const mapCanvas = document.getElementById('map-canvas'); 
-        const mapCtx = mapCanvas.getContext('2d'); 
-        let trails = []; let mouseX = -1000, mouseY = -1000; 
-        
+        // ================= MAP LOGIC =================
+        const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); let trails = []; let mouseX = -1000, mouseY = -1000; 
         window.addEventListener('resize', resizeMap); 
         function resizeMap() { 
-            const container = document.getElementById('void');
-            mapCanvas.width = container.offsetWidth; 
-            mapCanvas.height = container.offsetHeight; 
+            const voidSec = document.getElementById('void');
+            if(voidSec) { mapCanvas.width = voidSec.offsetWidth; mapCanvas.height = voidSec.offsetHeight; }
         } 
-        setTimeout(resizeMap, 100);
-        loopMap();
-
+        resizeMap(); loopMap();
         document.getElementById('void').addEventListener('mousemove', (e) => { 
             const rect = mapCanvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top; 
             trails.push({ x: mouseX + (Math.random()-0.5)*10, y: mouseY + (Math.random()-0.5)*10, life: 1.0, size: Math.random() * 4 + 2, color: '#ff0000' }); 
@@ -491,151 +417,80 @@
             mapCtx.globalAlpha = 1.0; 
         }
 
-        // ================= 3D RECONSTRUCTION LOGIC (V7 FINAL) =================
+        // ================= 3D LOGIC (FINAL OPTIMIZED) =================
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse;
-        let targetRotationY = 0, targetRotationX = 0; 
-        let isDragging = false; 
-        let previousMousePosition = { x: 0, y: 0 };
-        const autoRotateSpeed = -0.002; 
-        let isAutoRotating = false; 
-        let autoFocusTargetY = 0; 
+        let targetRotationY = 0, targetRotationX = 0; let isDragging = false; let previousMousePosition = { x: 0, y: 0 }; const autoRotateSpeed = -0.002;
 
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
-        
         function submitMemory() { 
-            const input = document.getElementById('memory-input'); 
-            const val = input.value; 
-            if(!val) return;
-            
-            const btn = document.querySelector('.submit-btn'); 
-            btn.innerText = "SAVING..."; 
-            
-            const container = document.getElementById('particles-container'); 
-            const particle = document.createElement('div'); 
-            particle.classList.add('floating-text'); 
-            particle.innerText = "MEMORY UPLOADED"; 
-            particle.style.left = '50%'; particle.style.top = '30%'; 
-            particle.style.color = '#00ff41';
-            container.appendChild(particle); 
-            setTimeout(() => { particle.remove(); }, 3000);
-            
-            activateMemory(val); 
-            
-            btn.innerText = "INJECT"; 
-            input.value = ""; 
-            input.placeholder = "DATA SAVED"; 
+            const input = document.getElementById('memory-input'); const val = input.value; if(!val) return;
+            const btn = document.querySelector('.submit-btn'); btn.innerText = "PROCESSING..."; 
+            const container = document.getElementById('particles-container'); const particle = document.createElement('div'); particle.classList.add('floating-text'); particle.innerText = val; particle.style.left = '50%'; particle.style.top = '20%'; container.appendChild(particle); setTimeout(() => { particle.remove(); }, 4000);
+            setTimeout(() => { activateMemory(val); btn.innerText = "INJECT"; input.value = ""; input.placeholder = "DATA SAVED"; }, 500); 
         }
 
         function initThree() {
             const container = document.getElementById('three-container');
-            const isMobile = window.innerWidth < 768;
-
-            scene = new THREE.Scene(); 
-            scene.fog = new THREE.FogExp2(0x020202, 0.005);
-
+            scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x020202, 0.012);
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, isMobile ? 40 : 35, isMobile ? 90 : 60); 
-            camera.lookAt(0, 10, 0); 
-            
+            camera.position.set(0, 35, 60); camera.lookAt(0, 10, 0); 
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
-            renderer.setSize(window.innerWidth, window.innerHeight); 
-            container.appendChild(renderer.domElement);
+            renderer.setSize(window.innerWidth, window.innerHeight); container.appendChild(renderer.domElement);
 
-            memoryGroup = new THREE.Group(); 
-            pointsMesh = new THREE.Group(); 
-            
-            // V7 CRITICAL FIX: Ensure BOTH have same Y-offset so they align perfectly
-            pointsMesh.position.y = -15; 
-            memoryGroup.position.y = -15; 
-            
-            scene.add(memoryGroup); 
-            scene.add(pointsMesh);
-
+            memoryGroup = new THREE.Group(); scene.add(memoryGroup); pointsMesh = new THREE.Group(); memoryGroup.position.y = -15;
             raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
 
-            generateStructure(isMobile); 
-            loadSavedMemories();
+            generateStructure(); loadSavedMemories();
 
             window.addEventListener('keydown', (e) => { if ((e.key === 'Delete' || e.key === 'Backspace') && hoveredObject) removeMemory(hoveredObject); });
             
-            function onStart(x, y) {
-                isDragging = true;
-                isAutoRotating = false; 
-                previousMousePosition = { x: x, y: y };
-                const rect = container.getBoundingClientRect();
-                mouse.x = ((x - rect.left) / rect.width) * 2 - 1; 
-                mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
-                const tooltip = document.getElementById('memory-3d-tooltip');
-                tooltip.style.left = x + 10 + 'px'; 
-                tooltip.style.top = y - 40 + 'px';
-            }
-            function onMove(x, y) {
-                const rect = container.getBoundingClientRect();
-                mouse.x = ((x - rect.left) / rect.width) * 2 - 1; 
-                mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
-                if (isDragging) {
-                    const deltaMove = { x: x - previousMousePosition.x, y: y - previousMousePosition.y };
-                    targetRotationY += deltaMove.x * 0.005; 
-                    targetRotationX += deltaMove.y * 0.005;
-                    previousMousePosition = { x: x, y: y };
-                }
-                if (!isDragging && window.matchMedia("(min-width: 768px)").matches) {
-                    const tooltip = document.getElementById('memory-3d-tooltip');
-                    tooltip.style.left = x + 20 + 'px'; tooltip.style.top = y + 20 + 'px';
-                }
-            }
-            container.addEventListener('mousedown', (e) => { onStart(e.clientX, e.clientY); });
+            container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
             document.addEventListener('mouseup', () => { isDragging = false; });
-            document.addEventListener('mousemove', (e) => { onMove(e.clientX, e.clientY); });
-            container.addEventListener('touchstart', (e) => { onStart(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
-            container.addEventListener('touchmove', (e) => { if(isDragging) e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
-            container.addEventListener('touchend', () => { isDragging = false; });
+            document.addEventListener('mousemove', (e) => {
+                const rect = container.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1; 
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                if (isDragging) {
+                    targetRotationY += (e.clientX - previousMousePosition.x) * 0.005; 
+                    targetRotationX += (e.clientY - previousMousePosition.y) * 0.005;
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                }
+                const tooltip = document.getElementById('memory-3d-tooltip');
+                tooltip.style.left = e.clientX + 20 + 'px'; tooltip.style.top = e.clientY + 20 + 'px';
+            });
 
             function animate() {
                 requestAnimationFrame(animate);
                 const distToCenter = Math.min(Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y), 1.0);
-                const threshold = 0.2; 
-                let explosionFactor = 0;
-                if(distToCenter > threshold) explosionFactor = Math.pow((distToCenter - threshold) / (1.0 - threshold), 2) * 1.5; 
+                const threshold = 0.2; let explosionFactor = 0;
+                if(distToCenter > threshold) { explosionFactor = Math.pow((distToCenter - threshold) / (1.0 - threshold), 2) * 1.5; }
 
-                if (isAutoRotating) {
-                    targetRotationY += (autoFocusTargetY - targetRotationY) * 0.05;
-                    if(Math.abs(targetRotationY - autoFocusTargetY) < 0.01) isAutoRotating = false;
-                } else if(!isDragging) {
-                    targetRotationY += autoRotateSpeed;
-                }
-
+                if(!isDragging) { targetRotationY += autoRotateSpeed; }
                 if(pointsMesh) {
                     pointsMesh.rotation.y += (targetRotationY - pointsMesh.rotation.y) * 0.1;
                     pointsMesh.rotation.x += (targetRotationX - pointsMesh.rotation.x) * 0.1;
                     memoryGroup.rotation.copy(pointsMesh.rotation); 
-                    
+
                     const positions = pointsMesh.geometry.attributes.position.array;
                     const initials = pointsMesh.geometry.attributes.initialPosition.array;
                     const randomDirs = pointsMesh.geometry.attributes.randomDirection.array;
+
                     for(let i = 0; i < positions.length; i += 3) {
                         const ox = initials[i]; const oy = initials[i+1]; const oz = initials[i+2];
                         const randX = randomDirs[i]; const randY = randomDirs[i+1]; const randZ = randomDirs[i+2];
                         const flyDist = 300 * explosionFactor;
-                        const time = Date.now() * 0.001;
-                        const breath = 0.5 * Math.sin(time + ox);
-                        positions[i] = ox + (randX * flyDist) + breath;
-                        positions[i+1] = oy + (randY * flyDist) + breath;
-                        positions[i+2] = oz + (randZ * flyDist) + breath;
+                        const time = Date.now() * 0.001; const breath = 0.5 * Math.sin(time + ox);
+                        positions[i] = ox + (randX * flyDist) + breath; positions[i+1] = oy + (randY * flyDist) + breath; positions[i+2] = oz + (randZ * flyDist) + breath;
                     }
                     pointsMesh.geometry.attributes.position.needsUpdate = true;
                 }
-                
                 memoryGroup.children.forEach((mesh, i) => {
                      mesh.rotation.x += 0.01; mesh.rotation.y += 0.02;
                      if (mesh.userData.initialPos) {
                          const init = mesh.userData.initialPos;
                          const flyDist = 50 * explosionFactor; 
                          const dir = new THREE.Vector3(init.x, init.y, init.z).normalize();
-                         mesh.position.x = init.x + dir.x * flyDist;
-                         mesh.position.y = init.y + dir.y * flyDist;
-                         mesh.position.z = init.z + dir.z * flyDist;
+                         mesh.position.x = init.x + dir.x * flyDist; mesh.position.y = init.y + dir.y * flyDist; mesh.position.z = init.z + dir.z * flyDist;
                      }
                 });
                 raycaster.setFromCamera(mouse, camera);
@@ -654,144 +509,73 @@
                 renderer.render(scene, camera);
             }
             animate();
-            window.addEventListener('resize', () => { 
-                const isMobile = window.innerWidth < 768;
-                camera.position.set(0, isMobile ? 40 : 35, isMobile ? 90 : 60); 
-                camera.lookAt(0, 10, 0);
-                camera.aspect = window.innerWidth / window.innerHeight; 
-                camera.updateProjectionMatrix(); 
-                renderer.setSize(window.innerWidth, window.innerHeight); 
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
-            });
+            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         }
-
         function getParticleTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d');
             ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
             const texture = new THREE.Texture(canvas); texture.needsUpdate = true; return texture;
         }
-
-        function generateStructure(isMobile) {
+        function generateStructure() {
             const positions = []; const colors = []; const initials = []; const randomDirs = [];
             const baseRadius = 45; const groundLevel = -15;
-            function getRandomDir() {
-                const v = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5));
-                v.normalize(); return v;
-            }
-            function addPoint(x, y, z) { 
-                positions.push(x, y, z); initials.push(x, y, z); colors.push(0.8, 0.8, 0.85); 
-                const dir = getRandomDir(); randomDirs.push(dir.x, dir.y, dir.z);
-            }
+            function getRandomDir() { const v = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)); v.normalize(); return v; }
+            function addPoint(x, y, z) { positions.push(x, y, z); initials.push(x, y, z); colors.push(0.8, 0.8, 0.85); const dir = getRandomDir(); randomDirs.push(dir.x, dir.y, dir.z); }
             for(let i=0; i<2500; i++) { const a = (Math.random() - 0.5) * 0.5; const h = groundLevel + Math.random() * 25; const d = Math.random() * 8; if (Math.abs(a) < 0.08 && h < -5) continue; const r = baseRadius - d - 2; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); }
             const wallCount = 4000;
             for(let i=0; i<wallCount; i++) { const side = Math.random() > 0.5 ? 1 : -1; const a = (0.28 + Math.random() * (Math.PI/1.7 - 0.28)) * side; const h = groundLevel + Math.random() * 35; const t = Math.random() * 4; const r = baseRadius + t; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); }
             for(let i = 0; i < 1200; i++) { const theta = Math.random() * Math.PI * 2; const rRatio = Math.sqrt(Math.random()); const x = 18 * rRatio * Math.cos(theta); const z = 30 * rRatio * Math.sin(theta); const y = groundLevel + 0.5; addPoint(x, y, z); }
             for(let i = 0; i < 800; i++) { const a = -Math.PI/1.5 + Math.random() * (Math.PI*1.3); const r = baseRadius + Math.random() * 40; const x = Math.cos(a) * r; const z = Math.sin(a) * r; if ((x*x)/(900) + (z*z)/(324) < 1.5) continue; addPoint(x, groundLevel, z); }
-            
-            const geometry = new THREE.BufferGeometry(); 
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); 
-            geometry.setAttribute('initialPosition', new THREE.Float32BufferAttribute(initials, 3)); 
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            geometry.setAttribute('randomDirection', new THREE.Float32BufferAttribute(randomDirs, 3));
-
-            const material = new THREE.PointsMaterial({ 
-                size: 0.7, 
-                vertexColors: true, 
-                transparent: true, 
-                opacity: 0.9, 
-                map: getParticleTexture(), 
-                depthWrite: false, 
-                sizeAttenuation: true 
-            });
-            pointsMesh = new THREE.Points(geometry, material); scene.add(pointsMesh); 
-            // NOTE: Coordinate is set in initThree() to ensure sync with memoryGroup
+            const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('initialPosition', new THREE.Float32BufferAttribute(initials, 3)); geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.setAttribute('randomDirection', new THREE.Float32BufferAttribute(randomDirs, 3));
+            const material = new THREE.PointsMaterial({ size: 0.7, vertexColors: true, transparent: true, opacity: 0.5, map: getParticleTexture(), depthWrite: false, sizeAttenuation: true });
+            pointsMesh = new THREE.Points(geometry, material); scene.add(pointsMesh); pointsMesh.position.y = -15;
         }
-
-        function safeSave(key, value) {
-            try {
-                localStorage.setItem(key, value);
-            } catch (e) {
-                console.warn("Storage quota exceeded or disabled (Private Mode)", e);
-            }
-        }
-
         function saveMemories(text, x, y, z, colorHex) {
-            let existing = [];
-            try {
-                existing = JSON.parse(localStorage.getItem('stachus_memories')) || [];
-            } catch(e) {}
-            
+            let existing = JSON.parse(localStorage.getItem('stachus_memories')) || [];
             existing.push({ text, x, y, z, colorHex });
-            safeSave('stachus_memories', JSON.stringify(existing));
+            localStorage.setItem('stachus_memories', JSON.stringify(existing));
         }
-
         function loadSavedMemories() {
-            let saved = [];
-            try {
-                saved = JSON.parse(localStorage.getItem('stachus_memories')) || [];
-            } catch(e) {}
+            let saved = JSON.parse(localStorage.getItem('stachus_memories')) || [];
             saved.forEach(mem => { createMemoryCrystal(mem.text, mem.x, mem.y, mem.z, mem.colorHex); });
         }
-
         function removeMemory(mesh) {
             if (!mesh) return;
             memoryGroup.remove(mesh);
             let saved = JSON.parse(localStorage.getItem('stachus_memories')) || [];
             const updated = saved.filter(m => m.text !== mesh.userData.text);
-            safeSave('stachus_memories', JSON.stringify(updated));
+            localStorage.setItem('stachus_memories', JSON.stringify(updated));
             hoveredObject = null; document.body.style.cursor = 'default'; document.getElementById('memory-3d-tooltip').style.opacity = 0;
         }
         window.purgeMemories = function() {
             if(confirm("WARNING: SYSTEM PURGE?")) { localStorage.removeItem('stachus_memories'); while(memoryGroup.children.length > 0){ memoryGroup.remove(memoryGroup.children[0]); } }
         };
-
-        // ================= V6 FIX: BIGGER CRYSTALS =================
         function createMemoryCrystal(text, x, y, z, colorHex) {
-            // Increased size for mobile touch
-            const geo = new THREE.IcosahedronGeometry(2.5, 0);
+            const geo = new THREE.IcosahedronGeometry(1.5, 0);
             const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.8 });
             const mesh = new THREE.Mesh(geo, mat);
-            
-            const glowGeo = new THREE.SphereGeometry(1.3, 16, 16);
+            const glowGeo = new THREE.SphereGeometry(0.8, 16, 16);
             const glowMat = new THREE.MeshBasicMaterial({ color: colorHex });
             const glowMesh = new THREE.Mesh(glowGeo, glowMat);
             mesh.add(glowMesh);
             mesh.position.set(x, y, z); mesh.userData = { text: text, initialPos: {x, y, z} }; 
             memoryGroup.add(mesh);
         }
-
-        // ================= V7 FIX: BETTER RANDOM & NEON COLORS =================
-        function getNeonColor() {
-            // HSL generation for Cyberpunk style (High Saturation, specific Hues)
-            const hue = Math.random(); 
-            // Avoid greens (too similar to UI) - Focus on Pink, Purple, Blue, Orange
-            const sat = 0.9;
-            const light = 0.6;
-            const col = new THREE.Color().setHSL(hue, sat, light);
-            return col.getHex();
-        }
-
         window.activateMemory = function(text) {
             if(!pointsMesh) return;
             const positions = pointsMesh.geometry.attributes.position.array;
-            const pointCount = positions.length / 3;
-            
-            // V7 FIX: NO RESTRICTION RANDOM PICK
-            // We select ANY random point from the thousands available
-            // This prevents stacking because the probability of picking the same point twice is 1/20000
-            const i = Math.floor(Math.random() * pointCount);
-            const x = positions[i*3];
-            const y = positions[i*3+1];
-            const z = positions[i*3+2];
-
-            const randomColor = getNeonColor();
-
-            createMemoryCrystal(text, x, y, z, randomColor);
-            saveMemories(text, x, y, z, randomColor);
-            
-            // Auto Focus
-            autoFocusTargetY = -Math.atan2(x, z);
-            isAutoRotating = true; 
+            let attempts = 0;
+            while(attempts < 500) {
+                const idx = Math.floor(Math.random() * (positions.length/3));
+                const x = positions[idx*3]; const y = positions[idx*3+1]; const z = positions[idx*3+2];
+                if(y > -14 && y < 30) {
+                    const randomColor = Math.random() * 0xffffff;
+                    createMemoryCrystal(text, x, y, z, randomColor);
+                    saveMemories(text, x, y, z, randomColor);
+                    return;
+                }
+                attempts++;
+            }
         };
 
         initThree();
