@@ -45,52 +45,28 @@
         .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.3); opacity: 0.5; animation: scan 4s linear infinite; }
         @keyframes scan { 0% {top: -10%;} 100% {top: 110%;} }
 
-        /* ================= NEW CYBERPUNK HUD (TOP LEFT) ================= */
+        /* HUD & DROPDOWN */
         .hud-container {
             position: absolute; top: 20px; left: 40px;
-            pointer-events: auto; /* Allow clicking */
-            z-index: 100;
+            pointer-events: auto; z-index: 100;
         }
-
-        /* The Glitchy Button */
         .hud-trigger {
-            font-family: var(--font-tech);
-            font-size: 12px;
-            color: var(--accent-green);
-            border: 1px solid var(--accent-green);
-            padding: 5px 10px;
-            background: rgba(0, 20, 0, 0.8);
-            cursor: pointer;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            display: inline-block;
-            transition: 0.2s;
+            font-family: var(--font-tech); font-size: 12px; color: var(--accent-green);
+            border: 1px solid var(--accent-green); padding: 5px 10px;
+            background: rgba(0, 20, 0, 0.8); cursor: pointer; letter-spacing: 2px;
+            text-transform: uppercase; display: inline-block; transition: 0.2s;
             animation: border-flicker 3s infinite;
         }
-        .hud-trigger:hover {
-            background: var(--accent-green);
-            color: #000;
-            box-shadow: 0 0 10px var(--accent-green);
-        }
+        .hud-trigger:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 10px var(--accent-green); }
         .hud-trigger::before { content: "[ + ] "; }
         .hud-trigger.active::before { content: "[ - ] "; }
 
-        /* The Hidden Content */
         .hud-details {
-            margin-top: 10px;
-            font-family: var(--font-mono);
-            font-size: 10px;
-            color: #bbb;
-            background: rgba(0, 0, 0, 0.9);
-            border-left: 2px solid var(--alert-red);
-            padding: 10px;
-            display: none; /* Hidden by default */
-            max-width: 250px;
-            backdrop-filter: blur(5px);
-            line-height: 1.6;
+            margin-top: 10px; font-family: var(--font-mono); font-size: 10px; color: #bbb;
+            background: rgba(0, 0, 0, 0.9); border-left: 2px solid var(--alert-red); padding: 10px;
+            display: none; max-width: 250px; backdrop-filter: blur(5px); line-height: 1.6;
         }
         .hud-details.visible { display: block; animation: slide-down 0.3s ease-out; }
-        
         .hud-label { color: var(--alert-red); font-weight: bold; display: block; margin-top: 5px; letter-spacing: 1px; }
         .hud-value { color: var(--neon-blue); text-shadow: 0 0 2px var(--neon-blue); }
 
@@ -99,10 +75,9 @@
 
         .data-br { position: absolute; bottom: 20px; right: 40px; text-align: right; font-family: var(--font-mono); font-size: 10px; color: var(--accent-green); }
 
-
         .section { min-height: 100vh; width: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; z-index: 2; }
 
-        /* PART 1: HERO */
+        /* HERO */
         #hero { z-index: 10; background: radial-gradient(circle at center, #111 0%, #000 80%); }
         .hero-title { font-family: var(--font-serif); font-size: 9vw; font-weight: 400; color: #fff; letter-spacing: -2px; mix-blend-mode: exclusion; }
         @media (max-width: 768px) { .hero-title { font-size: 15vw; } }
@@ -112,28 +87,19 @@
         .hero-subtitle { margin-top: 2rem; font-family: var(--font-mono); font-size: 1rem; letter-spacing: 4px; text-transform: uppercase; color: #888; border-top: 1px solid #333; padding-top: 1.5rem; text-align: center;}
         .scroll-indicator { position: absolute; bottom: 60px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 4px; color: #555; animation: blink 1s infinite; }
 
-        /* PART 2: CONCEPT */
+        /* CONCEPT */
         #concept { background: #000; overflow: hidden; border-top: 1px solid #222; }
         .parallax-container { display: flex; gap: 10%; max-width: 1100px; align-items: center; width: 100%; flex-direction: column-reverse; } 
         @media(min-width: 768px) { .parallax-container { flex-direction: row; } }
-        
         .text-block { flex: 1; padding: 2rem; border-left: 2px solid var(--alert-red); width: 100%; }
         .text-block h2 { font-family: var(--font-serif); font-size: 2.5rem; margin-bottom: 2rem; color: #fff; }
         .text-block p { font-family: var(--font-mono); color: #bbb; line-height: 1.8; font-size: 0.9rem; }
         .visual-block { flex: 1; height: 40vh; width: 100%; background-image: url('https://images.unsplash.com/photo-1470723710355-171b443c6589?q=80&w=2070'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(110%); opacity: 0.6; }
         @media(min-width: 768px) { .visual-block { height: 60vh; } }
 
-        /* PART 3: MAP */
+        /* MAP */
         #void { height: 100vh; width: 100%; position: relative; background-color: #000; cursor: crosshair; overflow: hidden; padding: 0; }
-        @media (max-width: 768px) {
-            #void {
-                height: auto;
-                aspect-ratio: 4 / 3;
-                margin: 20vh 0; 
-                border-top: 1px solid var(--alert-red);
-                border-bottom: 1px solid var(--alert-red);
-            }
-        }
+        @media (max-width: 768px) { #void { height: auto; aspect-ratio: 4 / 3; margin: 20vh 0; border-top: 1px solid var(--alert-red); border-bottom: 1px solid var(--alert-red); } }
 
         #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4) sepia(20%); z-index: 1; }
         #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
@@ -149,15 +115,13 @@
         .radar-ping { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; border: 1px solid #00ff41; border-radius: 50%; opacity: 0; animation: ping 2s infinite; }
         .user-label { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); color: #00ff41; font-family: 'Share Tech Mono', monospace; font-size: 10px; white-space: nowrap; }
 
-        /* PART 4: 3D RECONSTRUCTION */
+        /* RECONSTRUCTION */
         #reconstruction { height: 100vh; width: 100%; background: #000; position: relative; border-top: 1px solid #222; overflow: hidden; display: block; padding: 0; }
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; touch-action: none; }
         #three-container:active { cursor: grabbing; }
 
         #recon-console {
-            position: absolute; 
-            top: 10%; 
-            left: 50%; transform: translateX(-50%);
+            position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 500px; z-index: 50; pointer-events: auto;
             text-align: center;
             background: rgba(0, 10, 0, 0.8); border: 1px solid var(--accent-green);
@@ -260,7 +224,7 @@
                 <span class="hud-label">>>> OPERATIVE:</span>
                 <span class="hud-value">RUNXUAN LIU</span><br>
                 <span class="hud-label">>>> MISSION:</span>
-                <span class="hud-value">ARTISTIC PROJECT 1 / MEMORY RECONSTRUCTION</span><br>
+                <span class="hud-value">ARTISTIC PROJECT 1</span><br>
                 <span class="hud-label">>>> SUPERVISOR:</span>
                 <span class="hud-value">PROF. DR. COSENTINO</span><br>
                 <span class="hud-label">>>> SYSTEM STATUS:</span>
@@ -351,7 +315,7 @@
             if(visualBlock) visualBlock.style.transform = `translateY(${window.scrollY * 0.05}px)`;
         });
 
-        // ================= HUD TOGGLE LOGIC =================
+        // ================= HUD TOGGLE =================
         function toggleHud() {
             const details = document.getElementById('hud-details');
             const trigger = document.querySelector('.hud-trigger');
@@ -366,7 +330,7 @@
             }
         }
 
-        // ================= TERMINAL DATA (WITH GPS) =================
+        // ================= TERMINAL DATA =================
         const archives = [
             {
                 id: "ERR_ARCHIVE_A",
@@ -429,7 +393,7 @@
             document.body.classList.remove('fullscreen-mode');
         }
 
-        // ================= MARKERS & GPS LOGIC =================
+        // ================= MARKERS =================
         const markersContainer = document.getElementById('void');
         const markerElements = [];
         
@@ -466,7 +430,6 @@
                     const userLat = position.coords.latitude;
                     const userLng = position.coords.longitude;
                     document.getElementById('coords').innerText = `LAT:${userLat.toFixed(5)} LON:${userLng.toFixed(5)}`;
-
                     const xPercent = (userLng - MAP_BOUNDS.leftLng) / (MAP_BOUNDS.rightLng - MAP_BOUNDS.leftLng);
                     const yPercent = (MAP_BOUNDS.topLat - userLat) / (MAP_BOUNDS.topLat - MAP_BOUNDS.bottomLat);
                     if (xPercent >= -0.1 && xPercent <= 1.1 && yPercent >= -0.1 && yPercent <= 1.1) {
@@ -474,7 +437,6 @@
                         userCursor.style.left = (xPercent * 100) + '%';
                         userCursor.style.top = (yPercent * 100) + '%';
                     }
-
                     archives.forEach((data, index) => {
                         const dist = getDistanceFromLatLonInM(userLat, userLng, data.lat, data.lng);
                         const markerEl = markerElements[index];
@@ -491,7 +453,7 @@
         }
         initGPS();
 
-        // ================= MAP CANVAS ANIMATION =================
+        // ================= MAP CANVAS =================
         const mapCanvas = document.getElementById('map-canvas'); 
         const mapCtx = mapCanvas.getContext('2d'); 
         let trails = []; let mouseX = -1000, mouseY = -1000; 
@@ -529,7 +491,7 @@
             mapCtx.globalAlpha = 1.0; 
         }
 
-        // ================= 3D RECONSTRUCTION LOGIC =================
+        // ================= 3D RECONSTRUCTION LOGIC (V5 FIXED) =================
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse;
         let targetRotationY = 0, targetRotationX = 0; 
         let isDragging = false; 
@@ -540,26 +502,32 @@
         let autoFocusTargetY = 0; 
 
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
+        
+        // ------------------ CRITICAL FIX: SUBMIT LOGIC ------------------
         function submitMemory() { 
-            const input = document.getElementById('memory-input'); const val = input.value; if(!val) return;
-            const btn = document.querySelector('.submit-btn'); btn.innerText = "SAVING..."; 
+            const input = document.getElementById('memory-input'); 
+            const val = input.value; 
+            if(!val) return;
             
-            // 粒子反馈
+            const btn = document.querySelector('.submit-btn'); 
+            btn.innerText = "SAVING..."; 
+            
+            // FEEDBACK UI
             const container = document.getElementById('particles-container'); 
             const particle = document.createElement('div'); 
             particle.classList.add('floating-text'); 
-            particle.innerText = "DATA UPLOADED"; 
-            particle.style.left = '50%'; particle.style.top = '20%'; 
-            particle.style.color = '#00ff41';
+            particle.innerText = "MEMORY UPLOADED"; 
+            particle.style.left = '50%'; particle.style.top = '30%'; 
+            particle.style.color = '#ff0055'; // RED ALERT
             container.appendChild(particle); 
             setTimeout(() => { particle.remove(); }, 3000);
             
-            setTimeout(() => { 
-                activateMemory(val);
-                btn.innerText = "INJECT"; input.value = ""; input.placeholder = "DATA SAVED"; 
-                // 添加 Alert 方便手机端确认
-                // alert("SYSTEM MESSAGE: Memory Fragment Saved Locally.");
-            }, 500); 
+            // EXECUTE IMMEDIATELY (NO TIMEOUT DELAY)
+            activateMemory(val); 
+            
+            btn.innerText = "INJECT"; 
+            input.value = ""; 
+            input.placeholder = "DATA SAVED"; 
         }
 
         function initThree() {
@@ -567,7 +535,7 @@
             const isMobile = window.innerWidth < 768;
 
             scene = new THREE.Scene(); 
-            // V4.0 FIX: 恢复低雾气，保持通透
+            // FOG: KEEP IT LOW
             scene.fog = new THREE.FogExp2(0x020202, 0.005);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -576,9 +544,11 @@
             
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
-            renderer.setSize(window.innerWidth, window.innerHeight); container.appendChild(renderer.domElement);
+            renderer.setSize(window.innerWidth, window.innerHeight); 
+            container.appendChild(renderer.domElement);
 
-            memoryGroup = new THREE.Group(); scene.add(memoryGroup); pointsMesh = new THREE.Group(); memoryGroup.position.y = -15;
+            memoryGroup = new THREE.Group(); scene.add(memoryGroup); 
+            pointsMesh = new THREE.Group(); memoryGroup.position.y = -15;
             raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
 
             generateStructure(isMobile); 
@@ -665,7 +635,6 @@
                          mesh.position.z = init.z + dir.z * flyDist;
                      }
                 });
-
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObjects(memoryGroup.children, true);
                 const tooltip = document.getElementById('memory-3d-tooltip');
@@ -722,7 +691,7 @@
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             geometry.setAttribute('randomDirection', new THREE.Float32BufferAttribute(randomDirs, 3));
 
-            // V4.0 FIX: 回归 0.7 大小，但透明度设高，让它既精致又清晰
+            // V5.0: KEEP ORIGINAL SIZE (0.7), BUT HIGH OPACITY & CLEAR FOG
             const material = new THREE.PointsMaterial({ 
                 size: 0.7, 
                 vertexColors: true, 
@@ -735,21 +704,40 @@
             pointsMesh = new THREE.Points(geometry, material); scene.add(pointsMesh); pointsMesh.position.y = -15;
         }
 
-        function saveMemories(text, x, y, z, colorHex) {
-            let existing = JSON.parse(localStorage.getItem('stachus_memories')) || [];
-            existing.push({ text, x, y, z, colorHex });
-            localStorage.setItem('stachus_memories', JSON.stringify(existing));
+        // ------------------ SAFE STORAGE WRAPPER (Mobile Fix) ------------------
+        function safeSave(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {
+                console.warn("Storage quota exceeded or disabled (Private Mode)", e);
+                // Even if we can't save to disk, the app should continue running in memory
+            }
         }
+
+        function saveMemories(text, x, y, z, colorHex) {
+            let existing = [];
+            try {
+                existing = JSON.parse(localStorage.getItem('stachus_memories')) || [];
+            } catch(e) {}
+            
+            existing.push({ text, x, y, z, colorHex });
+            safeSave('stachus_memories', JSON.stringify(existing));
+        }
+
         function loadSavedMemories() {
-            let saved = JSON.parse(localStorage.getItem('stachus_memories')) || [];
+            let saved = [];
+            try {
+                saved = JSON.parse(localStorage.getItem('stachus_memories')) || [];
+            } catch(e) {}
             saved.forEach(mem => { createMemoryCrystal(mem.text, mem.x, mem.y, mem.z, mem.colorHex); });
         }
+
         function removeMemory(mesh) {
             if (!mesh) return;
             memoryGroup.remove(mesh);
             let saved = JSON.parse(localStorage.getItem('stachus_memories')) || [];
             const updated = saved.filter(m => m.text !== mesh.userData.text);
-            localStorage.setItem('stachus_memories', JSON.stringify(updated));
+            safeSave('stachus_memories', JSON.stringify(updated));
             hoveredObject = null; document.body.style.cursor = 'default'; document.getElementById('memory-3d-tooltip').style.opacity = 0;
         }
         window.purgeMemories = function() {
@@ -769,33 +757,17 @@
         }
 
         window.activateMemory = function(text) {
-            if(!pointsMesh) return;
-            const positions = pointsMesh.geometry.attributes.position.array;
-            
-            // V4.0 FIX: 强制选择一个更靠前的位置，而不是完全随机
-            // 我们尝试找一个 z 坐标比较小（靠近相机）的点
-            let bestX=0, bestY=0, bestZ=0;
-            let found = false;
-            
-            for(let i=0; i<100; i++) {
-                 const idx = Math.floor(Math.random() * (positions.length/3));
-                 const x = positions[idx*3]; const y = positions[idx*3+1]; const z = positions[idx*3+2];
-                 // 寻找高度适中且稍微靠近外层的点
-                 if(y > -5 && y < 20) {
-                     bestX = x; bestY = y; bestZ = z;
-                     found = true;
-                     break;
-                 }
-            }
-            // 如果没找到好的点，就给一个默认前方的位置
-            if(!found) { bestX = 0; bestY = 0; bestZ = 40; }
+            // V5.0 FIX: NO RANDOM SEARCH. FORCE SPAWN.
+            // Spawning directly in front of the center view (z=20 is closer to camera)
+            const bestX = 0;
+            const bestY = 0;
+            const bestZ = 20; 
 
-            // 新记忆用刺眼的红色/粉色，方便寻找
-            const highlightColor = 0xff0055; 
+            const highlightColor = 0xff0055; // Neon Red for new item
             createMemoryCrystal(text, bestX, bestY, bestZ, highlightColor);
             saveMemories(text, bestX, bestY, bestZ, highlightColor);
             
-            // 自动旋转对焦
+            // Force focus
             autoFocusTargetY = -Math.atan2(bestX, bestZ);
             isAutoRotating = true; 
         };
