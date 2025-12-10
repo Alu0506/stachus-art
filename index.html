@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STACHUS: THE ABSENCE (FINAL)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>STACHUS: THE ABSENCE (MOBILE OPTIMIZED)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,7 +28,8 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; cursor: crosshair; }
-        body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; }
+        /* 禁止移动端缩放和默认触摸行为 */
+        body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; touch-action: none; }
         body.fullscreen-mode { overflow: hidden !important; }
 
         /* HUD & Scanline */
@@ -56,16 +57,19 @@
         .hero-title { font-family: var(--font-serif); font-size: 9vw; font-weight: 400; color: #fff; letter-spacing: -2px; mix-blend-mode: exclusion; }
         .hero-glitch { animation: glitch-text-hero 3s infinite alternate-reverse; }
         @keyframes glitch-text-hero { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
-        .hero-subtitle { margin-top: 2rem; font-family: var(--font-mono); font-size: 1rem; letter-spacing: 4px; text-transform: uppercase; color: #888; border-top: 1px solid #333; padding-top: 1.5rem; }
+        .hero-subtitle { margin-top: 2rem; font-family: var(--font-mono); font-size: 1rem; letter-spacing: 4px; text-transform: uppercase; color: #888; border-top: 1px solid #333; padding-top: 1.5rem; text-align: center;}
         .scroll-indicator { position: absolute; bottom: 60px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 4px; color: #555; animation: blink 1s infinite; }
 
         /* PART 2: CONCEPT */
         #concept { background: #000; overflow: hidden; border-top: 1px solid #222; }
-        .parallax-container { display: flex; gap: 10%; max-width: 1100px; align-items: center; width: 100%; }
+        .parallax-container { display: flex; gap: 10%; max-width: 1100px; align-items: center; width: 100%; flex-direction: column-reverse; /* Mobile friendly */ }
+        @media(min-width: 768px) { .parallax-container { flex-direction: row; } }
+        
         .text-block { flex: 1; padding: 2rem; border-left: 2px solid var(--alert-red); }
-        .text-block h2 { font-family: var(--font-serif); font-size: 3.5rem; margin-bottom: 2rem; color: #fff; }
-        .text-block p { font-family: var(--font-mono); color: #bbb; line-height: 1.8; font-size: 1rem; }
-        .visual-block { flex: 1; height: 60vh; background-image: url('https://images.unsplash.com/photo-1470723710355-171b443c6589?q=80&w=2070'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(110%); opacity: 0.6; transform: translateY(50px); transition: transform 0.1s ease-out; }
+        .text-block h2 { font-family: var(--font-serif); font-size: 2.5rem; margin-bottom: 2rem; color: #fff; }
+        .text-block p { font-family: var(--font-mono); color: #bbb; line-height: 1.8; font-size: 0.9rem; }
+        .visual-block { flex: 1; height: 40vh; width: 100%; background-image: url('https://images.unsplash.com/photo-1470723710355-171b443c6589?q=80&w=2070'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(110%); opacity: 0.6; }
+        @media(min-width: 768px) { .visual-block { height: 60vh; } }
 
         /* PART 3: MAP */
         #void { height: 100vh; width: 100%; position: relative; background-color: #000; cursor: crosshair; overflow: hidden; padding: 0; }
@@ -73,33 +77,14 @@
         #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         
         .marker { position: absolute; width: 30px; height: 30px; z-index: 30; cursor: pointer; background: rgba(255, 0, 85, 0.2); border: 1px solid var(--alert-red); box-shadow: 0 0 15px var(--alert-red); transform: rotate(45deg); transition: 0.3s; animation: pulse-marker 2s infinite; }
-        .marker:hover { background: var(--alert-red); transform: rotate(45deg) scale(1.2); box-shadow: 0 0 30px var(--alert-red), 0 0 10px #fff inset; }
+        .marker:hover, .marker:active { background: var(--alert-red); transform: rotate(45deg) scale(1.2); box-shadow: 0 0 30px var(--alert-red), 0 0 10px #fff inset; }
         @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        .marker-label { position: absolute; left: 40px; top: -10px; font-size: 10px; font-family: var(--font-mono); color: var(--alert-red); background: #000; border: 1px solid var(--alert-red); padding: 2px 5px; white-space: nowrap; opacity: 0; transition: 0.3s; transform: rotate(-45deg); pointer-events: none; }
-        .marker:hover .marker-label { opacity: 1; }
-
-        /* USER CURSOR (GPS) STYLES */
-        #user-cursor { 
-            position: absolute; width: 10px; height: 10px; background: #00ff41; 
-            border-radius: 50%; transform: translate(-50%, -50%); z-index: 50; 
-            display: none; pointer-events: none;
-            box-shadow: 0 0 10px #00ff41;
-            transition: top 1s cubic-bezier(0.1, 0.7, 1.0, 0.1), left 1s cubic-bezier(0.1, 0.7, 1.0, 0.1);
-        }
-        .radar-ping { 
-            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; 
-            border: 1px solid #00ff41; border-radius: 50%; opacity: 0; 
-            animation: ping 2s infinite; 
-        }
-        @keyframes ping { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-        .user-label { 
-            position: absolute; top: -20px; left: 50%; transform: translateX(-50%); 
-            color: #00ff41; font-family: 'Share Tech Mono', monospace; font-size: 10px; white-space: nowrap;
-            text-shadow: 0 0 5px #00ff41;
-        }
+        .marker-label { position: absolute; left: 40px; top: -10px; font-size: 10px; font-family: var(--font-mono); color: var(--alert-red); background: #000; border: 1px solid var(--alert-red); padding: 2px 5px; white-space: nowrap; opacity: 1; transition: 0.3s; transform: rotate(-45deg); pointer-events: none; }
+        /* Mobile: always show label slightly */
+        @media(max-width: 768px) { .marker-label { opacity: 0.7; } }
 
         /* PART 4: 3D RECONSTRUCTION (UPDATED) */
-        #reconstruction { height: 100vh; width: 100%; background: #000; position: relative; border-top: 1px solid #222; overflow: hidden; display: block; padding: 0; }
+        #reconstruction { height: 100vh; width: 100%; background: #000; position: relative; border-top: 1px solid #222; overflow: hidden; display: block; padding: 0; touch-action: none; /* 重要：防止手机滑动时滚屏 */ }
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
         #three-container:active { cursor: grabbing; }
 
@@ -117,7 +102,7 @@
         .input-area { display: flex; border-bottom: 1px solid var(--accent-green); margin-top: 10px; background: rgba(0,255,65,0.05); }
         input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-family: var(--font-mono); }
         .submit-btn { background: transparent; color: var(--accent-green); border: none; cursor: pointer; padding: 0 20px; font-weight: bold; font-family: var(--font-mono); transition:0.3s;}
-        .submit-btn:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 15px var(--accent-green);}
+        .submit-btn:hover, .submit-btn:active { background: var(--accent-green); color: #000; box-shadow: 0 0 15px var(--accent-green);}
         #purge-btn { margin-top: 10px; font-size: 10px; color: #666; cursor: pointer; display: inline-block; border: 1px solid #333; padding: 5px; font-family: var(--font-mono); transition:0.3s;}
         #purge-btn:hover { color: var(--alert-red); border-color: var(--alert-red); background: rgba(255,0,85,0.1); }
 
@@ -155,14 +140,19 @@
             width: 90vw; height: 85vh; background: #050505; border: 2px solid var(--alert-red);
             display: flex; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(255, 0, 85, 0.2);
             transform: perspective(1000px) rotateX(2deg) rotateY(-1deg); border-radius: 10px;
+            flex-direction: column; /* Mobile first */
         }
+        @media(min-width: 768px) { .terminal-window { flex-direction: row; } }
+        
         .terminal-window::before { content: "SYSTEM CRITICAL // DATA CORRUPTION DETECTED"; position: absolute; top: 0; left: 0; width: 100%; background: var(--alert-red); color: #000; font-family: var(--font-tech); font-size: 10px; padding: 2px; text-align: center; animation: flicker 0.5s infinite; z-index: 20; }
         @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; background: var(--neon-blue); } }
 
         .close-terminal { position: absolute; top: 30px; right: 30px; color: var(--alert-red); border: 2px solid var(--alert-red); padding: 10px 20px; font-family: var(--font-tech); font-size: 14px; cursor: pointer; z-index: 100; background: #000; transition: 0.2s; }
         .close-terminal:hover { background: var(--alert-red); color: #000; box-shadow: 0 0 20px var(--alert-red); }
 
-        .terminal-visual { flex: 1.2; position: relative; overflow: hidden; border-right: 3px double var(--alert-red); filter: contrast(120%) brightness(0.9); }
+        .terminal-visual { flex: 1.2; position: relative; overflow: hidden; border-right: 3px double var(--alert-red); filter: contrast(120%) brightness(0.9); height: 30vh; }
+        @media(min-width: 768px) { .terminal-visual { height: auto; border-right: 3px double var(--alert-red); border-bottom: none; } }
+
         .glitch-img-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
         .glitch-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(150%) brightness(0.7) sepia(30%); transition: all 0.3s cubic-bezier(0.1, 0.7, 1.0, 0.1); opacity: 0.8; mix-blend-mode: luminosity; }
         .terminal-visual::after { content: ""; position: absolute; inset: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClIorXAAAAHlBMVEUAAAD///////////////////////////////////8f+B7AAAAAEHRSTlMABg8dHiQvMzY4PkxTVF1+c/4AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAASUlEQVQ4jWNgGAVDBQylMGiAMY0yplEw2AAjCjEIA6YmGGBiYqJgZ2JiZGRgZGRmZsZUZmZgYAAxGUDKGEQYGBgYmBgYGAAAVaYFqQ56270AAAAASUVORK5CYII='); opacity: 0.2; pointer-events: none; animation: noise-shift 0.2s infinite steps(4); z-index: 5;}
@@ -173,12 +163,12 @@
         .terminal-data { flex: 1; padding: 50px 30px; overflow-y: auto; font-family: var(--font-mono); background: #020202; background-image: linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px); background-size: 20px 20px; background-position: -5px -5px; }
         .data-header { border-bottom: 4px solid var(--alert-red); padding-bottom: 20px; margin-bottom: 30px; transform: rotate(-1deg); }
         .data-id { color: var(--alert-red); font-family: var(--font-tech); font-size: 14px; letter-spacing: 4px; animation: flicker 1s infinite; }
-        .data-title { font-family: var(--font-tech); font-size: 3rem; color: #fff; margin: 10px 0; text-transform: uppercase; letter-spacing: -2px; }
+        .data-title { font-family: var(--font-tech); font-size: 2rem; color: #fff; margin: 10px 0; text-transform: uppercase; letter-spacing: -2px; }
         .data-block { margin-bottom: 40px; padding: 20px; border: 1px dashed #333; position: relative; transform: rotate(0.5deg); background: rgba(255,255,255,0.02); }
         .data-block:nth-child(even) { transform: rotate(-0.8deg); background: rgba(0,0,0,0.3); border-color: var(--alert-red); }
         .block-label { font-family: var(--font-tech); font-size: 12px; color: var(--accent-green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--accent-green); display: inline-block;}
-        .human-text { color: #ccc; font-family: var(--font-serif); font-size: 1.1rem; line-height: 1.5; font-style: italic; white-space: pre-wrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        .history-text { color: #fff; font-family: var(--font-sans); font-size: 0.9rem; line-height: 1.4; border-left: 3px solid #555; padding-left: 10px; background: rgba(255,255,255,0.05); }
+        .human-text { color: #ccc; font-family: var(--font-serif); font-size: 1rem; line-height: 1.5; font-style: italic; white-space: pre-wrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .history-text { color: #fff; font-family: var(--font-sans); font-size: 0.8rem; line-height: 1.4; border-left: 3px solid #555; padding-left: 10px; background: rgba(255,255,255,0.05); }
         .ai-block { border: 2px solid var(--alert-red); background: rgba(255, 0, 85, 0.15); color: var(--alert-red); font-family: var(--font-tech); font-size: 0.9rem; }
         .ai-text { animation: text-flicker 0.1s infinite alternate; }
         @keyframes text-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; transform: translateX(1px); } }
@@ -192,7 +182,7 @@
     <div id="hud-layer">
         <div class="hud-line hud-top"></div><div class="hud-line hud-bottom"></div><div class="hud-line hud-left"></div><div class="hud-line hud-right"></div><div class="scan-line"></div>
         <div class="hud-data data-tl">SYSTEM: ONLINE<br>MODE: RESTORATION<br>NAME: RUNXUAN LIU<br>COURSE: ARTISTIC PROJECT 1<br>TEACHER: Prof. Dr. Cosentino, Dominik</div>
-        <div class="hud-data data-br">COORDS: <span id="coords">WAITING FOR SATELLITE...</span></div>
+        <div class="hud-data data-br">COORDS: <span id="coords">WAITING...</span></div>
     </div>
 
     <main id="main-content">
@@ -215,11 +205,6 @@
         <section id="void" class="section" style="padding:0;">
             <div id="map-bg"></div>
             <canvas id="map-canvas"></canvas>
-            <div id="user-cursor">
-                <div class="radar-ping"></div>
-                <div class="user-label">YOU</div>
-            </div>
-            
             <div class="marker" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"><div class="marker-label">01: THE LOOP</div></div>
             <div class="marker" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"><div class="marker-label">02: FLUID GHOST</div></div>
             <div class="marker" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"><div class="marker-label">03: IDENTITY WAR</div></div>
@@ -274,75 +259,11 @@
     </div>
 
     <script>
-        // ================= GLOBAL INTERACTIONS =================
-        document.addEventListener('mousemove', (e) => { 
-            // 只有当没有 GPS 数据时，才用鼠标坐标作为备选
-            // 这里我们保留鼠标显示用于调试，但标注为 MOUSE
-            // document.getElementById('coords').innerText = "MOUSE: " + (e.clientX).toFixed(0) + ", " + (e.clientY).toFixed(0); 
-        });
+        document.addEventListener('mousemove', (e) => { document.getElementById('coords').innerText = (e.clientX).toFixed(0) + ", " + (e.clientY).toFixed(0); });
         window.addEventListener('scroll', () => {
             const visualBlock = document.querySelector('.visual-block');
             if(visualBlock) visualBlock.style.transform = `translateY(${window.scrollY * 0.05}px)`;
         });
-
-        // ================= GPS / MAP MAPPING SYSTEM =================
-        // Configured specifically for Karlsplatz Image provided
-        const MAP_BOUNDS = {
-            topLat: 48.139790,    // North
-            bottomLat: 48.138450, // South
-            leftLng: 11.5649000,   // West
-            rightLng: 11.567400   // East
-        };
-
-        const userCursor = document.getElementById('user-cursor');
-        let targetX = 0, targetY = 0;
-
-        function initGPS() {
-            if (!navigator.geolocation) {
-                console.warn("GPS NOT SUPPORTED ON THIS DEVICE");
-                document.getElementById('coords').innerText = "ERR: NO GPS MODULE";
-                return;
-            }
-            
-            navigator.geolocation.watchPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-
-                    // Update HUD with real data
-                    document.getElementById('coords').innerText = `LAT:${lat.toFixed(5)} LON:${lng.toFixed(5)}`;
-
-                    // Map Logic: 0.0 to 1.0 mapping
-                    const xPercent = (lng - MAP_BOUNDS.leftLng) / (MAP_BOUNDS.rightLng - MAP_BOUNDS.leftLng);
-                    const yPercent = (MAP_BOUNDS.topLat - lat) / (MAP_BOUNDS.topLat - MAP_BOUNDS.bottomLat); // Latitude is inverted on Y axis
-
-                    // Check bounds (with 10% overflow buffer)
-                    if (xPercent >= -0.1 && xPercent <= 1.1 && yPercent >= -0.1 && yPercent <= 1.1) {
-                        userCursor.style.display = 'block';
-                        // Convert to percentage strings
-                        userCursor.style.left = (xPercent * 100) + '%';
-                        userCursor.style.top = (yPercent * 100) + '%';
-                    } else {
-                        // Optional: Hide if too far, or keep showing at edge
-                        // userCursor.style.display = 'none'; 
-                    }
-                },
-                (error) => {
-                    console.warn("GPS ERROR:", error);
-                    let errMsg = "SIGNAL LOSS";
-                    if(error.code === 1) errMsg = "GPS DENIED";
-                    document.getElementById('coords').innerText = "ERR: " + errMsg;
-                },
-                {
-                    enableHighAccuracy: true,
-                    maximumAge: 0,
-                    timeout: 5000
-                }
-            );
-        }
-
-        // Start GPS immediately
-        initGPS();
 
         // ================= TERMINAL DATA =================
         const archives = [
@@ -399,7 +320,7 @@
             document.body.classList.remove('fullscreen-mode');
         }
 
-        // ================= MAP CANVAS ANIMATION (BACKGROUND) =================
+        // ================= MAP CANVAS LOGIC =================
         const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); let trails = []; let mouseX = -1000, mouseY = -1000; 
         window.addEventListener('resize', resizeMap); function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; } resizeMap(); loopMap();
         document.getElementById('void').addEventListener('mousemove', (e) => { 
@@ -410,18 +331,13 @@
         function loopMap() { 
             requestAnimationFrame(loopMap); 
             mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height); 
-            // Draw semi-transparent black over map to create "void" effect
-            mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(0,0,0,0.85)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
-            
-            // Mouse interaction: reveal map
+            mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(0,0,0,0.95)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
             if (mouseX > -100) { 
                 mapCtx.globalCompositeOperation = 'destination-out'; 
                 let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 50, mouseX, mouseY, 250); 
                 gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
                 mapCtx.beginPath(); mapCtx.arc(mouseX, mouseY, 250, 0, Math.PI*2); mapCtx.fillStyle = gradient; mapCtx.fill(); 
             } 
-            
-            // Trails
             mapCtx.globalCompositeOperation = 'source-over'; 
             for(let i=0; i<trails.length; i++) { 
                 let p = trails[i]; mapCtx.fillStyle = '#ff0000'; mapCtx.globalAlpha = p.life; 
@@ -431,12 +347,15 @@
             mapCtx.globalAlpha = 1.0; 
         }
 
-        // ================= 3D RECONSTRUCTION LOGIC =================
+        // ================= 3D RECONSTRUCTION LOGIC (UPDATED FOR MOBILE) =================
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse;
+        // 旋转相关变量
         let targetRotationY = 0, targetRotationX = 0; 
         let isDragging = false; 
         let previousMousePosition = { x: 0, y: 0 };
+        // 自动旋转速度 (顺时针)
         const autoRotateSpeed = -0.002; 
+        // 累计的旋转量
         let totalRotationY = 0;
 
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
@@ -455,7 +374,10 @@
             scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x020202, 0.012);
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 35, 60); camera.lookAt(0, 10, 0); 
+            
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            // UPDATED: Fix fuzzy rendering on mobile
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
             renderer.setSize(window.innerWidth, window.innerHeight); container.appendChild(renderer.domElement);
 
             memoryGroup = new THREE.Group(); scene.add(memoryGroup); pointsMesh = new THREE.Group(); memoryGroup.position.y = -15;
@@ -465,34 +387,75 @@
 
             window.addEventListener('keydown', (e) => { if ((e.key === 'Delete' || e.key === 'Backspace') && hoveredObject) removeMemory(hoveredObject); });
             
-            container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
-            document.addEventListener('mouseup', () => { isDragging = false; });
-            document.addEventListener('mousemove', (e) => {
-                const rect = container.getBoundingClientRect();
-                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1; 
-                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            // --- UPDATED INTERACTION FOR MOBILE & DESKTOP ---
+            // Common handler for start interaction
+            function onStart(x, y) {
+                isDragging = true;
+                previousMousePosition = { x: x, y: y };
                 
+                // Update mouse for raycaster (for tap selection)
+                const rect = container.getBoundingClientRect();
+                mouse.x = ((x - rect.left) / rect.width) * 2 - 1; 
+                mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
+                
+                // Mobile tooltip positioning fix (offset so finger doesn't cover)
+                const tooltip = document.getElementById('memory-3d-tooltip');
+                tooltip.style.left = x + 10 + 'px'; 
+                tooltip.style.top = y - 40 + 'px';
+            }
+            
+            function onMove(x, y) {
+                // Raycasting update
+                const rect = container.getBoundingClientRect();
+                mouse.x = ((x - rect.left) / rect.width) * 2 - 1; 
+                mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
+
                 if (isDragging) {
-                    const deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
+                    const deltaMove = { x: x - previousMousePosition.x, y: y - previousMousePosition.y };
                     targetRotationY += deltaMove.x * 0.005; 
                     targetRotationX += deltaMove.y * 0.005;
-                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                    previousMousePosition = { x: x, y: y };
                 }
                 
-                const tooltip = document.getElementById('memory-3d-tooltip');
-                tooltip.style.left = e.clientX + 20 + 'px'; tooltip.style.top = e.clientY + 20 + 'px';
-            });
+                // Desktop tooltip update
+                if (!isDragging && window.matchMedia("(min-width: 768px)").matches) {
+                    const tooltip = document.getElementById('memory-3d-tooltip');
+                    tooltip.style.left = x + 20 + 'px'; tooltip.style.top = y + 20 + 'px';
+                }
+            }
+
+            // Mouse Events
+            container.addEventListener('mousedown', (e) => { onStart(e.clientX, e.clientY); });
+            document.addEventListener('mouseup', () => { isDragging = false; });
+            document.addEventListener('mousemove', (e) => { onMove(e.clientX, e.clientY); });
+
+            // Touch Events (New!)
+            container.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                onStart(touch.clientX, touch.clientY);
+            }, {passive: false});
+
+            container.addEventListener('touchmove', (e) => {
+                // Prevent scrolling while rotating
+                if(isDragging) e.preventDefault(); 
+                const touch = e.touches[0];
+                onMove(touch.clientX, touch.clientY);
+            }, {passive: false});
+
+            container.addEventListener('touchend', () => { isDragging = false; });
+
 
             function animate() {
                 requestAnimationFrame(animate);
                 
+                // Explosion factor logic
                 const distToCenter = Math.min(Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y), 1.0);
                 const threshold = 0.2; 
                 let explosionFactor = 0;
                 if(distToCenter > threshold) {
                     explosionFactor = (distToCenter - threshold) / (1.0 - threshold);
                 }
-                explosionFactor = Math.pow(explosionFactor, 2) * 1.5;
+                explosionFactor = Math.pow(explosionFactor, 2) * 1.5; 
 
                 if(!isDragging) {
                     targetRotationY += autoRotateSpeed;
@@ -532,9 +495,12 @@
                      }
                 });
 
+                // Raycaster Logic
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObjects(memoryGroup.children, true);
                 const tooltip = document.getElementById('memory-3d-tooltip');
+                
+                // Logic updated: works for both hover (desktop) and tap (mobile)
                 if (intersects.length > 0) {
                     let crystalMesh = intersects[0].object;
                     while(crystalMesh.parent && crystalMesh.parent !== memoryGroup) { crystalMesh = crystalMesh.parent; }
@@ -548,7 +514,12 @@
                 renderer.render(scene, camera);
             }
             animate();
-            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+            window.addEventListener('resize', () => { 
+                camera.aspect = window.innerWidth / window.innerHeight; 
+                camera.updateProjectionMatrix(); 
+                renderer.setSize(window.innerWidth, window.innerHeight); 
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Resize update
+            });
         }
 
         function getParticleTexture() {
