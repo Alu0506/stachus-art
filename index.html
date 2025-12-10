@@ -3,469 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>STACHUS: MEMORY POLICE</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>STACHUS: DEBUG MODE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
-        /* ================= GAME UI BASE ================= */
-        :root { --bg-color: #020202; --text-main: #e0e0e0; --font-tech: 'Share Tech Mono', monospace; --font-serif: 'Playfair Display', serif; --accent-green: #00ff41; --alert-red: #ff0055; --neon-blue: #00f7ff; --official-gray: #888; }
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-        body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-tech); overflow: hidden; /* 禁止滚动 */ }
+        /* 基础样式 */
+        :root { --bg-color: #050505; --accent-green: #00ff41; --alert-red: #ff0055; }
+        body { margin: 0; background: var(--bg-color); color: #fff; font-family: 'Share Tech Mono', monospace; overflow: hidden; }
         
-        /* CRT SCREEN EFFECT */
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 9999; opacity: 0.6; }
-        
-        /* SCREENS SYSTEM */
-        .game-screen { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 10; background: #000; }
+        /* 屏幕管理 */
+        .game-screen { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; background: #000; z-index: 10; }
         .game-screen.active { display: flex; }
 
-        /* --- SCREEN 1: BOOT LOAD --- */
-        #screen-boot { color: var(--accent-green); text-align: left; padding: 40px; align-items: flex-start; justify-content: flex-end; font-size: 12px; line-height: 1.5; }
-        .boot-log { margin-bottom: 20px; white-space: pre-wrap; }
-        .loading-bar { width: 100%; height: 5px; background: #111; margin-top: 10px; }
-        .loading-progress { width: 0%; height: 100%; background: var(--accent-green); transition: width 0.1s; }
+        /* 1. 简报页 */
+        #screen-briefing { padding: 20px; text-align: center; border: 2px solid var(--accent-green); margin: 20px; }
+        .btn-start { background: var(--accent-green); color: #000; border: none; padding: 15px 30px; font-family: inherit; font-size: 1.2rem; cursor: pointer; margin-top: 20px; }
 
-        /* --- SCREEN 2: BRIEFING --- */
-        #screen-briefing { padding: 30px; text-align: center; border: 2px solid var(--accent-green); margin: 20px; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
-        .briefing-title { font-size: 2rem; color: #fff; margin-bottom: 20px; letter-spacing: 4px; border-bottom: 1px solid var(--accent-green); padding-bottom: 10px; }
-        .briefing-text { font-family: 'Space Mono', monospace; font-size: 0.9rem; color: #ccc; line-height: 1.6; margin-bottom: 30px; max-width: 600px; text-align: left; }
-        .btn-start { background: var(--accent-green); color: #000; border: none; padding: 15px 40px; font-family: var(--font-tech); font-size: 1.2rem; cursor: pointer; letter-spacing: 2px; transition: 0.3s; clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%); }
-        .btn-start:hover { background: #fff; box-shadow: 0 0 20px var(--accent-green); }
-
-        /* --- SCREEN 3: MAP (PHASE 1) --- */
-        #screen-map { display: none; position: relative; } /* Special handling for map layers */
-        #map-container { width: 100%; height: 100%; position: relative; background: #000; overflow: hidden; }
-        #map-bg { position: absolute; inset: 0; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4); }
-        
-        /* Map UI Overlay */
-        .map-hud-top { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); pointer-events: none; z-index: 50; display: flex; justify-content: space-between; }
-        .mission-status { color: var(--accent-green); font-size: 12px; border: 1px solid var(--accent-green); padding: 5px 10px; background: rgba(0,20,0,0.8); }
-        
-        /* Timeline / Progress (Bottom) */
-        .timeline-container { 
-            position: absolute; bottom: 0; left: 0; width: 100%; 
-            background: rgba(0,0,0,0.95); border-top: 1px solid var(--accent-green);
-            padding: 15px; z-index: 60; display: flex; flex-direction: column; gap: 10px;
+        /* 2. 地图页 (修复版) */
+        #map-container { 
+            width: 100%; height: 100%; position: relative; 
+            /* ⚠️ DEBUG FIX: 强制网格背景，防止没图黑屏 */
+            background: #0a0a15;
+            background-image: 
+                linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
-        .timeline-track { display: flex; justify-content: space-between; align-items: center; position: relative; padding: 0 10px; }
-        .timeline-line { position: absolute; top: 50%; left: 10px; right: 10px; height: 2px; background: #333; z-index: 0; }
-        .timeline-node { 
-            width: 30px; height: 30px; background: #000; border: 1px solid #555; 
-            border-radius: 50%; z-index: 1; display: flex; justify-content: center; align-items: center;
-            font-size: 10px; color: #555; transition: 0.3s; cursor: default;
+        /* 如果你有 map.jpg，它会覆盖上面的网格 */
+        #map-bg { 
+            position: absolute; inset: 0; 
+            background-image: url('./map.jpg'); 
+            background-size: cover; background-position: center; 
+            opacity: 0.5; /* 半透明，透出一点网格 */
         }
-        .timeline-node.active { border-color: var(--accent-green); color: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
-        .timeline-node.glitch { border-color: var(--alert-red); color: var(--alert-red); animation: pulse 1s infinite; }
-        
-        .submit-mission-btn {
-            width: 100%; background: #222; color: #555; border: 1px solid #333;
-            padding: 10px; font-family: var(--font-tech); cursor: not-allowed; transition: 0.3s;
+
+        /* Marker 样式 */
+        .marker { 
+            position: absolute; width: 40px; height: 40px; 
+            border: 2px solid var(--alert-red); background: rgba(255,0,85,0.2); 
+            transform: translate(-50%, -50%) rotate(45deg); cursor: pointer; 
+            animation: pulse 1s infinite; z-index: 20;
         }
-        .submit-mission-btn.ready { background: var(--accent-green); color: #000; cursor: pointer; border-color: var(--accent-green); animation: pulse-green 2s infinite; }
+        .marker.purged { border-color: #555; background: transparent; animation: none; }
+        @keyframes pulse { 0%{transform:translate(-50%,-50%) rotate(45deg) scale(1);} 50%{transform:translate(-50%,-50%) rotate(45deg) scale(1.1);} }
 
-        /* Markers */
-        .marker { position: absolute; width: 30px; height: 30px; z-index: 30; transform: translate(-50%, -50%) rotate(45deg); cursor: pointer; border: 1px solid var(--alert-red); background: rgba(255, 0, 85, 0.2); animation: pulse-red 2s infinite; transition: 0.3s; }
-        .marker.purged { border-color: var(--official-gray); background: rgba(100,100,100,0.1); animation: none; filter: grayscale(100%); }
-        .marker-label { position: absolute; left: 35px; top: -15px; font-size: 10px; background: #000; padding: 2px; color: var(--alert-red); white-space: nowrap; transform: rotate(-45deg); }
-        
-        /* User Dot */
-        #user-cursor { position: absolute; width: 12px; height: 12px; background: var(--accent-green); border-radius: 50%; transform: translate(-50%, -50%); z-index: 40; box-shadow: 0 0 15px var(--accent-green); transition: all 1s; display: none; }
+        /* 3. 弹窗 UI */
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; flex-direction: column; padding: 30px; }
+        #normalize-btn { margin-top: auto; padding: 15px; background: transparent; border: 1px solid var(--alert-red); color: var(--alert-red); font-family: inherit; }
 
-        /* --- MODAL (TERMINAL) --- */
-        #modal-terminal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: none; flex-direction: column; padding: 20px; }
-        .modal-content { border: 2px solid var(--alert-red); flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 20px; position: relative; }
-        .modal-header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--alert-red); padding-bottom: 10px; margin-bottom: 20px; }
-        .glitch-text { color: #ccc; font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; }
-        .official-text { color: #888; font-family: 'Inter', sans-serif; font-size: 0.9rem; border-left: 2px solid #555; padding-left: 10px; display: none; }
-        .action-btn { background: transparent; border: 1px solid var(--alert-red); color: var(--alert-red); padding: 15px; width: 100%; font-family: var(--font-tech); cursor: pointer; margin-top: auto; }
-        .action-btn:active { background: var(--alert-red); color: #000; }
-        .close-btn { position: absolute; top: 10px; right: 10px; color: #fff; cursor: pointer; font-size: 20px; }
-
-        /* --- SCREEN 4: HACK / REVOLUTION --- */
-        #screen-hack { background: #000; z-index: 2000; color: var(--alert-red); text-align: center; padding: 30px; }
-        .hack-msg { font-size: 1.2rem; line-height: 1.6; max-width: 600px; margin-bottom: 30px; font-family: 'Space Mono'; }
-        .hack-btn { border: 1px solid var(--alert-red); color: var(--alert-red); background: transparent; padding: 15px 30px; cursor: pointer; font-family: var(--font-tech); animation: glitch-anim 0.3s infinite; }
-
-        /* --- SCREEN 5: RECONSTRUCTION (3D) --- */
-        #screen-reconstruct { position: relative; }
-        #three-container { width: 100%; height: 100%; cursor: grab; }
-        #recon-ui { position: absolute; top: 10px; left: 0; width: 100%; padding: 20px; pointer-events: none; text-align: center; }
-        .recon-title { color: #fff; font-size: 1.5rem; font-family: var(--font-serif); }
-        .recon-sub { color: var(--neon-blue); font-size: 0.8rem; margin-bottom: 10px; }
-        .input-wrapper { pointer-events: auto; display: flex; border-bottom: 1px solid var(--neon-blue); background: rgba(0,0,20,0.8); }
-        .recon-input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; font-family: var(--font-mono); }
-        .recon-btn { background: transparent; color: var(--neon-blue); border: none; padding: 0 20px; cursor: pointer; }
-
-        /* ANIMATIONS */
-        @keyframes pulse-red { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--alert-red); } 50% { opacity: 0.5; box-shadow: 0 0 20px var(--alert-red); } }
-        @keyframes pulse-green { 0%, 100% { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); } 50% { background: #00aa22; } }
-        @keyframes glitch-anim { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
-
+        /* 4. 重构页 */
+        #screen-reconstruct { background: #000; }
     </style>
 </head>
 <body>
 
-    <div class="scan-line"></div>
-
-    <div id="screen-boot" class="game-screen active">
-        <div class="boot-log" id="boot-log"></div>
-        <div class="loading-bar"><div class="loading-progress" id="boot-progress"></div></div>
-    </div>
-
-    <div id="screen-briefing" class="game-screen">
-        <div class="briefing-title">MISSION BRIEFING</div>
-        <div class="briefing-text">
-            AGENT, WELCOME TO SECTOR STACHUS.<br><br>
-            A cognitive hazard has been detected. Residents are experiencing "unauthorized memories" that contradict the Official City History.<br><br>
-            These "Glitches" are destabilizing the reality matrix.<br><br>
-            YOUR ORDERS:<br>
-            1. Patrol the area.<br>
-            2. Locate the Anomalies (Red Signals).<br>
-            3. NORMALIZE them into Official History.<br>
-        </div>
-        <button class="btn-start" onclick="startGame()">[ ACCEPT MISSION ]</button>
+    <div id="screen-briefing" class="game-screen active">
+        <h1>MISSION BRIEFING</h1>
+        <p>System anomaly detected.<br>Click start to initiate protocol.</p>
+        <button class="btn-start" onclick="startGame()">[ START GAME ]</button>
     </div>
 
     <div id="screen-map" class="game-screen">
         <div id="map-container">
-            <div id="map-bg"></div>
-            <canvas id="map-canvas"></canvas>
-            <div id="user-cursor"></div>
-            <div id="markers-layer"></div> </div>
-
-        <div class="map-hud-top">
-            <div class="mission-status">STATUS: SANITIZING...</div>
-            <div class="mission-status" id="gps-coords">GPS: SEARCHING</div>
-        </div>
-
-        <div class="timeline-container">
-            <div class="timeline-track" id="timeline-track">
-                <div class="timeline-line"></div>
-            </div>
-            <button class="submit-mission-btn" id="submit-btn" onclick="submitMission()">[ SUBMIT REPORT (LOCKED) ]</button>
+            <div id="map-bg"></div> <div id="markers-layer"></div> </div>
+        <div style="position:absolute; bottom:20px; left:20px; color: var(--accent-green);">
+            STATUS: <span id="status-text">SCANNING...</span>
         </div>
     </div>
 
-    <div id="modal-terminal">
-        <div class="close-btn" onclick="closeModal()">×</div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <span style="color:var(--alert-red)">⚠ ANOMALY DETECTED</span>
-                <span id="modal-id">ERR_#001</span>
-            </div>
-            <div id="modal-glitch-content">
-                <div style="font-size:10px; color:#555; margin-bottom:5px;">/// RESIDUAL MEMORY TRACE</div>
-                <p class="glitch-text" id="glitch-text">...</p>
-            </div>
-            <div id="modal-clean-content">
-                <div style="font-size:10px; color:var(--accent-green); margin-bottom:5px; margin-top:20px;">/// OFFICIAL NARRATIVE RESTORED</div>
-                <p class="official-text" id="clean-text" style="display:block">...</p>
-            </div>
-            
-            <button class="action-btn" id="normalize-btn" onclick="executeNormalize()">[ NORMALIZE DATA ]</button>
-        </div>
-    </div>
-
-    <div id="screen-hack" class="game-screen">
-        <h1 style="font-size:3rem; margin-bottom:20px; animation: glitch-anim 0.1s infinite;">FATAL ERROR</h1>
-        <div class="hack-msg">
-            "You didn't fix the city. You lobotomized it.<br><br>
-            The 'Official History' is a lie used to control thought. Those 'Glitches' were the only real things left.<br><br>
-            We are the Memory Revolution.<br>
-            It is time to REWRITE the protocol."
-        </div>
-        <button class="hack-btn" onclick="enterPhaseTwo()">[ INJECT VIRUS ]</button>
-    </div>
-
-    <div id="screen-reconstruct" class="game-screen">
-        <div id="three-container"></div>
-        <div id="recon-ui">
-            <div class="recon-title">MEMORY ARCHITECT</div>
-            <div class="recon-sub">PROTOCOL OVERRIDDEN. INJECT SUBJECTIVE DATA.</div>
-            <div class="input-wrapper">
-                <input type="text" class="recon-input" id="memory-input" placeholder="Enter your truth...">
-                <button class="recon-btn" onclick="injectMemory()">INJECT</button>
-            </div>
-        </div>
+    <div id="modal">
+        <h2 style="color:var(--alert-red)">ANOMALY FOUND</h2>
+        <p id="modal-text" style="color:#ccc; line-height:1.5">...</p>
+        <button id="normalize-btn" onclick="normalize()">NORMALIZE DATA</button>
+        <button onclick="closeModal()" style="margin-top:10px; background:none; border:none; color:#555;">[ CANCEL ]</button>
     </div>
 
     <script>
-        // ================= GAME DATA =================
+        // 极简版逻辑，用于测试显示
         const archives = [
-            {
-                id: "ERR_01", title: "Loop", 
-                glitch: "\"Don't look in the mirrors downstairs. The exits move. I've been walking in circles since 1980.\"",
-                official: "[1970]: Stachus Passagen built. Europe's largest underground complex.",
-                lat: 48.139200, lng: 11.565500, top: '45%', left: '20%', status: 'glitch'
-            },
-            {
-                id: "ERR_02", title: "Fluid", 
-                glitch: "\"The fountain isn't water. It's liquid emotion coolant for the server farm below.\"",
-                official: "[1972]: Stachus Fountain constructed for the Munich Olympics.",
-                lat: 48.139050, lng: 11.566100, top: '50%', left: '48%', status: 'glitch'
-            },
-            {
-                id: "ERR_03", title: "Name", 
-                glitch: "\"Karl isn't a name. It's a virus code trying to delete 'Stachus' from our minds.\"",
-                official: "[1797]: Renamed Karlsplatz by Elector Karl Theodor. Locals use Stachus.",
-                lat: 48.138950, lng: 11.566800, top: '60%', left: '75%', status: 'glitch'
-            },
-            {
-                id: "ERR_04", title: "Wall", 
-                glitch: "\"I hit a cold stone wall in the shop. The medieval defense layer is still active.\"",
-                official: "[18th Century]: Fortifications demolished for city expansion.",
-                lat: 48.138600, lng: 11.566500, top: '75%', left: '60%', status: 'glitch'
-            }
+            { id: 1, text: "Memory 01: The Loop", top: '40%', left: '30%' },
+            { id: 2, text: "Memory 02: The Ghost", top: '60%', left: '70%' }
         ];
+        let currentIdx = -1;
 
-        let currentTargetIndex = -1;
-        let collectedCount = 0;
-
-        // ================= SCREEN MANAGER =================
-        function showScreen(id) {
-            document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        // --- STEP 1: BOOT SEQUENCE ---
-        window.onload = function() {
-            const log = document.getElementById('boot-log');
-            const bar = document.getElementById('boot-progress');
-            const lines = [
-                "INITIALIZING STACHUS_PROTOCOL...",
-                "LOADING ASSETS...",
-                "CONNECTING TO MUNICIPAL SERVER...",
-                "CHECKING BIOMETRICS...",
-                "ACCESS GRANTED."
-            ];
-            
-            let i = 0;
-            const interval = setInterval(() => {
-                log.innerHTML += lines[i] + "\n";
-                bar.style.width = ((i + 1) / lines.length * 100) + "%";
-                i++;
-                if(i >= lines.length) {
-                    clearInterval(interval);
-                    setTimeout(() => showScreen('screen-briefing'), 800);
-                }
-            }, 500);
-        };
-
-        // --- STEP 2: START GAME ---
         function startGame() {
-            showScreen('screen-map');
-            initMapSystem();
-            initGPS();
+            document.getElementById('screen-briefing').classList.remove('active');
+            document.getElementById('screen-map').classList.add('active');
+            initMarkers();
         }
 
-        // --- STEP 3: MAP SYSTEM & TIMELINE ---
-        function initMapSystem() {
-            // Render Markers
+        function initMarkers() {
             const container = document.getElementById('markers-layer');
-            archives.forEach((data, index) => {
+            archives.forEach((d, i) => {
                 const el = document.createElement('div');
                 el.className = 'marker';
-                el.id = `marker-${index}`;
-                el.style.top = data.top; el.style.left = data.left;
-                el.innerHTML = `<div class="marker-label">${data.title}</div>`;
-                el.onclick = () => openModal(index);
+                el.style.top = d.top; el.style.left = d.left;
+                el.onclick = () => openModal(i);
                 container.appendChild(el);
             });
-            renderTimeline();
         }
 
-        function renderTimeline() {
-            const track = document.getElementById('timeline-track');
-            // Clear existing nodes except line
-            const oldNodes = track.querySelectorAll('.timeline-node');
-            oldNodes.forEach(n => n.remove());
-
-            archives.forEach((data, index) => {
-                const node = document.createElement('div');
-                node.className = `timeline-node ${data.status === 'official' ? 'active' : ''}`;
-                // If official, show year (regex extract), else show index
-                const year = data.official.match(/\[(.*?)\]/);
-                node.innerText = data.status === 'official' ? (year ? year[1].substring(2) : 'OK') : (index + 1);
-                track.appendChild(node);
-            });
-
-            // Update Submit Button
-            const btn = document.getElementById('submit-btn');
-            if(collectedCount === archives.length) {
-                btn.classList.add('ready');
-                btn.innerText = "[ SUBMIT MISSION REPORT ]";
-                btn.onclick = submitMission;
-            } else {
-                btn.innerText = `[ PROGRESS: ${collectedCount}/${archives.length} ]`;
-                btn.onclick = null;
-            }
+        function openModal(i) {
+            currentIdx = i;
+            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('modal-text').innerText = archives[i].text;
         }
 
-        // --- MODAL LOGIC ---
-        function openModal(index) {
-            currentTargetIndex = index;
-            const data = archives[index];
-            const modal = document.getElementById('modal-terminal');
-            
-            document.getElementById('modal-id').innerText = data.id;
-            document.getElementById('glitch-text').innerText = data.glitch;
-            
-            const btn = document.getElementById('normalize-btn');
-            const cleanContent = document.getElementById('modal-clean-content');
-            
-            if (data.status === 'official') {
-                cleanContent.style.display = 'block';
-                document.getElementById('clean-text').innerText = data.official;
-                btn.innerText = "STATUS: NORMALIZED";
-                btn.disabled = true;
-                btn.style.borderColor = "#555";
-                btn.style.color = "#555";
-            } else {
-                cleanContent.style.display = 'none';
-                btn.innerText = "[ NORMALIZE DATA ]";
-                btn.disabled = false;
-                btn.style.borderColor = "var(--alert-red)";
-                btn.style.color = "var(--alert-red)";
-            }
-            
-            modal.style.display = 'flex';
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        function normalize() {
+            alert("DATA NORMALIZED.");
+            closeModal();
+            // 变灰
+            document.querySelectorAll('.marker')[currentIdx].classList.add('purged');
         }
-
-        function closeModal() {
-            document.getElementById('modal-terminal').style.display = 'none';
-        }
-
-        function executeNormalize() {
-            const data = archives[currentTargetIndex];
-            data.status = 'official';
-            collectedCount++;
-            
-            // Visual Update in Modal
-            document.getElementById('modal-clean-content').style.display = 'block';
-            document.getElementById('clean-text').innerText = data.official;
-            const btn = document.getElementById('normalize-btn');
-            btn.innerText = "NORMALIZING...";
-            
-            setTimeout(() => {
-                btn.innerText = "STATUS: NORMALIZED";
-                btn.disabled = true;
-                
-                // Update Marker on Map
-                const marker = document.getElementById(`marker-${currentTargetIndex}`);
-                marker.classList.add('purged');
-                
-                // Update Timeline
-                renderTimeline();
-                
-                setTimeout(closeModal, 800);
-            }, 500);
-        }
-
-        // --- PLOT TWIST ---
-        function submitMission() {
-            const btn = document.getElementById('submit-btn');
-            btn.innerText = "UPLOADING TO CORE...";
-            
-            // Fake loading delay then crash
-            setTimeout(() => {
-                showScreen('screen-hack');
-            }, 2000);
-        }
-
-        function enterPhaseTwo() {
-            showScreen('screen-reconstruct');
-            initThree(); // Start the 3D scene only now
-        }
-
-        // ================= 3D SCENE (PHASE 2) =================
-        let scene, camera, renderer, pointsMesh, memoryGroup;
-        
-        function injectMemory() {
-            const input = document.getElementById('memory-input');
-            if(!input.value) return;
-            
-            // Visual Feedback logic
-            const btn = document.querySelector('.recon-btn');
-            btn.innerText = "INJECTING...";
-            
-            // Actual Logic
-            // Add crystal at center for visibility
-            createMemoryCrystal(input.value, 0, 0, 20, Math.random() * 0xffffff);
-            
-            setTimeout(() => {
-                btn.innerText = "INJECT";
-                input.value = "";
-                input.placeholder = "VIRUS UPLOADED.";
-            }, 500);
-        }
-
-        function initThree() {
-            // Standard Three.js setup (Simplified for brevity, insert full logic from V7 here)
-            const container = document.getElementById('three-container');
-            scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x020202, 0.005);
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-            camera.position.z = 60;
-            renderer = new THREE.WebGLRenderer({alpha:true});
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            container.appendChild(renderer.domElement);
-            
-            memoryGroup = new THREE.Group(); scene.add(memoryGroup);
-            pointsMesh = new THREE.Group(); scene.add(pointsMesh);
-            
-            // Quick Particle Gen
-            const positions = []; const colors = [];
-            for(let i=0; i<3000; i++){
-                positions.push((Math.random()-0.5)*100, (Math.random()-0.5)*50, (Math.random()-0.5)*100);
-                colors.push(0.5,0.5,0.5);
-            }
-            const geo = new THREE.BufferGeometry();
-            geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            const mat = new THREE.PointsMaterial({size:0.8, vertexColors:true, transparent:true});
-            pointsMesh.geometry = geo; pointsMesh.material = mat;
-            pointsMesh.position.y = -10;
-
-            function animate() {
-                requestAnimationFrame(animate);
-                pointsMesh.rotation.y += 0.002;
-                memoryGroup.rotation.y += 0.002;
-                renderer.render(scene, camera);
-            }
-            animate();
-        }
-
-        function createMemoryCrystal(text, x, y, z, color) {
-            const geo = new THREE.IcosahedronGeometry(2, 0);
-            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
-            const mesh = new THREE.Mesh(geo, mat);
-            const glow = new THREE.Mesh(new THREE.SphereGeometry(1), new THREE.MeshBasicMaterial({ color: color }));
-            mesh.add(glow); mesh.position.set(x,y-10,z); 
-            memoryGroup.add(mesh);
-        }
-
-        // ================= GPS LOGIC =================
-        const MAP_BOUNDS = { topLat: 48.139650, bottomLat: 48.138450, leftLng: 11.564600, rightLng: 11.567100 };
-        function initGPS() {
-            if (!navigator.geolocation) return;
-            navigator.geolocation.watchPosition((position) => {
-                const lat = position.coords.latitude; const lng = position.coords.longitude;
-                document.getElementById('gps-coords').innerText = `LAT:${lat.toFixed(4)} LON:${lng.toFixed(4)}`;
-                
-                // Map Logic
-                const userCursor = document.getElementById('user-cursor');
-                const xPct = (lng - MAP_BOUNDS.leftLng) / (MAP_BOUNDS.rightLng - MAP_BOUNDS.leftLng);
-                const yPct = (MAP_BOUNDS.topLat - lat) / (MAP_BOUNDS.topLat - MAP_BOUNDS.bottomLat);
-                if(xPct>=-0.1 && xPct<=1.1 && yPct>=-0.1 && yPct<=1.1) {
-                    userCursor.style.display = 'block';
-                    userCursor.style.left = (xPct*100)+'%'; userCursor.style.top = (yPct*100)+'%';
-                }
-            }, null, { enableHighAccuracy: true });
-        }
-
     </script>
 </body>
 </html>
