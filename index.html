@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STACHUS: THE ABSENCE (FINAL POLISHED)</title>
+    <title>STACHUS: PROJECT CLASSIFIED</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,7 +30,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; cursor: crosshair; }
         body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; }
         
-        /* HUD & Scanline */
+        /* HUD LAYER */
         #hud-layer { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             pointer-events: none; z-index: 99; 
@@ -45,14 +45,60 @@
         .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.3); opacity: 0.5; animation: scan 4s linear infinite; }
         @keyframes scan { 0% {top: -10%;} 100% {top: 110%;} }
 
-        .hud-data { position: absolute; font-family: var(--font-mono); font-size: 10px; color: var(--accent-green); letter-spacing: 1px; opacity: 0.8; }
-        .data-tl { top: 20px; left: 40px; max-width: 200px; } 
-        .data-br { bottom: 20px; right: 40px; text-align: right; }
-
-        /* FIX: 手机端直接隐藏左上角繁琐文字，给输入框腾位置 */
-        @media (max-width: 768px) {
-            .data-tl { display: none; }
+        /* ================= NEW CYBERPUNK HUD (TOP LEFT) ================= */
+        .hud-container {
+            position: absolute; top: 20px; left: 40px;
+            pointer-events: auto; /* Allow clicking */
+            z-index: 100;
         }
+
+        /* The Glitchy Button */
+        .hud-trigger {
+            font-family: var(--font-tech);
+            font-size: 12px;
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            padding: 5px 10px;
+            background: rgba(0, 20, 0, 0.8);
+            cursor: pointer;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: inline-block;
+            transition: 0.2s;
+            animation: border-flicker 3s infinite;
+        }
+        .hud-trigger:hover {
+            background: var(--accent-green);
+            color: #000;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+        .hud-trigger::before { content: "[ + ] "; }
+        .hud-trigger.active::before { content: "[ - ] "; }
+
+        /* The Hidden Content */
+        .hud-details {
+            margin-top: 10px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: #bbb;
+            background: rgba(0, 0, 0, 0.9);
+            border-left: 2px solid var(--alert-red);
+            padding: 10px;
+            display: none; /* Hidden by default */
+            max-width: 250px;
+            backdrop-filter: blur(5px);
+            line-height: 1.6;
+        }
+        .hud-details.visible { display: block; animation: slide-down 0.3s ease-out; }
+        
+        .hud-label { color: var(--alert-red); font-weight: bold; display: block; margin-top: 5px; letter-spacing: 1px; }
+        .hud-value { color: var(--neon-blue); text-shadow: 0 0 2px var(--neon-blue); }
+
+        @keyframes border-flicker { 0%, 100% { border-color: var(--accent-green); opacity: 1; } 50% { border-color: transparent; opacity: 0.7; } 52% { border-color: var(--accent-green); opacity: 1; } }
+        @keyframes slide-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .data-br { position: absolute; bottom: 20px; right: 40px; text-align: right; font-family: var(--font-mono); font-size: 10px; color: var(--accent-green); }
+
 
         .section { min-height: 100vh; width: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; z-index: 2; }
 
@@ -77,7 +123,7 @@
         .visual-block { flex: 1; height: 40vh; width: 100%; background-image: url('https://images.unsplash.com/photo-1470723710355-171b443c6589?q=80&w=2070'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(110%); opacity: 0.6; }
         @media(min-width: 768px) { .visual-block { height: 60vh; } }
 
-        /* PART 3: MAP (保持 4:3 适配) */
+        /* PART 3: MAP */
         #void { height: 100vh; width: 100%; position: relative; background-color: #000; cursor: crosshair; overflow: hidden; padding: 0; }
         @media (max-width: 768px) {
             #void {
@@ -108,7 +154,6 @@
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; touch-action: none; }
         #three-container:active { cursor: grabbing; }
 
-        /* UI: 保持在顶部，但通过 CSS 隐藏重叠的文字来解决 */
         #recon-console {
             position: absolute; 
             top: 10%; 
@@ -206,7 +251,23 @@
 
     <div id="hud-layer">
         <div class="hud-line hud-top"></div><div class="hud-line hud-bottom"></div><div class="hud-line hud-left"></div><div class="hud-line hud-right"></div><div class="scan-line"></div>
-        <div class="hud-data data-tl">SYSTEM: ONLINE<br>MODE: RESTORATION<br>NAME: RUNXUAN LIU<br>COURSE: ARTISTIC PROJECT 1<br>TEACHER: Prof. Dr. Cosentino, Dominik</div>
+        
+        <div class="hud-container">
+            <div class="hud-trigger" onclick="toggleHud()">CLASSIFIED_INTEL</div>
+            <div class="hud-details" id="hud-details">
+                <span class="hud-label">>>> PROJECT NAME:</span>
+                <span class="hud-value">STACHUS_ABSENCE_PROTOCOL</span><br>
+                <span class="hud-label">>>> OPERATIVE:</span>
+                <span class="hud-value">RUNXUAN LIU</span><br>
+                <span class="hud-label">>>> MISSION:</span>
+                <span class="hud-value">ARTISTIC PROJECT 1 / MEMORY RECONSTRUCTION</span><br>
+                <span class="hud-label">>>> SUPERVISOR:</span>
+                <span class="hud-value">PROF. DR. COSENTINO</span><br>
+                <span class="hud-label">>>> SYSTEM STATUS:</span>
+                <span class="hud-value" style="color:#00ff41">STABLE (LOCAL_LAYER)</span>
+            </div>
+        </div>
+
         <div class="hud-data data-br">COORDS: <span id="coords">WAITING...</span></div>
     </div>
 
@@ -289,6 +350,21 @@
             const visualBlock = document.querySelector('.visual-block');
             if(visualBlock) visualBlock.style.transform = `translateY(${window.scrollY * 0.05}px)`;
         });
+
+        // ================= HUD TOGGLE LOGIC =================
+        function toggleHud() {
+            const details = document.getElementById('hud-details');
+            const trigger = document.querySelector('.hud-trigger');
+            if(details.style.display === 'block') {
+                details.style.display = 'none';
+                details.classList.remove('visible');
+                trigger.classList.remove('active');
+            } else {
+                details.style.display = 'block';
+                setTimeout(() => details.classList.add('visible'), 10);
+                trigger.classList.add('active');
+            }
+        }
 
         // ================= TERMINAL DATA (WITH GPS) =================
         const archives = [
@@ -460,18 +536,29 @@
         let previousMousePosition = { x: 0, y: 0 };
         const autoRotateSpeed = -0.002; 
         
-        // Auto-rotation vars
         let isAutoRotating = false; 
         let autoFocusTargetY = 0; 
 
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
         function submitMemory() { 
             const input = document.getElementById('memory-input'); const val = input.value; if(!val) return;
-            const btn = document.querySelector('.submit-btn'); btn.innerText = "PROCESSING..."; 
-            const container = document.getElementById('particles-container'); const particle = document.createElement('div'); particle.classList.add('floating-text'); particle.innerText = val; particle.style.left = '50%'; particle.style.top = '20%'; container.appendChild(particle); setTimeout(() => { particle.remove(); }, 4000);
+            const btn = document.querySelector('.submit-btn'); btn.innerText = "SAVING..."; 
+            
+            // 粒子反馈
+            const container = document.getElementById('particles-container'); 
+            const particle = document.createElement('div'); 
+            particle.classList.add('floating-text'); 
+            particle.innerText = "DATA UPLOADED"; 
+            particle.style.left = '50%'; particle.style.top = '20%'; 
+            particle.style.color = '#00ff41';
+            container.appendChild(particle); 
+            setTimeout(() => { particle.remove(); }, 3000);
+            
             setTimeout(() => { 
                 activateMemory(val);
                 btn.innerText = "INJECT"; input.value = ""; input.placeholder = "DATA SAVED"; 
+                // 添加 Alert 方便手机端确认
+                // alert("SYSTEM MESSAGE: Memory Fragment Saved Locally.");
             }, 500); 
         }
 
@@ -480,11 +567,10 @@
             const isMobile = window.innerWidth < 768;
 
             scene = new THREE.Scene(); 
-            // 修复点：手机端大大减少雾气，让粒子更亮
-            scene.fog = new THREE.FogExp2(0x020202, isMobile ? 0.005 : 0.012);
+            // V4.0 FIX: 恢复低雾气，保持通透
+            scene.fog = new THREE.FogExp2(0x020202, 0.005);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            // 修复点：手机端相机拉近 (90)，而不是拉远 (110)，配合大粒子食用
             camera.position.set(0, isMobile ? 40 : 35, isMobile ? 90 : 60); 
             camera.lookAt(0, 10, 0); 
             
@@ -495,7 +581,7 @@
             memoryGroup = new THREE.Group(); scene.add(memoryGroup); pointsMesh = new THREE.Group(); memoryGroup.position.y = -15;
             raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
 
-            generateStructure(isMobile); // 传入 isMobile
+            generateStructure(isMobile); 
             loadSavedMemories();
 
             window.addEventListener('keydown', (e) => { if ((e.key === 'Delete' || e.key === 'Backspace') && hoveredObject) removeMemory(hoveredObject); });
@@ -636,12 +722,12 @@
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             geometry.setAttribute('randomDirection', new THREE.Float32BufferAttribute(randomDirs, 3));
 
-            // 修复点：手机上 size 放大 (1.5)，且 opacity 提高 (0.9)
+            // V4.0 FIX: 回归 0.7 大小，但透明度设高，让它既精致又清晰
             const material = new THREE.PointsMaterial({ 
-                size: isMobile ? 1.5 : 0.7, 
+                size: 0.7, 
                 vertexColors: true, 
                 transparent: true, 
-                opacity: isMobile ? 0.9 : 0.5, 
+                opacity: 0.9, 
                 map: getParticleTexture(), 
                 depthWrite: false, 
                 sizeAttenuation: true 
@@ -685,22 +771,33 @@
         window.activateMemory = function(text) {
             if(!pointsMesh) return;
             const positions = pointsMesh.geometry.attributes.position.array;
-            let attempts = 0;
-            while(attempts < 500) {
-                const idx = Math.floor(Math.random() * (positions.length/3));
-                const x = positions[idx*3]; const y = positions[idx*3+1]; const z = positions[idx*3+2];
-                if(y > -14 && y < 30) {
-                    const randomColor = Math.random() * 0xffffff;
-                    createMemoryCrystal(text, x, y, z, randomColor);
-                    saveMemories(text, x, y, z, randomColor);
-                    
-                    autoFocusTargetY = -Math.atan2(x, z);
-                    isAutoRotating = true; 
-                    
-                    return;
-                }
-                attempts++;
+            
+            // V4.0 FIX: 强制选择一个更靠前的位置，而不是完全随机
+            // 我们尝试找一个 z 坐标比较小（靠近相机）的点
+            let bestX=0, bestY=0, bestZ=0;
+            let found = false;
+            
+            for(let i=0; i<100; i++) {
+                 const idx = Math.floor(Math.random() * (positions.length/3));
+                 const x = positions[idx*3]; const y = positions[idx*3+1]; const z = positions[idx*3+2];
+                 // 寻找高度适中且稍微靠近外层的点
+                 if(y > -5 && y < 20) {
+                     bestX = x; bestY = y; bestZ = z;
+                     found = true;
+                     break;
+                 }
             }
+            // 如果没找到好的点，就给一个默认前方的位置
+            if(!found) { bestX = 0; bestY = 0; bestZ = 40; }
+
+            // 新记忆用刺眼的红色/粉色，方便寻找
+            const highlightColor = 0xff0055; 
+            createMemoryCrystal(text, bestX, bestY, bestZ, highlightColor);
+            saveMemories(text, bestX, bestY, bestZ, highlightColor);
+            
+            // 自动旋转对焦
+            autoFocusTargetY = -Math.atan2(bestX, bestZ);
+            isAutoRotating = true; 
         };
 
         initThree();
