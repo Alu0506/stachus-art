@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STACHUS: PROTOCOL V19 (FULL MOBILE TOUCH)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>STACHUS: PROTOCOL V23 (VISUAL OVERLOAD)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,9 +11,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
-        /* ================= GLOBAL SETTINGS ================= */
+        /* ================= GLOBAL & RESET ================= */
         :root { 
-            --bg-color: #050505; 
+            --bg-color: #020202; 
             --text-main: #e0e0e0; 
             --font-title: 'Black Ops One', cursive;
             --font-mono: 'Space Mono', monospace;          
@@ -21,10 +21,10 @@
             --font-serif: 'Playfair Display', serif;
             --accent-green: #00ff41; 
             --alert-red: #ff0055; 
-            --neon-blue: #00f7ff;    
+            --neon-blue: #00f7ff;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; cursor: crosshair; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
         body, html { 
             width: 100%; height: 100%; 
@@ -32,164 +32,220 @@
             color: var(--text-main); 
             font-family: var(--font-mono); 
             overflow: hidden; 
-            overscroll-behavior: none; /* 禁止橡皮筋效果 */
+            overscroll-behavior: none;
+            position: fixed; 
         }
 
-        /* ================= NAVIGATION & LAYOUT ================= */
-        .game-section { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            background: var(--bg-color); z-index: 1;
-            opacity: 0; pointer-events: none; 
-            transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1); 
+        /* ================= VFX LAYERS (NEW) ================= */
+        /* 1. Grain/Noise Effect */
+        .noise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 90; opacity: 0.05;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAA5OTkAAABMTExERERmZmYzMzNmZmYAAABw23E9AAAACHRSTlMABg8lKzM3Q0Z68C0AAAABYktHRACIBR1IAAAAJElEQVQ4jWNgYBASEGCYwIACTAwhDAwM5QwMDEA0hCFUA0YKBQA72QDbmK6+xAAAAABJRU5ErkJggg==');
+            animation: noise 0.5s steps(2) infinite;
         }
+        @keyframes noise { 0% { transform: translate(0,0); } 10% { transform: translate(-5%,-5%); } 20% { transform: translate(-10%,5%); } 30% { transform: translate(5%,-10%); } 40% { transform: translate(-5%,15%); } 50% { transform: translate(-10%,5%); } 60% { transform: translate(15%,0); } 70% { transform: translate(0,10%); } 80% { transform: translate(-15%,0); } 90% { transform: translate(10%,5%); } 100% { transform: translate(5%,0); } }
 
-        .game-section.active { opacity: 1; pointer-events: auto; z-index: 10; }
-
-        .back-btn {
-            position: absolute; top: 40px; left: 40px;
-            font-family: var(--font-tech); color: #666; font-size: 14px;
-            cursor: pointer; border: 1px solid #333; padding: 5px 15px;
-            transition: 0.3s; z-index: 100; display: none; 
+        /* 2. Moving Grid Background */
+        .grid-bg {
+            position: fixed; top: 0; left: 0; width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: grid-move 20s linear infinite;
+            z-index: 0; pointer-events: none;
         }
-        .back-btn:hover { border-color: var(--neon-blue); color: var(--neon-blue); }
+        @keyframes grid-move { 0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); } 100% { transform: perspective(500px) rotateX(60deg) translateY(40px) translateZ(-200px); } }
 
-        .next-phase-btn {
-            position: absolute; bottom: 40px; right: 40px;
-            font-family: var(--font-tech); color: var(--accent-green); font-size: 14px;
-            cursor: pointer; border: 1px solid var(--accent-green); padding: 10px 20px;
-            background: rgba(0,0,0,0.8); z-index: 90;
-            animation: pulse-border 2s infinite;
+        /* ================= LOADER (BIOS STYLE) ================= */
+        #loader {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;
+            padding: 30px; font-family: var(--font-tech); color: var(--accent-green);
+            transition: opacity 0.5s ease-out;
         }
-        .next-phase-btn:hover { background: var(--accent-green); color: #000; }
+        .boot-log { font-size: 12px; line-height: 1.5; margin-bottom: 20px; opacity: 0.8; height: 60%; overflow: hidden;}
+        .progress-container { width: 100%; height: 4px; background: #111; position: relative; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: var(--accent-green); transition: width 0.1s; box-shadow: 0 0 10px var(--accent-green); }
 
-        @keyframes pulse-border { 0% {box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.4);} 70% {box-shadow: 0 0 0 10px rgba(0, 255, 65, 0);} 100% {box-shadow: 0 0 0 0 rgba(0, 255, 65, 0);} }
-
-        /* ================= HUD LAYER (TOP RIGHT) ================= */
+        /* ================= HUD LAYER ================= */
         #hud-layer { 
             position: fixed; inset: 0; pointer-events: none; z-index: 99; 
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 3px, 3px 100%;
+            background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.6) 100%);
         }
-        .hud-corner { position: absolute; width: 30px; height: 30px; border: 2px solid #555; opacity: 0.5; }
-        .tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
-        .tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
-        .bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
-        .br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
-
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.3); opacity: 0.5; animation: scan 6s linear infinite; }
-        @keyframes scan { 0% {top: -10%;} 100% {top: 110%;} }
-
-        /* HUD & DROPDOWN (RIGHT) */
-        .hud-container {
-            position: absolute; top: 30px; right: 40px;
-            pointer-events: auto; z-index: 101; text-align: right;
+        
+        .scan-line { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1)); 
+            background-size: 100% 4px; pointer-events: none; opacity: 0.5; z-index: 98;
         }
+
+        .hud-top-bar {
+            position: absolute; top: 0; left: 0; width: 100%; height: 60px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 20px; pointer-events: auto;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+        }
+
+        .back-btn {
+            font-family: var(--font-tech); color: #888; font-size: 12px;
+            border: 1px solid #444; padding: 8px 15px; display: none; cursor: pointer;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+        }
+
         .hud-trigger {
             font-family: var(--font-tech); font-size: 12px; color: var(--accent-green);
-            border: 1px solid var(--accent-green); padding: 5px 10px;
-            background: rgba(0, 20, 0, 0.8); cursor: pointer; letter-spacing: 2px;
-            text-transform: uppercase; display: inline-block; transition: 0.2s;
-            animation: border-flicker 3s infinite;
+            border: 1px solid var(--accent-green); padding: 8px 12px;
+            background: rgba(0, 20, 0, 0.8); cursor: pointer; letter-spacing: 1px;
+            animation: border-pulse 2s infinite;
         }
-        .hud-trigger:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 10px var(--accent-green); }
-        .hud-trigger::before { content: "[ + ] "; }
-        .hud-trigger.active::before { content: "[ - ] "; }
+        @keyframes border-pulse { 0% {box-shadow: 0 0 0 var(--accent-green);} 50% {box-shadow: 0 0 10px var(--accent-green);} 100% {box-shadow: 0 0 0 var(--accent-green);} }
 
         .hud-details {
-            margin-top: 10px; font-family: var(--font-mono); font-size: 10px; color: #bbb;
-            background: rgba(0, 0, 0, 0.9); border-right: 2px solid var(--alert-red); padding: 10px;
-            display: none; max-width: 250px; backdrop-filter: blur(5px); line-height: 1.6;
-            margin-left: auto;
+            position: absolute; top: 60px; right: 20px; width: 220px;
+            font-family: var(--font-mono); font-size: 10px; color: #bbb;
+            background: rgba(0, 0, 0, 0.95); border: 1px solid var(--accent-green); 
+            padding: 15px; display: none; text-align: left;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            border-left: 5px solid var(--accent-green);
         }
         .hud-details.visible { display: block; animation: slide-down 0.3s ease-out; }
-        .hud-label { color: var(--alert-red); font-weight: bold; display: block; margin-top: 5px; letter-spacing: 1px; }
-        .hud-value { color: var(--neon-blue); text-shadow: 0 0 2px var(--neon-blue); }
-
-        @keyframes border-flicker { 0%, 100% { border-color: var(--accent-green); opacity: 1; } 50% { border-color: transparent; opacity: 0.7; } 52% { border-color: var(--accent-green); opacity: 1; } }
+        .hud-label { color: var(--alert-red); display: block; margin-top: 8px; font-weight: bold;}
         @keyframes slide-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .hud-data-br { position: absolute; bottom: 25px; right: 60px; text-align: right; font-family: var(--font-tech); font-size: 10px; color: var(--accent-green); letter-spacing: 1px; opacity: 0.8; }
+        /* ================= LAYOUT CONTAINERS ================= */
+        .game-section { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            background: transparent; z-index: 2;
+            opacity: 0; pointer-events: none; visibility: hidden;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            padding: 20px; text-align: center;
+        }
 
-        /* ================= SLIDE STYLES ================= */
-        #slide-cover { background: radial-gradient(circle at center, #111 0%, #000 90%); }
+        .game-section.active { opacity: 1; pointer-events: auto; visibility: visible; z-index: 10; transform: scale(1); }
+
+        /* ================= TYPOGRAPHY & ELEMENTS ================= */
         .glitch-title { 
-            font-family: var(--font-title); font-size: 10vw; color: #fff; 
-            text-transform: uppercase; letter-spacing: -2px; line-height: 0.9;
-            text-shadow: 4px 4px 0px rgba(255, 0, 85, 0.5);
-            animation: glitch-skew 3s infinite linear alternate-reverse;
+            font-family: var(--font-title); font-size: 15vw; color: #fff; line-height: 0.9; margin-bottom: 20px;
+            text-shadow: 3px 3px 0px rgba(255, 0, 85, 0.5);
+            /* animation: glitch-anim 3s infinite alternate; REMOVED JS handles decoding now */
         }
-        @keyframes glitch-skew { 0% { transform: skew(0deg); } 20% { transform: skew(-2deg); } 40% { transform: skew(2deg); } 60% { transform: skew(-1deg); } 80% { transform: skew(1deg); } 100% { transform: skew(0deg); } }
         
-        .mission-info { text-align: left; border-left: 3px solid var(--accent-green); padding-left: 20px; margin: 2rem 0; color: #888; font-size: 1.2rem;}
-        .highlight { color: var(--accent-green); background: rgba(0, 255, 65, 0.1); padding: 0 5px; }
-
-        #slide-briefing { background: #050505; }
-        .section-title { font-family: var(--font-tech); font-size: 2rem; color: var(--alert-red); margin-bottom: 2rem; border-bottom: 2px solid var(--alert-red); display: inline-block; padding-bottom: 5px; }
-        .box-container { display: flex; gap: 2rem; margin-bottom: 3rem; flex-wrap: wrap; justify-content: center;}
-        .data-box { border: 1px solid #333; padding: 20px; background: rgba(255,255,255,0.03); max-width: 400px; text-align: left; position: relative;}
-        .data-box h3 { font-family: var(--font-tech); margin-bottom: 10px; color: var(--alert-red); }
-        .stamp { 
-            border: 4px solid var(--alert-red); color: var(--alert-red); 
-            font-family: var(--font-title); font-size: 2rem; 
-            padding: 10px 20px; transform: rotate(-10deg); opacity: 0.7; 
-            position: absolute; bottom: 10%; right: 10%;
+        .section-title {
+            font-family: var(--font-tech); font-size: 8vw; color: var(--alert-red);
+            border-bottom: 2px solid var(--alert-red); padding-bottom: 10px; margin-bottom: 30px;
+            text-transform: uppercase; letter-spacing: 2px;
+            position: relative;
         }
-
-        #slide-mechanics { background: #020202; }
-        .mech-title { color: var(--neon-blue); border-color: var(--neon-blue); }
-        .gps-mockup { 
-            border: 2px dashed var(--neon-blue); padding: 30px; width: 80%; max-width: 500px; 
-            margin: 2rem auto; position: relative; background: rgba(0, 247, 255, 0.05);
+        .section-title::after {
+            content: ''; position: absolute; bottom: -5px; left: 0; width: 30%; height: 2px; background: var(--accent-green);
+            animation: loading-bar 2s infinite ease-in-out;
         }
-        .gps-coords { font-family: var(--font-tech); font-size: 1.5rem; color: var(--accent-green); margin-bottom: 10px;}
+        @keyframes loading-bar { 0% {left:0; width:0;} 50% {width:100%;} 100% {left:100%; width:0;} }
 
-        /* BUTTONS */
+        /* INFO CARDS WITH SCAN EFFECT */
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid var(--accent-green);
+            padding: 20px; margin: 10px 0; width: 100%; max-width: 400px;
+            text-align: left; backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden;
+        }
+        .info-card::before {
+            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg); animation: shine 3s infinite; pointer-events: none;
+        }
+        @keyframes shine { 0% {top: -100%;} 100% {top: 100%;} }
+        
+        .info-card h3 { font-family: var(--font-tech); color: var(--accent-green); font-size: 1.2rem; margin-bottom: 5px; }
+        .info-card p { font-size: 0.9rem; color: #ccc; line-height: 1.5; }
+        .info-card.alert { border-color: var(--alert-red); background: rgba(255, 0, 85, 0.05); }
+        .info-card.alert h3 { color: var(--alert-red); }
+
         .action-btn {
-            margin-top: 30px;
+            margin-top: 30px; width: 100%; max-width: 300px;
             font-family: var(--font-tech); font-size: 1.2rem;
             color: #000; background: var(--accent-green);
-            border: none; padding: 15px 40px; cursor: pointer;
-            letter-spacing: 2px; text-transform: uppercase;
-            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-            transition: all 0.3s; position: relative; z-index: 50;
+            border: none; padding: 18px 0; cursor: pointer;
+            letter-spacing: 3px; text-transform: uppercase; font-weight: bold;
+            clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+            animation: btn-pulse 3s infinite;
+            position: relative; overflow: hidden;
         }
-        .action-btn:hover { background: #fff; box-shadow: 0 0 20px var(--accent-green); transform: translateY(-2px); }
+        .action-btn::after {
+            content: ">>"; position: absolute; right: 20px; opacity: 0.5; animation: arrow-blink 1s infinite;
+        }
+        @keyframes arrow-blink { 0%,100% {opacity:0.2} 50% {opacity:1} }
+        .action-btn:active { transform: scale(0.95); background: #fff; }
         .action-btn.alert { background: var(--alert-red); color: #fff; }
-        .action-btn.alert:hover { background: #fff; color: var(--alert-red); box-shadow: 0 0 20px var(--alert-red); }
+        @keyframes btn-pulse { 0% { box-shadow: 0 0 5px var(--accent-green); } 50% { box-shadow: 0 0 20px var(--accent-green); } 100% { box-shadow: 0 0 5px var(--accent-green); } }
 
-        /* ================= INTRUSION SLIDE STYLES (NEW) ================= */
-        #slide-intrusion { background: #1a0005; }
-        #slide-intrusion h1 { color: var(--alert-red); text-shadow: 2px 2px var(--accent-green); font-size: 4rem; margin-bottom: 2rem; }
-        .crossed-out { text-decoration: line-through; text-decoration-color: var(--alert-red); text-decoration-thickness: 3px; color: #666; font-size: 1.2rem;}
-        .handwritten { font-family: 'Brush Script MT', cursive; color: var(--accent-green); font-size: 3rem; transform: rotate(-5deg); display: block; margin-top: 20px; text-shadow: 0 0 10px var(--accent-green);}
+        /* Slide 1 & 3 Styles */
+        #slide-cover .mission-info { 
+            font-size: 1rem; color: #888; margin-bottom: 30px; 
+            border: 1px solid #333; padding: 15px; background: rgba(0,0,0,0.5); 
+            border-right: 3px solid var(--accent-green);
+        }
         
-        .typewriter {
-            overflow: hidden; border-right: .15em solid var(--accent-green);
-            white-space: nowrap; margin: 0 auto; letter-spacing: .15em;
-            animation: blink-caret .75s step-end infinite;
-            font-family: var(--font-tech); color: var(--alert-red); font-size: 1.5rem; margin-bottom: 3rem;
-        }
-        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--accent-green); } }
+        .gps-container { width: 100%; max-width: 350px; border: 2px dashed var(--neon-blue); padding: 20px; background: rgba(0, 247, 255, 0.05); margin-bottom: 20px; position: relative; }
+        .gps-coords { font-family: var(--font-tech); font-size: 1.5rem; color: var(--neon-blue); margin: 10px 0; animation: text-flicker 2s infinite; }
 
-        .intrusion-box {
-            text-align: left; max-width: 600px;
-            padding: 2rem; border-left: 5px solid var(--alert-red);
-            background: linear-gradient(90deg, rgba(255,0,85,0.1), transparent);
+        /* Slide 4: Intrusion (HEAVY FX) */
+        #slide-intrusion { background: #120003; }
+        #slide-intrusion.active { animation: shake-screen 0.5s infinite; }
+        
+        @keyframes shake-screen { 
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
 
-        /* ================= MAP (VOID) ================= */
+        .intrusion-alert {
+            width: 100%; border: 2px solid var(--alert-red); padding: 20px;
+            background: repeating-linear-gradient(45deg, rgba(255,0,85,0.1), rgba(255,0,85,0.1) 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
+            animation: bg-scroll 0.5s linear infinite reverse; /* Faster scroll */
+        }
+        @keyframes bg-scroll { 0% { background-position: 0 0; } 100% { background-position: 40px 0; } }
+        
+        .handwritten { 
+            font-family: 'Brush Script MT', cursive; color: var(--accent-green); 
+            font-size: 2.5rem; transform: rotate(-5deg); display: block; 
+            margin: 20px 0; text-shadow: 0 0 10px var(--accent-green);
+            animation: blink 0.1s infinite; /* Strobe effect */
+        }
+
+        /* ================= MAP (RESTORED V19 LOOK) ================= */
         #void { background-color: #000; }
         #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4) sepia(20%); z-index: 1; }
         #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         
-        .marker { position: absolute; width: 30px; height: 30px; z-index: 30; cursor: pointer; background: rgba(255, 0, 85, 0.2); border: 1px solid var(--alert-red); box-shadow: 0 0 15px var(--alert-red); transform: rotate(45deg); transition: 0.3s; animation: pulse-marker 2s infinite; }
-        .marker:hover { background: var(--alert-red); transform: rotate(45deg) scale(1.2); box-shadow: 0 0 30px var(--alert-red), 0 0 10px #fff inset; }
-        @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        .marker-label { position: absolute; left: 40px; top: -10px; font-size: 10px; font-family: var(--font-mono); color: var(--alert-red); background: #000; border: 1px solid var(--alert-red); padding: 2px 5px; white-space: nowrap; opacity: 0; transition: 0.3s; transform: rotate(-45deg); pointer-events: none; }
-        .marker:hover .marker-label { opacity: 1; }
+        .map-ui-overlay { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; pointer-events: none; z-index: 50; }
+        .upload-btn { 
+            pointer-events: auto; background: rgba(0,0,0,0.8); border: 1px solid var(--accent-green); 
+            color: var(--accent-green); padding: 15px 30px; font-family: var(--font-tech); 
+            font-size: 1rem; letter-spacing: 2px; cursor: pointer; 
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+            animation: pulse-border 2s infinite;
+        }
 
-        /* ================= 3D RECONSTRUCTION ================= */
+        .marker { position: absolute; width: 30px; height: 30px; z-index: 30; cursor: pointer; background: rgba(255, 0, 85, 0.2); border: 1px solid var(--alert-red); box-shadow: 0 0 15px var(--alert-red); transform: rotate(45deg); transition: 0.3s; animation: pulse-marker 2s infinite; }
+        @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* ================= 3D RECONSTRUCTION (RESTORED PHYSICS) ================= */
         #reconstruction { background: #000; }
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
         #three-container:active { cursor: grabbing; }
@@ -202,16 +258,10 @@
             padding: 20px; backdrop-filter: blur(5px);
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
         }
-        #recon-console h2 { font-family: var(--font-serif); font-size: 1.5rem; color: #fff; margin-bottom: 1rem; letter-spacing: 2px; text-transform: uppercase;}
-        #recon-console p { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green); margin-bottom: 15px;}
-        
         .input-area { display: flex; border-bottom: 1px solid var(--accent-green); margin-top: 10px; background: rgba(0,255,65,0.05); }
         input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-family: var(--font-mono); }
         .submit-btn { background: transparent; color: var(--accent-green); border: none; cursor: pointer; padding: 0 20px; font-weight: bold; font-family: var(--font-mono); transition:0.3s;}
-        .submit-btn:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 15px var(--accent-green);}
-        #purge-btn { margin-top: 10px; font-size: 10px; color: #666; cursor: pointer; display: inline-block; border: 1px solid #333; padding: 5px; font-family: var(--font-mono); transition:0.3s;}
-        #purge-btn:hover { color: var(--alert-red); border-color: var(--alert-red); background: rgba(255,0,85,0.1); }
-
+        
         #particles-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 60; }
         .floating-text { position: absolute; color: var(--accent-green); font-size: 0.8rem; animation: floatUp 4s linear forwards; font-family: var(--font-mono); }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.5); } }
@@ -223,183 +273,151 @@
             opacity: 0; transition: opacity 0.1s; z-index: 1000; 
             box-shadow: 0 0 20px rgba(255, 0, 85, 0.2); text-align: left;
         }
-        #tooltip-3d-content { color: #fff; font-family: var(--font-serif); font-size: 1rem; line-height: 1.4; }
 
-        /* TERMINAL OVERLAY */
-        .glitch-text { position: relative; display: inline-block; font-family: var(--font-tech); }
-        .glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; }
-        .glitch-text::before { color: var(--alert-red); z-index: -1; animation: glitch-shift 0.4s infinite linear alternate-reverse; }
-        .glitch-text::after { color: var(--neon-blue); z-index: -2; animation: glitch-shift 0.4s infinite linear alternate-reverse 0.2s; }
-        @keyframes glitch-shift { 0% { transform: translate(2px, 0) skew(0deg); } 20% { transform: translate(-2px, 0) skew(2deg); } 40% { transform: translate(0, 2px) skew(0deg); } 60% { transform: translate(2px, -2px) skew(-2deg); } 80% { transform: translate(-2px, 2px) skew(0deg); } 100% { transform: translate(0, 0) skew(0deg); } }
-
+        /* ================= TERMINAL (MOBILE MODAL) ================= */
         #fullscreen-stage {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 9999;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s steps(5);
-            display: flex; justify-content: center; align-items: center;
-            background-image: radial-gradient(circle at center, rgba(20,20,20,0.8) 0%, #000 100%);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200;
+            display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
         #fullscreen-stage.active { opacity: 1; pointer-events: auto; }
-        #fullscreen-stage::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 10000; background: repeating-linear-gradient(rgba(0,0,0,0.2) 0, transparent 2px); animation: scanline-scroll 10s linear infinite; }
-        @keyframes scanline-scroll { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
 
         .terminal-window {
-            width: 90vw; height: 85vh; background: #050505; border: 2px solid var(--alert-red);
-            display: flex; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(255, 0, 85, 0.2);
-            transform: perspective(1000px) rotateX(2deg) rotateY(-1deg); border-radius: 10px;
-            flex-direction: column; 
+            width: 100%; height: 90%; background: #080808; 
+            border-top: 2px solid var(--alert-red);
+            display: flex; flex-direction: column; 
+            box-shadow: 0 -10px 30px rgba(255, 0, 85, 0.2);
+            overflow: hidden;
         }
-        @media(min-width: 768px) { .terminal-window { flex-direction: row; } }
-        
-        .terminal-window::before { content: "SYSTEM CRITICAL // DATA CORRUPTION DETECTED"; position: absolute; top: 0; left: 0; width: 100%; background: var(--alert-red); color: #000; font-family: var(--font-tech); font-size: 10px; padding: 2px; text-align: center; animation: flicker 0.5s infinite; z-index: 20; }
-        @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; background: var(--neon-blue); } }
-
-        .close-terminal { position: absolute; top: 30px; right: 30px; color: var(--alert-red); border: 2px solid var(--alert-red); padding: 10px 20px; font-family: var(--font-tech); font-size: 14px; cursor: pointer; z-index: 100; background: #000; transition: 0.2s; }
-        .close-terminal:hover { background: var(--alert-red); color: #000; box-shadow: 0 0 20px var(--alert-red); }
-
-        .terminal-visual { flex: 1.2; position: relative; overflow: hidden; border-right: 3px double var(--alert-red); filter: contrast(120%) brightness(0.9); height: 30vh; }
-        @media(min-width: 768px) { .terminal-visual { height: auto; border-right: 3px double var(--alert-red); border-bottom: none; } }
-
-        .glitch-img-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
-        .glitch-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(150%) brightness(0.7) sepia(30%); transition: all 0.3s cubic-bezier(0.1, 0.7, 1.0, 0.1); opacity: 0.8; mix-blend-mode: luminosity; }
-        .terminal-visual::after { content: ""; position: absolute; inset: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClIorXAAAAHlBMVEUAAAD///////////////////////////////////8f+B7AAAAAEHRSTlMABg8dHiQvMzY4PkxTVF1+c/4AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAASUlEQVQ4jWNgGAVDBQylMGiAMY0yplEw2AAjCjEIA6YmGGBiYqJgZ2JiZGRgZGRmZsZUZmZgYAAxGUDKGEQYGBgYmBgYGAAAVaYFqQ56270AAAAASUVORK5CYII='); opacity: 0.2; pointer-events: none; animation: noise-shift 0.2s infinite steps(4); z-index: 5;}
-        @keyframes noise-shift { 0% {background-position: 0 0;} 100% {background-position: 100px 100px;} }
-        .terminal-visual:hover .glitch-img { filter: grayscale(0%) contrast(130%) brightness(1.2); box-shadow: -5px 0 var(--neon-blue), 5px 0 var(--alert-red); animation: strong-glitch 0.2s infinite linear alternate-reverse; transform: scale(1.02) translate(-2px, 2px); }
-        @keyframes strong-glitch { 0% { clip-path: inset(10% 0 40% 0); transform: translate(-5px, 2px); } 50% { clip-path: inset(0 30% 20% 0); transform: translate(-2px, 5px); filter: hue-rotate(90deg) contrast(180%);} 100% { clip-path: inset(0 0 0 0); transform: translate(0, 0); filter: hue-rotate(0deg); } }
-
-        .terminal-data { flex: 1; padding: 50px 30px; overflow-y: auto; font-family: var(--font-mono); background: #020202; background-image: linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px); background-size: 20px 20px; background-position: -5px -5px; }
-        .data-header { border-bottom: 4px solid var(--alert-red); padding-bottom: 20px; margin-bottom: 30px; transform: rotate(-1deg); }
-        .data-id { color: var(--alert-red); font-family: var(--font-tech); font-size: 14px; letter-spacing: 4px; animation: flicker 1s infinite; }
-        .data-title { font-family: var(--font-tech); font-size: 3rem; color: #fff; margin: 10px 0; text-transform: uppercase; letter-spacing: -2px; }
-        .data-block { margin-bottom: 40px; padding: 20px; border: 1px dashed #333; position: relative; transform: rotate(0.5deg); background: rgba(255,255,255,0.02); }
-        .data-block:nth-child(even) { transform: rotate(-0.8deg); background: rgba(0,0,0,0.3); border-color: var(--alert-red); }
-        .block-label { font-family: var(--font-tech); font-size: 12px; color: var(--accent-green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--accent-green); display: inline-block;}
-        .human-text { color: #ccc; font-family: var(--font-serif); font-size: 1rem; line-height: 1.5; font-style: italic; white-space: pre-wrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        .history-text { color: #fff; font-family: var(--font-sans); font-size: 0.8rem; line-height: 1.4; border-left: 3px solid #555; padding-left: 10px; background: rgba(255,255,255,0.05); }
-        .ai-block { border: 2px solid var(--alert-red); background: rgba(255, 0, 85, 0.15); color: var(--alert-red); font-family: var(--font-tech); font-size: 0.9rem; }
-        .ai-text { animation: text-flicker 0.1s infinite alternate; }
-        @keyframes text-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; transform: translateX(1px); } }
-        @keyframes blink { 0%,100% {opacity:1} 50% {opacity:0.3} }
+        .close-terminal { 
+            position: absolute; top: -50px; right: 20px; 
+            color: #fff; background: var(--alert-red); padding: 10px 20px; 
+            font-family: var(--font-tech); border: none; font-weight: bold;
+        }
+        .terminal-visual { height: 35%; width: 100%; position: relative; border-bottom: 2px solid var(--alert-red); overflow: hidden; }
+        .glitch-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) sepia(50%) contrast(1.2); }
+        .terminal-data { 
+            height: 65%; padding: 20px; overflow-y: auto; 
+            background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px); background-size: 100% 20px;
+        }
+        .data-title { font-size: 2rem; color: #fff; margin-bottom: 10px; line-height: 1; font-family: var(--font-tech); }
+        .human-text { font-family: var(--font-serif); font-style: italic; color: #ccc; margin-bottom: 20px; border-left: 2px solid var(--accent-green); padding-left: 10px; }
+        .history-text { color: #888; font-size: 0.9rem; }
+        .ai-text { color: var(--alert-red); font-family: var(--font-tech); font-size: 0.9rem; margin-top: 20px; animation: text-flicker 0.2s infinite; }
+        @keyframes text-flicker { 0% {opacity:1} 50% {opacity:0.7} 100% {opacity:1} }
     </style>
 </head>
 <body>
 
+    <div class="grid-bg"></div>
+    <div class="noise-overlay"></div>
+    
     <div id="loader">
-        <div class="loader-text">SYSTEM BOOTING...</div>
-        <div class="loader-bar"><div class="loader-progress"></div></div>
+        <div class="boot-log" id="boot-log">
+            > SYSTEM_INIT... OK<br>
+            > MEMORY_CHECK... 64TB OK<br>
+            > LOADING MAP_DATA... OK<br>
+            > CONNECTING SATELLITE... OK<br>
+            > DECRYPTING PROTOCOL V23...<br>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div style="margin-top:10px; font-size:10px; animation: blink 0.5s infinite;">_WAITING FOR SYNC</div>
     </div>
 
     <div id="hud-layer">
-        <div class="hud-corner tl"></div><div class="hud-corner tr"></div><div class="hud-corner bl"></div><div class="hud-corner br"></div>
         <div class="scan-line"></div>
-        
-        <div class="hud-container">
-            <div class="hud-trigger" onclick="toggleHud()">CLASSIFIED_INTEL</div>
-            <div class="hud-details" id="hud-details">
-                <span class="hud-label">>>> PROJECT NAME:</span>
-                <span class="hud-value">STACHUS_ABSENCE_PROTOCOL</span><br>
-                <span class="hud-label">>>> OPERATIVE:</span>
-                <span class="hud-value">RUNXUAN LIU</span><br>
-                <span class="hud-label">>>> MISSION:</span>
-                <span class="hud-value">ARTISTIC PROJECT 1</span><br>
-                <span class="hud-label">>>> SUPERVISOR:</span>
-                <span class="hud-value">PROF. DR. COSENTINO</span><br>
-                <span class="hud-label">>>> SYSTEM STATUS:</span>
-                <span class="hud-value" style="color:#00ff41">STABLE (LOCAL_LAYER)</span>
-            </div>
+        <div class="hud-top-bar">
+            <div class="back-btn" onclick="goBack()"> &lt; BACK</div>
+            <div class="hud-trigger" onclick="toggleHud()">[ MENU ]</div>
         </div>
-
-        <div class="hud-data-br">LAT/LON: <span id="coords">WAITING GPS...</span></div>
+        <div class="hud-details" id="hud-details">
+            <span class="hud-label">PROJECT:</span> STACHUS_PROTOCOL<br>
+            <span class="hud-label">USER:</span> RUNXUAN LIU<br>
+            <span class="hud-label">STATUS:</span> <span style="color:#00ff41">CONNECTED</span>
+        </div>
     </div>
-
-    <div class="back-btn" onclick="goBack()">[ < RETURN ]</div>
 
     <div id="game-container">
         
         <section id="slide-cover" class="game-section active">
-            <h1 class="glitch-title">PROJECT<br>STACHUS</h1>
+            <h1 class="glitch-title" data-final="PROJECT<br>STACHUS">PROJECT<br>STACHUS</h1>
             <div class="mission-info">
-                <p>TARGET: KARLSPLATZ_VOID</p>
-                <p>OBJECTIVE: <span class="highlight">RECOVER MEMORY</span></p>
-                <p>CLEARANCE: TOP SECRET</p>
+                TARGET: KARLSPLATZ<br>
+                OBJ: RECOVER MEMORY<br>
+                <span style="color:var(--accent-green); animation:blink 1s infinite;">[ TOUCH TO START ]</span>
             </div>
-            <button class="action-btn" onclick="navigateTo('slide-briefing')">INITIALIZE SYSTEM</button>
+            <button class="action-btn" onclick="navigateTo('slide-briefing')">INITIALIZE</button>
         </section>
 
         <section id="slide-briefing" class="game-section">
-            <h2 class="section-title">MISSION BRIEFING</h2>
-            <div class="box-container">
-                <div class="data-box">
-                    <h3>OFFICIAL DIRECTIVE</h3>
-                    <p>"Citizens report anomalies at Stachus. The police department requests immediate deletion of these hallucinations."</p>
-                </div>
-                <div class="data-box" style="border-color: var(--alert-red);">
-                    <h3 style="color: var(--alert-red);">WARNING</h3>
-                    <p>Official narrative may be compromised. Proceed with caution. The 'glitches' might be real memories.</p>
-                </div>
+            <h2 class="section-title">BRIEFING</h2>
+            <div class="info-card">
+                <h3>OFFICIAL DIRECTIVE</h3>
+                <p>"Citizens report anomalies. Delete all hallucinations immediately."</p>
             </div>
-            <div class="stamp">CLASSIFIED</div>
-            <button class="action-btn alert" onclick="navigateTo('slide-mechanics')">ACCEPT MISSION</button>
+            <div class="info-card alert">
+                <h3>⚠ WARNING</h3>
+                <p>The 'glitches' might be real memories. System compromise detected.</p>
+            </div>
+            <button class="action-btn alert" style="margin-top:20px;" onclick="navigateTo('slide-mechanics')">ACCEPT</button>
         </section>
 
         <section id="slide-mechanics" class="game-section">
-            <h2 class="section-title mech-title">LBS INTERFACE ACTIVE</h2>
-            <p style="color: #888;">Connecting to Satellite...</p>
-            <div class="gps-mockup">
-                <div style="position: absolute; top: -10px; left: 10px; background: #000; padding: 0 10px; color: var(--neon-blue); font-size: 0.8rem;">GPS SIGNAL: STRONG</div>
-                <div class="gps-coords">LAT: 48.13920 | LON: 11.56550</div>
-                <p style="font-size: 0.9rem; color: #bbb; margin-top: 20px;">
-                    Move physically to intercept signal.<br>
-                    <span style="color: var(--accent-green);">> TARGET LOCKED <</span>
+            <h2 class="section-title" style="color:var(--neon-blue); border-color:var(--neon-blue)">LBS SCANNER</h2>
+            <div class="gps-container">
+                <div style="font-size:0.8rem; color:#666;">SATELLITE LINK: ACTIVE</div>
+                <div class="gps-coords">LAT: 48.139<br>LON: 11.565</div>
+                <p style="font-size:0.8rem; color:#ccc; margin-top:10px;">
+                    Physical movement required.<br>Swipe map to reveal data.
                 </p>
             </div>
-            <button class="action-btn" onclick="navigateTo('void')">ENTER THE VOID</button>
+            <button class="action-btn" onclick="navigateTo('void')">ENTER MAP</button>
         </section>
 
         <section id="void" class="game-section">
             <div id="map-bg"></div>
             <canvas id="map-canvas"></canvas>
             
-            <div class="marker" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"><div class="marker-label">01: THE LOOP</div></div>
-            <div class="marker" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"><div class="marker-label">02: FLUID GHOST</div></div>
-            <div class="marker" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"><div class="marker-label">03: IDENTITY WAR</div></div>
-            <div class="marker" style="top: 75%; left: 60%;" onclick="event.stopPropagation(); openTerminal(3)"><div class="marker-label">04: DELETED WALL</div></div>
+            <div class="marker" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"></div>
+            <div class="marker" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"></div>
+            <div class="marker" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"></div>
+            <div class="marker" style="top: 75%; left: 60%;" onclick="event.stopPropagation(); openTerminal(3)"></div>
             
-            <div class="next-phase-btn" onclick="navigateTo('slide-intrusion')">[ UPLOAD DATA ]</div>
+            <div class="map-ui-overlay">
+                <button class="upload-btn" onclick="navigateTo('slide-intrusion')">UPLOAD DATA >></button>
+            </div>
         </section>
 
         <section id="slide-intrusion" class="game-section">
-            <h1>⚠ SYSTEM FAILURE ⚠</h1>
-            <p class="typewriter" style="color: var(--alert-red);">UNAUTHORIZED DATA DECRYPTION...</p>
-            <div class="intrusion-box">
-                <p>>> ANALYZING 'VIRUS'...</p>
-                <p>>> RESULT: <span class="crossed-out">MALICIOUS CODE</span></p>
-                <span class="handwritten">IT'S HUMAN MEMORY!</span>
-                <br>
-                <p style="border: 1px solid var(--alert-red); padding: 15px; color: var(--alert-red); background: rgba(255,0,0,0.1); margin-top: 20px;">
-                    ALERT: OFFICIAL NARRATIVE IS A LIE.<br>
-                    THEY WANT TO ERASE US.
+            <h1 style="font-family:var(--font-title); font-size:4rem; color:var(--alert-red); line-height:1;" data-final="SYSTEM<br>FAILURE">#@!%&<br>ERROR</h1>
+            
+            <div class="intrusion-alert" style="margin: 30px 0;">
+                <p style="color:#fff; font-size:0.9rem;">>> DECRYPTING...</p>
+                <p style="color:#666; text-decoration: line-through;">MALICIOUS CODE</p>
+                <span class="handwritten">HUMAN MEMORY</span>
+                <p style="color:var(--alert-red); margin-top:10px; font-weight:bold;">
+                    NARRATIVE REJECTED.<br>THEY ARE LYING TO YOU.
                 </p>
             </div>
-            <button class="action-btn alert" style="margin-top: 40px;" onclick="navigateTo('reconstruction')">FORCE SYSTEM OVERRIDE</button>
+            <button class="action-btn alert" onclick="navigateTo('reconstruction')">OVERRIDE</button>
         </section>
 
         <section id="reconstruction" class="game-section">
             <div id="three-container"></div>
             <div id="recon-console">
-                <h2>Memory Reconstruction</h2>
-                <p>Inject data to stabilize the structure</p>
+                <h2 style="font-family:var(--font-tech); color:#fff; font-size:1.2rem; margin-bottom:10px;">MEMORY REBUILD</h2>
                 <div class="input-area">
                     <input type="text" id="memory-input" placeholder="Enter missing memory..." autocomplete="off">
                     <button class="submit-btn" onclick="submitMemory()">INJECT</button>
                 </div>
-                <div id="purge-btn" onclick="purgeMemories()">[ PURGE DATABASE ]</div>
+                <div style="margin-top:10px; font-size:9px; color:#666;" onclick="purgeMemories()">[ PURGE SYSTEM ]</div>
             </div>
             <div id="particles-container"></div>
             <div id="memory-3d-tooltip">
-                <div style="color:var(--accent-green); font-size:10px; margin-bottom:5px; font-family:var(--font-mono);">[ MEMORY FRAGMENT ]</div>
-                <div id="tooltip-3d-content">...</div>
-                <div style="margin-top:5px; font-size:9px; color:#666; font-family:var(--font-mono);">[DEL] TO DELETE</div>
+                <div style="color:var(--accent-green); font-size:10px;">[ FRAGMENT ]</div>
+                <div id="tooltip-3d-content" style="color:#fff; font-size:1.2rem; font-family:var(--font-serif); margin:10px 0;">...</div>
+                <div style="font-size:9px; color:#666;">TAP TO DELETE</div>
             </div>
         </section>
 
@@ -407,118 +425,149 @@
 
     <div id="fullscreen-stage">
         <div class="terminal-window">
-            <div class="close-terminal" onclick="closeTerminal()">[x] ABORT</div>
+            <button class="close-terminal" onclick="closeTerminal()">CLOSE X</button>
             <div class="terminal-visual">
-                <div class="glitch-img-container"><img id="term-img" class="glitch-img" src="" alt="NO DATA"></div>
+                <img id="term-img" class="glitch-img" src="" alt="NO DATA">
             </div>
             <div class="terminal-data">
-                <div class="data-header">
-                    <div class="data-id glitch-text" id="term-id" data-text="ID">ID</div>
-                    <h2 class="data-title glitch-text" id="term-title" data-text="TITLE">TITLE</h2>
-                </div>
-                <div class="data-block human-block">
-                    <div class="block-label">/// HUMAN INPUT</div>
+                <div style="color:var(--alert-red); font-size:10px; letter-spacing:2px;">ENCRYPTED_FILE</div>
+                <h2 class="data-title glitch-text" id="term-title">TITLE</h2>
+                
+                <div style="margin: 20px 0;">
+                    <div style="font-size:10px; color:var(--accent-green); margin-bottom:5px;">/// HUMAN INPUT</div>
                     <p class="human-text" id="term-human">...</p>
                 </div>
-                <div class="data-block history-block" style="border-color: #555;">
-                    <div class="block-label" style="color: #888; border-color: #555;">/// HISTORICAL FACTS</div>
+
+                <div style="border:1px dashed #333; padding:10px; margin-bottom:20px;">
+                    <div style="font-size:10px; color:#666;">/// HISTORY FACT</div>
                     <p class="history-text" id="term-history">...</p>
                 </div>
-                <div class="data-block ai-block">
-                    <div class="block-label" style="color: var(--alert-red); border-color: var(--alert-red);">⚠ SYSTEM FAILURE REPORT (AI)</div>
-                    <div class="ai-text" id="term-ai">...</div>
-                </div>
+
+                <div class="ai-text" id="term-ai">SYSTEM ANALYSIS...</div>
             </div>
         </div>
     </div>
 
     <script>
-        // ================= LOADER & HUD TOGGLE =================
-        window.addEventListener('load', () => {
-            setTimeout(() => { document.getElementById('loader').style.opacity = '0'; }, 2000);
+        // ================= JAVASCRIPT LOGIC =================
+        
+        // 1. BIOS Loader Logic
+        window.addEventListener('load', () => { 
+            let progress = 0;
+            const bar = document.getElementById('progress-bar');
+            const log = document.getElementById('boot-log');
+            const logs = ["> OPTIMIZING CORE...", "> LOADING TEXTURES...", "> SYNCING...", "> READY"];
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 5;
+                if(progress > 100) progress = 100;
+                bar.style.width = progress + '%';
+                
+                if(Math.random() > 0.8 && logs.length > 0) {
+                    log.innerHTML += logs.shift() + "<br>";
+                    log.scrollTop = log.scrollHeight;
+                }
+
+                if(progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => { 
+                        document.getElementById('loader').style.opacity = '0'; 
+                        setTimeout(()=>document.getElementById('loader').remove(), 500);
+                        decodeText(document.querySelector('#slide-cover .glitch-title'));
+                    }, 500);
+                }
+            }, 50);
         });
 
-        function toggleHud() {
-            const details = document.getElementById('hud-details');
-            const trigger = document.querySelector('.hud-trigger');
-            if(details.style.display === 'block') {
-                details.style.display = 'none';
-                details.classList.remove('visible');
-                trigger.classList.remove('active');
-            } else {
-                details.style.display = 'block';
-                setTimeout(() => details.classList.add('visible'), 10);
-                trigger.classList.add('active');
-            }
+        // 2. Text Decoding Effect
+        const chars = "!@#$%^&*()_+-=[]{}|;':,./<>?";
+        function decodeText(element) {
+            const originalText = element.getAttribute('data-final').replace(/<br>/g, "\n"); // Handle breaks
+            const lines = originalText.split("\n");
+            let frame = 0;
+            
+            // Reconstruct HTML after effect
+            const originalHTML = element.getAttribute('data-final');
+
+            const interval = setInterval(() => {
+                let output = "";
+                // Simple random scramble for visual effect
+                for(let i=0; i<originalText.length; i++) {
+                    if(originalText[i] === "\n") { output += "<br>"; continue; }
+                    output += (Math.random() > 0.5) ? originalText[i] : chars[Math.floor(Math.random() * chars.length)];
+                }
+                element.innerHTML = output;
+                frame++;
+                if(frame > 10) {
+                    clearInterval(interval);
+                    element.innerHTML = originalHTML; // Restore clean HTML
+                }
+            }, 50);
         }
 
-        // ================= NAV =================
-        const historyStack = ['slide-cover']; 
-
+        const historyStack = ['slide-cover'];
         function navigateTo(targetId) {
-            const current = document.querySelector('.game-section.active');
-            if(current) current.classList.remove('active');
+            document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById(targetId);
-            if(target) target.classList.add('active');
-
-            if(targetId !== historyStack[historyStack.length-1]) { historyStack.push(targetId); }
+            target.classList.add('active');
+            
+            if(targetId !== historyStack[historyStack.length-1]) historyStack.push(targetId);
+            
+            // Trigger Effects
+            if(targetId === 'slide-cover' || targetId === 'slide-intrusion') {
+                const title = target.querySelector('h1');
+                if(title) decodeText(title);
+            }
 
             const backBtn = document.querySelector('.back-btn');
-            if(targetId === 'slide-cover') {
-                backBtn.style.display = 'none';
-                historyStack.length = 0; historyStack.push('slide-cover');
-            } else {
-                backBtn.style.display = 'block';
-            }
+            if(targetId === 'slide-cover') { backBtn.style.display = 'none'; historyStack.length=0; historyStack.push('slide-cover'); }
+            else { backBtn.style.display = 'block'; }
 
-            if(targetId === 'void') { setTimeout(resizeMap, 100); }
-            if(targetId === 'reconstruction') {
-                setTimeout(() => {
-                    if(camera && renderer) {
-                        camera.aspect = window.innerWidth / window.innerHeight;
-                        camera.updateProjectionMatrix();
-                        renderer.setSize(window.innerWidth, window.innerHeight);
-                    }
-                }, 100);
-            }
+            if(targetId === 'void') setTimeout(resizeMap, 100);
+            if(targetId === 'reconstruction') setTimeout(() => { 
+                if(camera) { 
+                    camera.aspect = window.innerWidth/window.innerHeight; 
+                    camera.updateProjectionMatrix(); 
+                    renderer.setSize(window.innerWidth, window.innerHeight); 
+                } 
+            }, 100);
         }
 
         function goBack() {
             if(historyStack.length > 1) {
-                historyStack.pop(); 
-                const prevId = historyStack[historyStack.length - 1]; 
+                historyStack.pop();
+                const prevId = historyStack[historyStack.length-1];
                 document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
                 document.getElementById(prevId).classList.add('active');
-                if(prevId === 'slide-cover') { document.querySelector('.back-btn').style.display = 'none'; }
+                if(prevId === 'slide-cover') document.querySelector('.back-btn').style.display = 'none';
             }
         }
 
-        document.addEventListener('mousemove', (e) => { document.getElementById('coords').innerText = (e.clientX).toFixed(0) + ", " + (e.clientY).toFixed(0); });
-
-        // ================= TERMINAL DATA & LOGIC =================
-        const archives = [
-            { id: "ERR_ARCHIVE_A", title: "THE UNDERGROUND LOOP", img: "./1.jpg", human: "\"I've worked down here for fifteen years...\"", history: "Fact: Built in 1970, Stachus Passagen was Europe's largest underground mall.", ai: "SYSTEM ERROR 1970-XX // All exits are fake screens." },
-            { id: "ERR_ARCHIVE_B", title: "THE FLUID GHOST", img: "./2.jpg", human: "\"If you come here at 4 AM, the fountain sounds different...\"", history: "Fact: The fountain was constructed in 1972 for the Olympics.", ai: "FLUID MEMORY ANALYSIS // SOURCE: 18th-Century Emotion." },
-            { id: "ERR_ARCHIVE_C", title: "IDENTITY WAR", img: "./3.jpg", human: "\"Karl? Who is Karl? This is Stachus...\"", history: "Fact: Renamed 'Karlsplatz' in 1797.", ai: "IDENTITY CONFLICT // BASE CODE: Stachus (Deep)." },
-            { id: "ERR_ARCHIVE_D", title: "THE DELETED WALL", img: "./4.jpg", human: "\"The old maps show a wall here...\"", history: "Fact: Medieval fortifications demolished in 18th century.", ai: "DEFENSE SYSTEM: OFFLINE // GHOST WALL DETECTED." }
-        ];
-
-        const termStage = document.getElementById('fullscreen-stage');
-        function openTerminal(index) {
-            const data = archives[index];
-            if(!data) return;
-            document.getElementById('term-id').innerText = data.id;
-            document.getElementById('term-title').innerText = data.title;
-            document.getElementById('term-title').setAttribute('data-text', data.title);
-            document.getElementById('term-img').src = data.img;
-            document.getElementById('term-human').innerText = data.human;
-            document.getElementById('term-history').innerText = data.history;
-            document.getElementById('term-ai').innerText = data.ai;
-            termStage.classList.add('active');
+        function toggleHud() {
+            const d = document.getElementById('hud-details');
+            d.classList.toggle('visible');
         }
-        function closeTerminal() { termStage.classList.remove('active'); }
 
-        // ================= MAP LOGIC (TOUCH ENABLED) =================
+        // 3. Terminal Logic
+        const archives = [
+            { id: "01", title: "THE LOOP", img: "./1.jpg", human: "\"Fifteen years underground... sunlight is a myth here.\"", history: "Built 1970. Europe's largest underground mall.", ai: "ERROR: EXIT NOT FOUND." },
+            { id: "02", title: "FLUID GHOST", img: "./2.jpg", human: "\"At 4 AM, the fountain whispers names.\"", history: "1972 Olympics construction.", ai: "ANALYSIS: LIQUID MEMORY LEAK." },
+            { id: "03", title: "IDENTITY", img: "./3.jpg", human: "\"Who is Karl? Why is he in the square?\"", history: "Renamed in 1797.", ai: "CONFLICT: ID MISMATCH." },
+            { id: "04", title: "THE WALL", img: "./4.jpg", human: "\"I swear there was a wall here yesterday.\"", history: "Fortifications demolished 18th century.", ai: "SYSTEM: GHOST GEOMETRY." }
+        ];
+        function openTerminal(index) {
+            const d = archives[index];
+            if(!d) return;
+            document.getElementById('term-title').innerText = d.title;
+            document.getElementById('term-img').src = d.img;
+            document.getElementById('term-human').innerText = d.human;
+            document.getElementById('term-history').innerText = d.history;
+            document.getElementById('term-ai').innerText = d.ai;
+            document.getElementById('fullscreen-stage').classList.add('active');
+        }
+        function closeTerminal() { document.getElementById('fullscreen-stage').classList.remove('active'); }
+
+        // 4. MAP LOGIC
         const mapCanvas = document.getElementById('map-canvas'); 
         const mapCtx = mapCanvas.getContext('2d'); 
         const voidSection = document.getElementById('void');
@@ -527,46 +576,37 @@
 
         window.addEventListener('resize', resizeMap); 
         function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; } 
-        resizeMap(); loopMap();
         
-        // --- UNIFIED MAP INPUT HANDLER ---
         function handleMapInput(x, y) {
             const rect = mapCanvas.getBoundingClientRect(); 
             mouseX = x - rect.left; 
             mouseY = y - rect.top; 
-            trails.push({ x: mouseX + (Math.random()-0.5)*10, y: mouseY + (Math.random()-0.5)*10, life: 1.0, size: Math.random() * 4 + 2, color: '#ff0000' }); 
+            trails.push({ x: mouseX + (Math.random()-0.5)*10, y: mouseY + (Math.random()-0.5)*10, life: 1.0, size: Math.random() * 4 + 2 }); 
             if(trails.length > 100) trails.shift(); 
         }
 
-        // MOUSE
-        voidSection.addEventListener('mousemove', (e) => { 
-            handleMapInput(e.clientX, e.clientY);
-        });
-
-        // TOUCH (PREVENT SCROLL & HANDLE INPUT)
+        voidSection.addEventListener('mousemove', (e) => { handleMapInput(e.clientX, e.clientY); });
         voidSection.addEventListener('touchmove', (e) => {
-            if(e.touches.length > 0) {
-                e.preventDefault(); // STOP SCROLLING
-                handleMapInput(e.touches[0].clientX, e.touches[0].clientY);
-            }
+            if(e.touches.length > 0) { e.preventDefault(); handleMapInput(e.touches[0].clientX, e.touches[0].clientY); }
         }, {passive: false});
-
         voidSection.addEventListener('touchstart', (e) => {
-             if(e.touches.length > 0) {
-                handleMapInput(e.touches[0].clientX, e.touches[0].clientY);
-             }
+             if(e.touches.length > 0) { handleMapInput(e.touches[0].clientX, e.touches[0].clientY); }
         }, {passive: false});
 
         function loopMap() { 
             requestAnimationFrame(loopMap); 
             mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height); 
-            mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(0,0,0,0.95)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
+            mapCtx.globalCompositeOperation = 'source-over'; 
+            mapCtx.fillStyle = 'rgba(0,0,0,0.95)'; 
+            mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
+            
             if (mouseX > -100) { 
                 mapCtx.globalCompositeOperation = 'destination-out'; 
                 let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 50, mouseX, mouseY, 250); 
                 gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
                 mapCtx.beginPath(); mapCtx.arc(mouseX, mouseY, 250, 0, Math.PI*2); mapCtx.fillStyle = gradient; mapCtx.fill(); 
             } 
+            
             mapCtx.globalCompositeOperation = 'source-over'; 
             for(let i=0; i<trails.length; i++) { 
                 let p = trails[i]; mapCtx.fillStyle = '#ff0000'; mapCtx.globalAlpha = p.life; 
@@ -575,8 +615,9 @@
             } 
             mapCtx.globalAlpha = 1.0; 
         }
+        loopMap();
 
-        // ================= 3D LOGIC (MOBILE OPTIMIZED) =================
+        // 5. THREE.JS LOGIC
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse;
         let targetRotationY = 0, targetRotationX = 0; 
         let isDragging = false; 
@@ -589,21 +630,18 @@
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
         function submitMemory() { 
             const input = document.getElementById('memory-input'); const val = input.value; if(!val) return;
-            const btn = document.querySelector('.submit-btn'); btn.innerText = "PROCESSING..."; 
+            const btn = document.querySelector('.submit-btn'); btn.innerText = "SENDING..."; 
             const container = document.getElementById('particles-container'); const particle = document.createElement('div'); particle.classList.add('floating-text'); particle.innerText = val; particle.style.left = '50%'; particle.style.top = '20%'; container.appendChild(particle); setTimeout(() => { particle.remove(); }, 4000);
-            setTimeout(() => { activateMemory(val); btn.innerText = "INJECT"; input.value = ""; input.placeholder = "DATA SAVED"; }, 500); 
+            setTimeout(() => { activateMemory(val); btn.innerText = "INJECT"; input.value = ""; input.placeholder = "SAVED"; }, 500); 
         }
 
         function initThree() {
             const container = document.getElementById('three-container');
             const isMobile = window.innerWidth < 768;
 
-            scene = new THREE.Scene(); 
-            scene.fog = new THREE.FogExp2(0x020202, 0.005); 
-
+            scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x020202, 0.005); 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, isMobile ? 40 : 35, isMobile ? 90 : 60); 
-            camera.lookAt(0, 10, 0); 
+            camera.position.set(0, isMobile ? 40 : 35, isMobile ? 90 : 60); camera.lookAt(0, 10, 0); 
             
             renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
@@ -618,24 +656,16 @@
 
             window.addEventListener('keydown', (e) => { if ((e.key === 'Delete' || e.key === 'Backspace') && hoveredObject) removeMemory(hoveredObject); });
             
-            // --- UNIFIED INPUT HANDLERS (MOUSE & TOUCH) ---
             function updateMouseVector(clientX, clientY) {
                 const rect = container.getBoundingClientRect();
                 mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1; 
                 mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-                
                 const tooltip = document.getElementById('memory-3d-tooltip');
-                tooltip.style.left = clientX + 20 + 'px'; 
-                tooltip.style.top = clientY + 20 + 'px';
+                tooltip.style.left = clientX + 20 + 'px'; tooltip.style.top = clientY + 20 + 'px';
             }
 
-            container.addEventListener('mousedown', (e) => { 
-                isDragging = true; 
-                previousMousePosition = { x: e.clientX, y: e.clientY }; 
-            });
-            
+            container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
             document.addEventListener('mouseup', () => { isDragging = false; });
-            
             document.addEventListener('mousemove', (e) => {
                 updateMouseVector(e.clientX, e.clientY);
                 if (isDragging) {
@@ -645,7 +675,6 @@
                 }
             });
 
-            // TOUCH EVENTS
             container.addEventListener('touchstart', (e) => {
                 if(e.touches.length === 1) {
                     isDragging = true;
@@ -669,6 +698,7 @@
 
             function animate() {
                 requestAnimationFrame(animate);
+                
                 const distToCenter = Math.min(Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y), 1.0);
                 const threshold = 0.2; let explosionFactor = 0;
                 if(distToCenter > threshold) { explosionFactor = Math.pow((distToCenter - threshold) / (1.0 - threshold), 2) * 1.5; }
@@ -676,9 +706,7 @@
                 if (isAutoRotating) {
                     targetRotationY += (autoFocusTargetY - targetRotationY) * 0.05;
                     if(Math.abs(targetRotationY - autoFocusTargetY) < 0.01) isAutoRotating = false;
-                } else if(!isDragging) {
-                    targetRotationY += autoRotateSpeed;
-                }
+                } else if(!isDragging) { targetRotationY += autoRotateSpeed; }
 
                 if(pointsMesh) {
                     pointsMesh.rotation.y += (targetRotationY - pointsMesh.rotation.y) * 0.1;
@@ -692,14 +720,19 @@
                     for(let i = 0; i < positions.length; i += 3) {
                         const ox = initials[i]; const oy = initials[i+1]; const oz = initials[i+2];
                         const randX = randomDirs[i]; const randY = randomDirs[i+1]; const randZ = randomDirs[i+2];
-                        const flyDist = 300 * explosionFactor;
-                        const time = Date.now() * 0.001; const breath = 0.5 * Math.sin(time + ox);
-                        positions[i] = ox + (randX * flyDist) + breath; positions[i+1] = oy + (randY * flyDist) + breath; positions[i+2] = oz + (randZ * flyDist) + breath;
+                        
+                        const flyDist = 300 * explosionFactor; 
+                        const time = Date.now() * 0.001; 
+                        const breath = 0.5 * Math.sin(time + ox);
+
+                        positions[i] = ox + (randX * flyDist) + breath; 
+                        positions[i+1] = oy + (randY * flyDist) + breath; 
+                        positions[i+2] = oz + (randZ * flyDist) + breath;
                     }
                     pointsMesh.geometry.attributes.position.needsUpdate = true;
                 }
                 
-                memoryGroup.children.forEach((mesh, i) => {
+                memoryGroup.children.forEach((mesh) => {
                      mesh.rotation.x += 0.01; mesh.rotation.y += 0.02;
                      if (mesh.userData.initialPos) {
                          const init = mesh.userData.initialPos;
@@ -722,19 +755,13 @@
                     document.getElementById('tooltip-3d-content').innerText = crystalMesh.userData.text;
                     crystalMesh.scale.setScalar(1.5 + Math.sin(Date.now()*0.02)*0.2); 
                 } else {
-                    hoveredObject = null; 
-                    tooltip.style.opacity = 0; 
-                    document.body.style.cursor = 'default';
+                    hoveredObject = null; tooltip.style.opacity = 0; document.body.style.cursor = 'default';
                     memoryGroup.children.forEach(child => child.scale.setScalar(1));
                 }
                 renderer.render(scene, camera);
             }
             animate();
-            window.addEventListener('resize', () => { 
-                camera.aspect = window.innerWidth / window.innerHeight; 
-                camera.updateProjectionMatrix(); 
-                renderer.setSize(window.innerWidth, window.innerHeight); 
-            });
+            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         }
 
         function getParticleTexture() {
@@ -743,7 +770,6 @@
             const texture = new THREE.Texture(canvas); texture.needsUpdate = true; return texture;
         }
 
-        // --- V7 STRUCTURE GENERATION ---
         function generateStructure(isMobile) {
             const positions = []; const colors = []; const initials = []; const randomDirs = [];
             const baseRadius = 45; const groundLevel = -15;
@@ -763,15 +789,7 @@
             
             const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('initialPosition', new THREE.Float32BufferAttribute(initials, 3)); geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.setAttribute('randomDirection', new THREE.Float32BufferAttribute(randomDirs, 3));
             
-            const material = new THREE.PointsMaterial({ 
-                size: 0.7, 
-                vertexColors: true, 
-                transparent: true, 
-                opacity: 0.9, 
-                map: getParticleTexture(), 
-                depthWrite: false, 
-                sizeAttenuation: true 
-            });
+            const material = new THREE.PointsMaterial({ size: 0.7, vertexColors: true, transparent: true, opacity: 0.9, map: getParticleTexture(), depthWrite: false, sizeAttenuation: true });
             pointsMesh = new THREE.Points(geometry, material); scene.add(pointsMesh); 
         }
 
@@ -790,7 +808,7 @@
             let saved = JSON.parse(localStorage.getItem('stachus_memories')) || [];
             const updated = saved.filter(m => m.text !== mesh.userData.text);
             localStorage.setItem('stachus_memories', JSON.stringify(updated));
-            hoveredObject = null; document.body.style.cursor = 'default'; document.getElementById('memory-3d-tooltip').style.opacity = 0;
+            hoveredObject = null; document.getElementById('memory-3d-tooltip').style.opacity = 0;
         }
         window.purgeMemories = function() {
             if(confirm("WARNING: SYSTEM PURGE?")) { localStorage.removeItem('stachus_memories'); while(memoryGroup.children.length > 0){ memoryGroup.remove(memoryGroup.children[0]); } }
@@ -813,7 +831,6 @@
             const col = new THREE.Color().setHSL(hue, sat, light); return col.getHex();
         }
 
-        // --- STRICT SPAWN LOGIC: ONLY IN THE WALLS ---
         window.activateMemory = function(text) {
             if(!pointsMesh) return;
             const positions = pointsMesh.geometry.attributes.position.array;
