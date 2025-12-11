@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STACHUS: PROTOCOL V18 (MOBILE READY)</title>
+    <title>STACHUS: PROTOCOL V19 (FULL MOBILE TOUCH)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,8 +32,7 @@
             color: var(--text-main); 
             font-family: var(--font-mono); 
             overflow: hidden; 
-            /* 禁止移动端默认的滚动回弹，保证3D体验 */
-            overscroll-behavior: none;
+            overscroll-behavior: none; /* 禁止橡皮筋效果 */
         }
 
         /* ================= NAVIGATION & LAYOUT ================= */
@@ -519,17 +518,45 @@
         }
         function closeTerminal() { termStage.classList.remove('active'); }
 
-        // ================= MAP LOGIC =================
-        const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); let trails = []; let mouseX = -1000, mouseY = -1000; 
+        // ================= MAP LOGIC (TOUCH ENABLED) =================
+        const mapCanvas = document.getElementById('map-canvas'); 
+        const mapCtx = mapCanvas.getContext('2d'); 
+        const voidSection = document.getElementById('void');
+        let trails = []; 
+        let mouseX = -1000, mouseY = -1000; 
+
         window.addEventListener('resize', resizeMap); 
         function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; } 
         resizeMap(); loopMap();
         
-        document.getElementById('void').addEventListener('mousemove', (e) => { 
-            const rect = mapCanvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top; 
+        // --- UNIFIED MAP INPUT HANDLER ---
+        function handleMapInput(x, y) {
+            const rect = mapCanvas.getBoundingClientRect(); 
+            mouseX = x - rect.left; 
+            mouseY = y - rect.top; 
             trails.push({ x: mouseX + (Math.random()-0.5)*10, y: mouseY + (Math.random()-0.5)*10, life: 1.0, size: Math.random() * 4 + 2, color: '#ff0000' }); 
             if(trails.length > 100) trails.shift(); 
+        }
+
+        // MOUSE
+        voidSection.addEventListener('mousemove', (e) => { 
+            handleMapInput(e.clientX, e.clientY);
         });
+
+        // TOUCH (PREVENT SCROLL & HANDLE INPUT)
+        voidSection.addEventListener('touchmove', (e) => {
+            if(e.touches.length > 0) {
+                e.preventDefault(); // STOP SCROLLING
+                handleMapInput(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, {passive: false});
+
+        voidSection.addEventListener('touchstart', (e) => {
+             if(e.touches.length > 0) {
+                handleMapInput(e.touches[0].clientX, e.touches[0].clientY);
+             }
+        }, {passive: false});
+
         function loopMap() { 
             requestAnimationFrame(loopMap); 
             mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height); 
@@ -592,20 +619,16 @@
             window.addEventListener('keydown', (e) => { if ((e.key === 'Delete' || e.key === 'Backspace') && hoveredObject) removeMemory(hoveredObject); });
             
             // --- UNIFIED INPUT HANDLERS (MOUSE & TOUCH) ---
-            
-            // Helper to update raycaster mouse vector
             function updateMouseVector(clientX, clientY) {
                 const rect = container.getBoundingClientRect();
                 mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1; 
                 mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
                 
-                // Also move tooltip for visual feedback
                 const tooltip = document.getElementById('memory-3d-tooltip');
                 tooltip.style.left = clientX + 20 + 'px'; 
                 tooltip.style.top = clientY + 20 + 'px';
             }
 
-            // MOUSE EVENTS
             container.addEventListener('mousedown', (e) => { 
                 isDragging = true; 
                 previousMousePosition = { x: e.clientX, y: e.clientY }; 
@@ -622,19 +645,18 @@
                 }
             });
 
-            // TOUCH EVENTS (MOBILE SUPPORT)
+            // TOUCH EVENTS
             container.addEventListener('touchstart', (e) => {
                 if(e.touches.length === 1) {
                     isDragging = true;
                     previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                    // Immediate update for "Tap to click" behavior
                     updateMouseVector(e.touches[0].clientX, e.touches[0].clientY);
                 }
             }, {passive: false});
 
             container.addEventListener('touchmove', (e) => {
                 if(isDragging && e.touches.length === 1) {
-                    e.preventDefault(); // Stop page scrolling
+                    e.preventDefault(); 
                     const touch = e.touches[0];
                     targetRotationY += (touch.clientX - previousMousePosition.x) * 0.005;
                     targetRotationX += (touch.clientY - previousMousePosition.y) * 0.005;
@@ -645,7 +667,6 @@
 
             container.addEventListener('touchend', () => { isDragging = false; });
 
-            // --- ANIMATION LOOP ---
             function animate() {
                 requestAnimationFrame(animate);
                 const distToCenter = Math.min(Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y), 1.0);
@@ -688,7 +709,6 @@
                      }
                 });
 
-                // Raycasting Logic
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObjects(memoryGroup.children, true);
                 const tooltip = document.getElementById('memory-3d-tooltip');
