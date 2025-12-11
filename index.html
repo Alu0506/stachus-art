@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>STACHUS: PROTOCOL V24 (PURGE EDITION)</title>
+    <title>STACHUS: PROTOCOL V25 (AUDIO SYNC)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,7 +37,6 @@
         }
 
         /* ================= VFX LAYERS ================= */
-        /* Noise */
         .noise-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 90; opacity: 0.05;
@@ -46,7 +45,6 @@
         }
         @keyframes noise { 0% { transform: translate(0,0); } 100% { transform: translate(5%,5%); } }
 
-        /* Moving Grid */
         .grid-bg {
             position: fixed; top: 0; left: 0; width: 200%; height: 200%;
             background-image: 
@@ -71,21 +69,9 @@
         .progress-bar { width: 0%; height: 100%; background: var(--accent-green); transition: width 0.1s; box-shadow: 0 0 10px var(--accent-green); }
 
         /* ================= HUD ================= */
-        #hud-layer { 
-            position: fixed; inset: 0; pointer-events: none; z-index: 99; 
-            background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.6) 100%);
-        }
-        .scan-line { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1)); 
-            background-size: 100% 4px; pointer-events: none; opacity: 0.5; z-index: 98;
-        }
-        .hud-top-bar {
-            position: absolute; top: 0; left: 0; width: 100%; height: 60px;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; pointer-events: auto;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
-        }
+        #hud-layer { position: fixed; inset: 0; pointer-events: none; z-index: 99; background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.6) 100%); }
+        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1)); background-size: 100% 4px; pointer-events: none; opacity: 0.5; z-index: 98; }
+        .hud-top-bar { position: absolute; top: 0; left: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; pointer-events: auto; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); }
         .back-btn { font-family: var(--font-tech); color: #888; font-size: 12px; border: 1px solid #444; padding: 8px 15px; display: none; cursor: pointer; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .hud-trigger { font-family: var(--font-tech); font-size: 12px; color: var(--accent-green); border: 1px solid var(--accent-green); padding: 8px 12px; background: rgba(0, 20, 0, 0.8); cursor: pointer; letter-spacing: 1px; animation: border-pulse 2s infinite; }
         @keyframes border-pulse { 0% {box-shadow: 0 0 0 var(--accent-green);} 50% {box-shadow: 0 0 10px var(--accent-green);} 100% {box-shadow: 0 0 0 var(--accent-green);} }
@@ -106,9 +92,8 @@
         }
         .game-section.active { opacity: 1; pointer-events: auto; visibility: visible; z-index: 10; transform: scale(1); }
 
-        /* ================= GENERAL UI ELEMENTS ================= */
+        /* ================= UI ELEMENTS ================= */
         .glitch-title { font-family: var(--font-title); font-size: 15vw; color: #fff; line-height: 0.9; margin-bottom: 20px; text-shadow: 3px 3px 0px rgba(255, 0, 85, 0.5); }
-        
         .section-title { font-family: var(--font-tech); font-size: 8vw; color: var(--alert-red); border-bottom: 2px solid var(--alert-red); padding-bottom: 10px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; position: relative; }
         .section-title::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 30%; height: 2px; background: var(--accent-green); animation: loading-bar 2s infinite ease-in-out; }
         @keyframes loading-bar { 0% {left:0; width:0;} 50% {width:100%;} 100% {left:100%; width:0;} }
@@ -121,24 +106,51 @@
         .info-card.alert { border-color: var(--alert-red); background: rgba(255, 0, 85, 0.05); }
         .info-card.alert h3 { color: var(--alert-red); }
 
-        .action-btn { margin-top: 30px; width: 100%; max-width: 300px; font-family: var(--font-tech); font-size: 1.2rem; color: #000; background: var(--accent-green); border: none; padding: 18px 0; cursor: pointer; letter-spacing: 3px; text-transform: uppercase; font-weight: bold; clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); animation: btn-pulse 3s infinite; position: relative; overflow: hidden; }
+        /* ACTION BUTTON & LOCK LOGIC */
+        .action-btn { 
+            margin-top: 30px; width: 100%; max-width: 300px; 
+            font-family: var(--font-tech); font-size: 1.2rem; 
+            color: #000; background: var(--accent-green); 
+            border: none; padding: 18px 0; cursor: pointer; 
+            letter-spacing: 3px; text-transform: uppercase; font-weight: bold; 
+            clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); 
+            animation: btn-pulse 3s infinite; position: relative; overflow: hidden;
+            transition: all 0.5s ease;
+        }
         .action-btn::after { content: ">>"; position: absolute; right: 20px; opacity: 0.5; animation: arrow-blink 1s infinite; }
         @keyframes arrow-blink { 0%,100% {opacity:0.2} 50% {opacity:1} }
         .action-btn.alert { background: var(--alert-red); color: #fff; }
         @keyframes btn-pulse { 0% { box-shadow: 0 0 5px var(--accent-green); } 50% { box-shadow: 0 0 20px var(--accent-green); } 100% { box-shadow: 0 0 5px var(--accent-green); } }
 
-        /* Slide Styles */
+        /* LOCKED STATE CLASS */
+        .btn-locked {
+            opacity: 0; pointer-events: none; transform: translateY(20px); filter: grayscale(100%);
+        }
+        .btn-unlocked {
+            opacity: 1; pointer-events: auto; transform: translateY(0); filter: grayscale(0%);
+        }
+
+        /* REPLAY BUTTON */
+        .replay-btn {
+            position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            font-family: var(--font-tech); font-size: 10px; color: var(--neon-blue);
+            border: 1px solid var(--neon-blue); padding: 5px 10px;
+            cursor: pointer; background: rgba(0,0,0,0.8); z-index: 80;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .replay-btn:hover { background: var(--neon-blue); color: #000; }
+
+        /* Page Specifics */
         #slide-cover .mission-info { font-size: 1rem; color: #888; margin-bottom: 30px; border: 1px solid #333; padding: 15px; background: rgba(0,0,0,0.5); border-right: 3px solid var(--accent-green); }
         .gps-container { width: 100%; max-width: 350px; border: 2px dashed var(--neon-blue); padding: 20px; background: rgba(0, 247, 255, 0.05); margin-bottom: 20px; position: relative; }
         .gps-coords { font-family: var(--font-tech); font-size: 1.5rem; color: var(--neon-blue); margin: 10px 0; animation: text-flicker 2s infinite; }
 
-        /* Slide 4: Intrusion */
         #slide-intrusion { background: #120003; }
         .intrusion-alert { width: 100%; border: 2px solid var(--alert-red); padding: 20px; background: repeating-linear-gradient(45deg, rgba(255,0,85,0.1), rgba(255,0,85,0.1) 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px); animation: bg-scroll 0.5s linear infinite reverse; }
         @keyframes bg-scroll { 0% { background-position: 0 0; } 100% { background-position: 40px 0; } }
         .handwritten { font-family: 'Brush Script MT', cursive; color: var(--accent-green); font-size: 2.5rem; transform: rotate(-5deg); display: block; margin: 20px 0; text-shadow: 0 0 10px var(--accent-green); animation: blink 0.1s infinite; }
 
-        /* ================= MAP ================= */
+        /* MAP */
         #void { background-color: #000; }
         #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4) sepia(20%); z-index: 1; }
         #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
@@ -147,7 +159,7 @@
         .marker { position: absolute; width: 30px; height: 30px; z-index: 30; cursor: pointer; background: rgba(255, 0, 85, 0.2); border: 1px solid var(--alert-red); box-shadow: 0 0 15px var(--alert-red); transform: rotate(45deg); transition: 0.3s; animation: pulse-marker 2s infinite; }
         @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-        /* ================= 3D RECONSTRUCTION ================= */
+        /* 3D */
         #reconstruction { background: #000; }
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
         #three-container:active { cursor: grabbing; }
@@ -160,67 +172,31 @@
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.5); } }
         #memory-3d-tooltip { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.95); border: 1px solid var(--alert-red); padding: 15px; max-width: 250px; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 1000; box-shadow: 0 0 20px rgba(255, 0, 85, 0.2); text-align: left; }
 
-        /* ================= RESTORED TERMINAL (GLITCH VISUALS) ================= */
-        #fullscreen-stage {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200;
-            display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s;
-        }
+        /* TERMINAL */
+        #fullscreen-stage { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         #fullscreen-stage.active { opacity: 1; pointer-events: auto; }
         #fullscreen-stage::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 10000; background: repeating-linear-gradient(rgba(0,0,0,0.2) 0, transparent 2px); animation: scanline-scroll 10s linear infinite; }
         @keyframes scanline-scroll { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
-
-        .terminal-window {
-            width: 100%; height: 95%; background: #080808; 
-            border-top: 4px solid var(--alert-red);
-            display: flex; flex-direction: column; 
-            box-shadow: 0 -10px 50px rgba(255, 0, 85, 0.4);
-            position: relative;
-        }
-
-        /* FIXED: CLOSE BUTTON VISIBLE INSIDE */
-        .close-terminal { 
-            position: absolute; top: 10px; right: 10px; z-index: 100;
-            color: #fff; background: var(--alert-red); padding: 5px 15px; 
-            font-family: var(--font-tech); border: 2px solid #fff; font-weight: bold;
-            cursor: pointer; box-shadow: 0 0 10px var(--alert-red);
-        }
-
+        .terminal-window { width: 100%; height: 95%; background: #080808; border-top: 4px solid var(--alert-red); display: flex; flex-direction: column; box-shadow: 0 -10px 50px rgba(255, 0, 85, 0.4); position: relative; }
+        .close-terminal { position: absolute; top: 10px; right: 10px; z-index: 100; color: #fff; background: var(--alert-red); padding: 5px 15px; font-family: var(--font-tech); border: 2px solid #fff; font-weight: bold; cursor: pointer; box-shadow: 0 0 10px var(--alert-red); }
         .terminal-visual { height: 30%; width: 100%; position: relative; border-bottom: 2px solid var(--alert-red); overflow: hidden; }
-        
-        /* RESTORED GLITCH EFFECTS */
         .glitch-img-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
         .glitch-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(150%) brightness(0.7) sepia(30%); }
         .terminal-visual::after { content: ""; position: absolute; inset: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClIorXAAAAHlBMVEUAAAD///////////////////////////////////8f+B7AAAAAEHRSTlMABg8dHiQvMzY4PkxTVF1+c/4AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAASUlEQVQ4jWNgGAVDBQylMGiAMY0yplEw2AAjCjEIA6YmGGBiYqJgZ2JiZGRgZGRmZsZUZmZgYAAxGUDKGEQYGBgYmBgYGAAAVaYFqQ56270AAAAASUVORK5CYII='); opacity: 0.3; pointer-events: none; animation: noise-shift 0.2s infinite steps(4); z-index: 5;}
         @keyframes noise-shift { 0% {background-position: 0 0;} 100% {background-position: 100px 100px;} }
-        
-        /* GLITCH TEXT RESTORATION */
         .glitch-text { position: relative; display: inline-block; }
         .glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; }
         .glitch-text::before { color: var(--alert-red); z-index: -1; animation: glitch-shift 0.4s infinite linear alternate-reverse; }
         .glitch-text::after { color: var(--neon-blue); z-index: -2; animation: glitch-shift 0.4s infinite linear alternate-reverse 0.2s; }
         @keyframes glitch-shift { 0% { transform: translate(2px, 0) skew(0deg); } 20% { transform: translate(-2px, 0) skew(2deg); } 40% { transform: translate(0, 2px) skew(0deg); } 60% { transform: translate(2px, -2px) skew(-2deg); } 80% { transform: translate(-2px, 2px) skew(0deg); } 100% { transform: translate(0, 0) skew(0deg); } }
-
-        .terminal-data { 
-            height: 70%; padding: 20px; overflow-y: auto; padding-bottom: 80px; /* Space for Purge Btn */
-            background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px); background-size: 100% 20px;
-        }
+        .terminal-data { height: 70%; padding: 20px; overflow-y: auto; padding-bottom: 80px; background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px); background-size: 100% 20px; }
         .data-title { font-size: 2rem; color: #fff; margin-bottom: 10px; line-height: 1; font-family: var(--font-tech); text-transform: uppercase;}
         .human-text { font-family: var(--font-serif); font-style: italic; color: #ccc; margin-bottom: 20px; border-left: 2px solid var(--accent-green); padding-left: 10px; }
         .history-text { color: #888; font-size: 0.9rem; }
         .ai-text { color: var(--alert-red); font-family: var(--font-tech); font-size: 0.9rem; margin-top: 20px; animation: text-flicker 0.1s infinite alternate; }
         @keyframes text-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; transform: translateX(1px); } }
-
-        /* NEW PURGE BUTTON */
-        .purge-btn-container {
-            position: absolute; bottom: 0; left: 0; width: 100%; 
-            padding: 15px; background: rgba(0,0,0,0.9); border-top: 1px solid #333;
-        }
-        .purge-btn {
-            width: 100%; background: rgba(255,0,0,0.1); border: 2px solid var(--alert-red);
-            color: var(--alert-red); font-family: var(--font-tech); font-size: 1.2rem;
-            padding: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
-            transition: 0.2s;
-        }
+        .purge-btn-container { position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.9); border-top: 1px solid #333; }
+        .purge-btn { width: 100%; background: rgba(255,0,0,0.1); border: 2px solid var(--alert-red); color: var(--alert-red); font-family: var(--font-tech); font-size: 1.2rem; padding: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s; }
         .purge-btn:active { background: var(--alert-red); color: #000; }
 
     </style>
@@ -230,13 +206,17 @@
     <div class="grid-bg"></div>
     <div class="noise-overlay"></div>
     
+    <audio id="audio-briefing" src="1.mp3"></audio>
+    <audio id="audio-mechanics" src="2.mp3"></audio>
+    <audio id="audio-reconstruction" src="3.mp3"></audio>
+    
     <div id="loader">
         <div class="boot-log" id="boot-log">
             > SYSTEM_INIT... OK<br>
             > MEMORY_CHECK... 64TB OK<br>
             > LOADING MAP_DATA... OK<br>
             > CONNECTING SATELLITE... OK<br>
-            > DECRYPTING PROTOCOL V24...<br>
+            > DECRYPTING PROTOCOL V25...<br>
         </div>
         <div class="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
@@ -270,6 +250,7 @@
         </section>
 
         <section id="slide-briefing" class="game-section">
+            <div class="replay-btn" onclick="replayAudio('audio-briefing')">🔊 REPLAY VOICE</div>
             <h2 class="section-title">BRIEFING</h2>
             <div class="info-card">
                 <h3>OFFICIAL DIRECTIVE</h3>
@@ -279,10 +260,11 @@
                 <h3>⚠ WARNING</h3>
                 <p>The 'glitches' might be real memories. System compromise detected.</p>
             </div>
-            <button class="action-btn alert" style="margin-top:20px;" onclick="navigateTo('slide-mechanics')">ACCEPT</button>
+            <button id="btn-briefing" class="action-btn alert btn-locked" style="margin-top:20px;" onclick="navigateTo('slide-mechanics')">ACCEPT</button>
         </section>
 
         <section id="slide-mechanics" class="game-section">
+            <div class="replay-btn" onclick="replayAudio('audio-mechanics')">🔊 REPLAY VOICE</div>
             <h2 class="section-title" style="color:var(--neon-blue); border-color:var(--neon-blue)">LBS SCANNER</h2>
             <div class="gps-container">
                 <div style="font-size:0.8rem; color:#666;">SATELLITE LINK: ACTIVE</div>
@@ -291,7 +273,7 @@
                     Physical movement required.<br>Swipe map to reveal data.
                 </p>
             </div>
-            <button class="action-btn" onclick="navigateTo('void')">ENTER MAP</button>
+            <button id="btn-mechanics" class="action-btn btn-locked" onclick="navigateTo('void')">ENTER MAP</button>
         </section>
 
         <section id="void" class="game-section">
@@ -310,7 +292,6 @@
 
         <section id="slide-intrusion" class="game-section">
             <h1 style="font-family:var(--font-title); font-size:4rem; color:var(--alert-red); line-height:1;" data-final="SYSTEM<br>FAILURE">#@!%&<br>ERROR</h1>
-            
             <div class="intrusion-alert" style="margin: 30px 0;">
                 <p style="color:#fff; font-size:0.9rem;">>> DECRYPTING...</p>
                 <p style="color:#666; text-decoration: line-through;">MALICIOUS CODE</p>
@@ -323,8 +304,9 @@
         </section>
 
         <section id="reconstruction" class="game-section">
+            <div class="replay-btn" style="top:20px;" onclick="replayAudio('audio-reconstruction')">🔊 REPLAY VOICE</div>
             <div id="three-container"></div>
-            <div id="recon-console">
+            <div id="recon-console" class="btn-locked">
                 <h2 style="font-family:var(--font-tech); color:#fff; font-size:1.2rem; margin-bottom:10px;">MEMORY REBUILD</h2>
                 <div class="input-area">
                     <input type="text" id="memory-input" placeholder="Enter missing memory..." autocomplete="off">
@@ -351,17 +333,14 @@
             <div class="terminal-data">
                 <div style="color:var(--alert-red); font-size:10px; letter-spacing:2px;">ENCRYPTED_FILE</div>
                 <h2 class="data-title glitch-text" id="term-title" data-text="TITLE">TITLE</h2>
-                
                 <div style="margin: 20px 0;">
                     <div style="font-size:10px; color:var(--accent-green); margin-bottom:5px;">/// HUMAN INPUT</div>
                     <p class="human-text" id="term-human">...</p>
                 </div>
-
                 <div style="border:1px dashed #333; padding:10px; margin-bottom:20px;">
                     <div style="font-size:10px; color:#666;">/// HISTORY FACT</div>
                     <p class="history-text" id="term-history">...</p>
                 </div>
-
                 <div class="ai-text" id="term-ai">SYSTEM ANALYSIS...</div>
             </div>
             <div class="purge-btn-container">
@@ -373,8 +352,68 @@
     <script>
         // ================= JAVASCRIPT LOGIC =================
         
-        // 1. BIOS Loader Logic
+        // --- 0. AUDIO CONTROLLER ---
+        const audioMap = {
+            'slide-briefing': { audioId: 'audio-briefing', btnId: 'btn-briefing' },
+            'slide-mechanics': { audioId: 'audio-mechanics', btnId: 'btn-mechanics' },
+            'reconstruction': { audioId: 'audio-reconstruction', btnId: 'recon-console' }
+        };
+        const completedAudios = new Set(); // Stores IDs of pages where audio finished
+
+        function initAudioLogic() {
+            Object.keys(audioMap).forEach(pageId => {
+                const config = audioMap[pageId];
+                const audio = document.getElementById(config.audioId);
+                const btn = document.getElementById(config.btnId);
+                
+                // When audio ends, unlock button and save state
+                audio.addEventListener('ended', () => {
+                    unlockButton(btn);
+                    completedAudios.add(pageId);
+                });
+            });
+        }
+
+        function unlockButton(btnElement) {
+            btnElement.classList.remove('btn-locked');
+            btnElement.classList.add('btn-unlocked');
+        }
+
+        function handlePageAudio(targetId) {
+            // 1. Pause all audios first
+            document.querySelectorAll('audio').forEach(a => { a.pause(); a.currentTime = 0; });
+
+            // 2. Check if current page has audio
+            if(audioMap[targetId]) {
+                const config = audioMap[targetId];
+                const audio = document.getElementById(config.audioId);
+                const btn = document.getElementById(config.btnId);
+
+                // Play Audio
+                audio.play().catch(e => console.log("Auto-play prevented by browser policy", e));
+
+                // Check lock state
+                if(completedAudios.has(targetId)) {
+                    // Already listened? Unlock immediately
+                    unlockButton(btn);
+                } else {
+                    // First time? Ensure locked
+                    btn.classList.remove('btn-unlocked');
+                    btn.classList.add('btn-locked');
+                }
+            }
+        }
+
+        function replayAudio(audioId) {
+            const audio = document.getElementById(audioId);
+            audio.currentTime = 0;
+            audio.play();
+        }
+
+        // --- 1. BIOS Loader Logic ---
         window.addEventListener('load', () => { 
+            initAudioLogic(); // Init Audio Listeners
+            
             let progress = 0;
             const bar = document.getElementById('progress-bar');
             const log = document.getElementById('boot-log');
@@ -401,7 +440,7 @@
             }, 50);
         });
 
-        // 2. Text Decoding Effect
+        // --- 2. Text Decoding Effect ---
         const chars = "!@#$%^&*()_+-=[]{}|;':,./<>?";
         function decodeText(element) {
             const originalText = element.getAttribute('data-final').replace(/<br>/g, "\n"); 
@@ -423,6 +462,9 @@
 
         const historyStack = ['slide-cover'];
         function navigateTo(targetId) {
+            // Handle Audio Logic First
+            handlePageAudio(targetId);
+
             document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById(targetId);
             target.classList.add('active');
@@ -452,9 +494,7 @@
             if(historyStack.length > 1) {
                 historyStack.pop();
                 const prevId = historyStack[historyStack.length-1];
-                document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
-                document.getElementById(prevId).classList.add('active');
-                if(prevId === 'slide-cover') document.querySelector('.back-btn').style.display = 'none';
+                navigateTo(prevId); // Use navigateTo to trigger audio logic on back
             }
         }
 
@@ -463,7 +503,7 @@
             d.classList.toggle('visible');
         }
 
-        // 3. Terminal Logic & Purge System
+        // --- 3. Terminal Logic & Purge System ---
         const archives = [
             { id: "01", title: "THE LOOP", img: "./1.jpg", human: "\"Fifteen years underground... sunlight is a myth here.\"", history: "Built 1970. Europe's largest underground mall.", ai: "ERROR: EXIT NOT FOUND." },
             { id: "02", title: "FLUID GHOST", img: "./2.jpg", human: "\"At 4 AM, the fountain whispers names.\"", history: "1972 Olympics construction.", ai: "ANALYSIS: LIQUID MEMORY LEAK." },
@@ -471,7 +511,7 @@
             { id: "04", title: "THE WALL", img: "./4.jpg", human: "\"I swear there was a wall here yesterday.\"", history: "Fortifications demolished 18th century.", ai: "SYSTEM: GHOST GEOMETRY." }
         ];
         
-        let currentMarkerIndex = -1; // Track which marker is open
+        let currentMarkerIndex = -1;
 
         function openTerminal(index) {
             currentMarkerIndex = index;
@@ -495,17 +535,19 @@
             if(currentMarkerIndex !== -1) {
                 const marker = document.getElementById(`marker-${currentMarkerIndex}`);
                 if(marker) {
-                    // Visual effect for deletion
                     marker.style.transition = "all 0.5s";
                     marker.style.transform = "scale(3)";
                     marker.style.opacity = "0";
+                    marker.style.pointerEvents = "none"; // Disable click
+                    // Keep display:block but hidden visually to maintain layout logic if needed, 
+                    // or just let it vanish. For persistent hide within session:
                     setTimeout(() => { marker.style.display = 'none'; }, 500);
                 }
                 closeTerminal();
             }
         }
 
-        // 4. MAP LOGIC
+        // --- 4. MAP LOGIC ---
         const mapCanvas = document.getElementById('map-canvas'); 
         const mapCtx = mapCanvas.getContext('2d'); 
         const voidSection = document.getElementById('void');
@@ -555,7 +597,7 @@
         }
         loopMap();
 
-        // 5. THREE.JS LOGIC
+        // --- 5. THREE.JS LOGIC ---
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse;
         let targetRotationY = 0, targetRotationX = 0; 
         let isDragging = false; 
@@ -658,11 +700,9 @@
                     for(let i = 0; i < positions.length; i += 3) {
                         const ox = initials[i]; const oy = initials[i+1]; const oz = initials[i+2];
                         const randX = randomDirs[i]; const randY = randomDirs[i+1]; const randZ = randomDirs[i+2];
-                        
                         const flyDist = 300 * explosionFactor; 
                         const time = Date.now() * 0.001; 
                         const breath = 0.5 * Math.sin(time + ox);
-
                         positions[i] = ox + (randX * flyDist) + breath; 
                         positions[i+1] = oy + (randY * flyDist) + breath; 
                         positions[i+2] = oz + (randZ * flyDist) + breath;
@@ -711,13 +751,8 @@
         function generateStructure(isMobile) {
             const positions = []; const colors = []; const initials = []; const randomDirs = [];
             const baseRadius = 45; const groundLevel = -15;
-            
             function getRandomDir() { const v = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)); v.normalize(); return v; }
-            function addPoint(x, y, z) { 
-                positions.push(x, y, z); initials.push(x, y, z); 
-                colors.push(0.8, 0.8, 0.85); 
-                const dir = getRandomDir(); randomDirs.push(dir.x, dir.y, dir.z); 
-            }
+            function addPoint(x, y, z) { positions.push(x, y, z); initials.push(x, y, z); colors.push(0.8, 0.8, 0.85); const dir = getRandomDir(); randomDirs.push(dir.x, dir.y, dir.z); }
             
             for(let i=0; i<2500; i++) { const a = (Math.random() - 0.5) * 0.5; const h = groundLevel + Math.random() * 25; const d = Math.random() * 8; if (Math.abs(a) < 0.08 && h < -5) continue; const r = baseRadius - d - 2; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); }
             const wallCount = 4000;
