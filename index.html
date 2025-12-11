@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>STACHUS: PROTOCOL V28 (FINAL MIX)</title>
+    <title>STACHUS: PROTOCOL V29 (NARRATIVE FLOW)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -94,15 +94,7 @@
 
         /* ================= UI ELEMENTS ================= */
         .glitch-title { font-family: var(--font-title); font-size: 15vw; color: #fff; line-height: 0.9; margin-bottom: 5px; text-shadow: 3px 3px 0px rgba(255, 0, 85, 0.5); }
-        
-        /* NEW SUBTITLE STYLE */
-        .subtitle {
-            font-family: var(--font-tech); font-size: 1rem; color: #888;
-            letter-spacing: 3px; margin-bottom: 30px; text-transform: uppercase;
-            border-top: 1px solid var(--accent-green); padding-top: 10px;
-            width: 80%; opacity: 0.8;
-        }
-
+        .subtitle { font-family: var(--font-tech); font-size: 1rem; color: #888; letter-spacing: 3px; margin-bottom: 30px; text-transform: uppercase; border-top: 1px solid var(--accent-green); padding-top: 10px; width: 80%; opacity: 0.8; }
         .section-title { font-family: var(--font-tech); font-size: 8vw; color: var(--alert-red); border-bottom: 2px solid var(--alert-red); padding-bottom: 10px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; position: relative; }
         .section-title::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 30%; height: 2px; background: var(--accent-green); animation: loading-bar 2s infinite ease-in-out; }
         @keyframes loading-bar { 0% {left:0; width:0;} 50% {width:100%;} 100% {left:100%; width:0;} }
@@ -130,7 +122,6 @@
         .action-btn.alert { background: var(--alert-red); color: #fff; }
         @keyframes btn-pulse { 0% { box-shadow: 0 0 5px var(--accent-green); } 50% { box-shadow: 0 0 20px var(--accent-green); } 100% { box-shadow: 0 0 5px var(--accent-green); } }
 
-        /* LOCK STATES & AUDIO UI */
         .btn-locked { opacity: 0; pointer-events: none; transform: translateY(20px); filter: grayscale(100%); }
         .btn-unlocked { opacity: 1; pointer-events: auto; transform: translateY(0); filter: grayscale(0%); }
 
@@ -168,7 +159,6 @@
         @keyframes bg-scroll { 0% { background-position: 0 0; } 100% { background-position: 40px 0; } }
         .handwritten { font-family: 'Brush Script MT', cursive; color: var(--accent-green); font-size: 2.5rem; transform: rotate(-5deg); display: block; margin: 20px 0; text-shadow: 0 0 10px var(--accent-green); animation: blink 0.1s infinite; }
 
-        /* MAP */
         #void { background-color: #000; }
         #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4) sepia(20%); z-index: 1; }
         #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
@@ -177,7 +167,6 @@
         .marker { position: absolute; width: 30px; height: 30px; z-index: 30; cursor: pointer; background: rgba(255, 0, 85, 0.2); border: 1px solid var(--alert-red); box-shadow: 0 0 15px var(--alert-red); transform: rotate(45deg); transition: 0.3s; animation: pulse-marker 2s infinite; }
         @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-        /* 3D */
         #reconstruction { background: #000; }
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
         #three-container:active { cursor: grabbing; }
@@ -190,7 +179,6 @@
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.5); } }
         #memory-3d-tooltip { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.95); border: 1px solid var(--alert-red); padding: 15px; max-width: 250px; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 1000; box-shadow: 0 0 20px rgba(255, 0, 85, 0.2); text-align: left; }
 
-        /* TERMINAL */
         #fullscreen-stage { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         #fullscreen-stage.active { opacity: 1; pointer-events: auto; }
         #fullscreen-stage::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 10000; background: repeating-linear-gradient(rgba(0,0,0,0.2) 0, transparent 2px); animation: scanline-scroll 10s linear infinite; }
@@ -226,9 +214,8 @@
     
     <audio id="audio-briefing" src="1.mp3"></audio>
     <audio id="audio-mechanics" src="2.mp3"></audio>
-    <audio id="audio-intrusion" src="3.mp3"></audio>
-
-    <audio id="bgm-1" src="B1.mp3" loop></audio>
+    <audio id="audio-intrusion-1" src="3.mp3"></audio>
+    <audio id="audio-intrusion-2" src="4.mp3"></audio> <audio id="bgm-1" src="B1.mp3" loop></audio>
     <audio id="bgm-2" src="B2.mp3" loop></audio>
     <audio id="bgm-3" src="B3.mp3" loop></audio>
     
@@ -238,7 +225,7 @@
             > MEMORY_CHECK... 64TB OK<br>
             > LOADING MAP_DATA... OK<br>
             > CONNECTING SATELLITE... OK<br>
-            > DECRYPTING PROTOCOL V28...<br>
+            > DECRYPTING PROTOCOL V29...<br>
         </div>
         <div class="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
@@ -259,10 +246,10 @@
         </div>
     </div>
 
-    <div id="game-container">
+     <div id="game-container">
         
         <section id="slide-cover" class="game-section active">
-            <h1 class="glitch-title" data-final="PROJECT<br>STACHUS">PROJECT<br>STACHUS</h1>
+            <h1 class="glitch-title" data-final="WHAT IF？<br>STACHUS">PROJECT<br>STACHUS</h1>
             <div class="subtitle">The Absence of City's Memory</div>
             <div class="mission-info">
                 TARGET: KARLSPLATZ<br>
@@ -310,12 +297,10 @@
         <section id="void" class="game-section">
             <div id="map-bg"></div>
             <canvas id="map-canvas"></canvas>
-            
             <div class="marker" id="marker-0" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"></div>
             <div class="marker" id="marker-1" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"></div>
             <div class="marker" id="marker-2" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"></div>
             <div class="marker" id="marker-3" style="top: 75%; left: 60%;" onclick="event.stopPropagation(); openTerminal(3)"></div>
-            
             <div class="map-ui-overlay">
                 <button class="upload-btn" onclick="navigateTo('slide-intrusion')">UPLOAD DATA >></button>
             </div>
@@ -337,13 +322,15 @@
                 </p>
             </div>
             
-            <div id="hint-intrusion" class="audio-hint">⚠ YOUR SYSTEM IS BEING INVADING！</div>
-            <button id="btn-intrusion" class="action-btn alert btn-locked" onclick="navigateTo('reconstruction')">WHAT SHOULD I DO！</button>
+            <div id="hint-intrusion" class="audio-hint">⚠ FINAL TRUTH // DO NOT IGNORE</div>
+            
+            <button id="btn-intrusion-1" class="action-btn alert btn-locked" onclick="playIntrusionPhaseTwo()">WHAT SHOULD I DO!?</button>
+            
+            <button id="btn-intrusion-2" class="action-btn alert btn-locked" style="display:none;" onclick="navigateTo('reconstruction')">RECONSTRUCT MEMORY</button>
         </section>
 
         <section id="reconstruction" class="game-section">
             <div id="three-container"></div>
-            
             <div id="recon-console">
                 <h2 style="font-family:var(--font-tech); color:#fff; font-size:1.2rem; margin-bottom:10px;">MEMORY REBUILD</h2>
                 <div class="input-area">
@@ -352,7 +339,6 @@
                 </div>
                 <div style="margin-top:10px; font-size:9px; color:#666;" onclick="purgeMemories()">[ PURGE SYSTEM ]</div>
             </div>
-            
             <div id="particles-container"></div>
             <div id="memory-3d-tooltip">
                 <div style="color:var(--accent-green); font-size:10px;">[ FRAGMENT ]</div>
@@ -391,7 +377,7 @@
     <script>
         // ================= JAVASCRIPT LOGIC =================
         
-        // --- 0. BGM MANAGER (MIXED VOLUME) ---
+        // --- 0. BGM MANAGER (MIXED: B1=0.2, B2=0.4, B3=0.2) ---
         const bgmConfig = {
             'slide-cover': 'bgm-1',
             'slide-briefing': 'bgm-1',
@@ -403,37 +389,27 @@
 
         function handleBGM(targetId) {
             const requiredBGMId = bgmConfig[targetId];
-            
-            // 1. Stop all other BGMs
             ['bgm-1', 'bgm-2', 'bgm-3'].forEach(id => {
                 const audio = document.getElementById(id);
-                if(id !== requiredBGMId) {
-                    audio.pause();
-                    audio.currentTime = 0;
-                }
+                if(id !== requiredBGMId) { audio.pause(); audio.currentTime = 0; }
             });
-
-            // 2. Play required BGM
             if(requiredBGMId) {
                 const audio = document.getElementById(requiredBGMId);
-                // NEW VOLUME LEVELS: B1=0.2, B2=0.4, B3=0.2
                 if(requiredBGMId === 'bgm-1') audio.volume = 0.2;
                 else if(requiredBGMId === 'bgm-2') audio.volume = 0.4;
                 else if(requiredBGMId === 'bgm-3') audio.volume = 0.2;
-
-                if(audio.paused) {
-                    audio.play().catch(e => console.log("BGM waiting for interaction"));
-                }
+                if(audio.paused) audio.play().catch(e => console.log("BGM waiting for interaction"));
             }
         }
 
-        // --- 1. VOICE AUDIO LOGIC (UPDATED MAPPING) ---
+        // --- 1. VOICE AUDIO LOGIC (Intrusion is Special) ---
         const audioMap = {
             'slide-briefing': { audioId: 'audio-briefing', btnId: 'btn-briefing', controlsId: 'controls-briefing', hintId: 'hint-briefing' },
             'slide-mechanics': { audioId: 'audio-mechanics', btnId: 'btn-mechanics', controlsId: 'controls-mechanics', hintId: 'hint-mechanics' },
-            'slide-intrusion': { audioId: 'audio-intrusion', btnId: 'btn-intrusion', controlsId: 'controls-intrusion', hintId: 'hint-intrusion' }
+            'slide-intrusion': { audioId: 'audio-intrusion-1', btnId: 'btn-intrusion-1', controlsId: 'controls-intrusion', hintId: 'hint-intrusion' }
         };
         const completedAudios = new Set(); 
+        let hasIntrusionPhase2Played = false;
 
         function initAudioLogic() {
             Object.keys(audioMap).forEach(pageId => {
@@ -444,11 +420,28 @@
                 const hint = document.getElementById(config.hintId);
                 
                 audio.addEventListener('ended', () => {
-                    unlockButton(btn);
-                    controls.classList.add('visible');
-                    hint.classList.remove('visible');
-                    completedAudios.add(pageId);
+                    // Logic for Intrusion Phase 1 end
+                    if(pageId === 'slide-intrusion') {
+                        if(!hasIntrusionPhase2Played) {
+                            unlockButton(btn);
+                        }
+                    } else {
+                        unlockButton(btn);
+                        completedAudios.add(pageId);
+                    }
+                    if(controls) controls.classList.add('visible');
+                    if(hint) hint.classList.remove('visible');
                 });
+            });
+
+            // Special listener for Intrusion Phase 2 (4.mp3)
+            const audioIntrusion2 = document.getElementById('audio-intrusion-2');
+            audioIntrusion2.addEventListener('ended', () => {
+                const btn2 = document.getElementById('btn-intrusion-2');
+                btn2.style.display = 'block';
+                setTimeout(() => unlockButton(btn2), 100);
+                hasIntrusionPhase2Played = true;
+                completedAudios.add('slide-intrusion'); // Mark whole page as done
             });
         }
 
@@ -460,10 +453,40 @@
         }
 
         function handlePageVoice(targetId) {
-            // Reset state
+            // Stop all voices
             document.querySelectorAll('audio:not([id^="bgm"])').forEach(a => { a.pause(); a.currentTime = 0; });
             document.querySelectorAll('.control-btn').forEach(b => { if(b.innerText.includes('RESUME')) b.innerText = '⏸ PAUSE'; });
 
+            // INTRUSION PAGE SPECIAL LOGIC
+            if(targetId === 'slide-intrusion') {
+                const btn1 = document.getElementById('btn-intrusion-1');
+                const btn2 = document.getElementById('btn-intrusion-2');
+                const controls = document.getElementById('controls-intrusion');
+                const hint = document.getElementById('hint-intrusion');
+                const audio1 = document.getElementById('audio-intrusion-1');
+
+                if(completedAudios.has(targetId)) {
+                    // Already done whole sequence? Show Final Button directly
+                    btn1.style.display = 'none';
+                    btn2.style.display = 'block';
+                    unlockButton(btn2);
+                    controls.classList.add('visible');
+                    hint.classList.remove('visible');
+                } else {
+                    // Reset to Phase 1
+                    btn1.style.display = 'block';
+                    btn2.style.display = 'none';
+                    btn1.classList.remove('btn-unlocked');
+                    btn1.classList.add('btn-locked');
+                    controls.classList.remove('visible');
+                    hint.classList.add('visible');
+                    audio1.volume = 1.0;
+                    audio1.play().catch(e=>console.log("Blocked"));
+                }
+                return;
+            }
+
+            // STANDARD PAGE LOGIC
             if(audioMap[targetId]) {
                 const config = audioMap[targetId];
                 const audio = document.getElementById(config.audioId);
@@ -471,7 +494,6 @@
                 const controls = document.getElementById(config.controlsId);
                 const hint = document.getElementById(config.hintId);
 
-                // FORCE VOICE VOLUME TO MAX
                 audio.volume = 1.0; 
                 audio.play().catch(e => console.log("Voice blocked"));
 
@@ -488,22 +510,56 @@
             }
         }
 
+        // Intrusion Specific: Phase 1 -> Phase 2
+        function playIntrusionPhaseTwo() {
+            const btn1 = document.getElementById('btn-intrusion-1');
+            const audio2 = document.getElementById('audio-intrusion-2');
+            
+            // Hide first button
+            btn1.classList.remove('btn-unlocked');
+            btn1.classList.add('btn-locked');
+            setTimeout(() => { btn1.style.display = 'none'; }, 500);
+
+            // Play second audio
+            audio2.volume = 1.0;
+            audio2.play();
+        }
+
         function replayAudio(pageId) {
-            const config = audioMap[pageId];
-            const audio = document.getElementById(config.audioId);
-            const hint = document.getElementById(config.hintId);
+            let audio;
+            if(pageId === 'slide-intrusion') {
+                // Intrusion replay always plays part 1 (3.mp3)
+                audio = document.getElementById('audio-intrusion-1');
+            } else {
+                const config = audioMap[pageId];
+                audio = document.getElementById(config.audioId);
+            }
+            const hint = document.querySelector(`#${pageId} .audio-hint`);
             audio.currentTime = 0;
             audio.volume = 1.0; 
             audio.play();
-            hint.classList.add('visible');
-            const pauseBtn = document.querySelector(`#${config.controlsId} .control-btn:nth-child(2)`);
+            if(hint) hint.classList.add('visible');
+            
+            const controlsId = (pageId === 'slide-intrusion') ? 'controls-intrusion' : audioMap[pageId].controlsId;
+            const pauseBtn = document.querySelector(`#${controlsId} .control-btn:nth-child(2)`);
             if(pauseBtn) pauseBtn.innerText = '⏸ PAUSE';
         }
 
         function togglePause(pageId) {
-            const config = audioMap[pageId];
-            const audio = document.getElementById(config.audioId);
-            const pauseBtn = document.querySelector(`#${config.controlsId} .control-btn:nth-child(2)`);
+            let audio;
+            // Handle Intrusion special case: which audio is currently active?
+            if(pageId === 'slide-intrusion') {
+                const a1 = document.getElementById('audio-intrusion-1');
+                const a2 = document.getElementById('audio-intrusion-2');
+                audio = (!a1.paused || a1.currentTime > 0 && !a1.ended) ? a1 : a2;
+            } else {
+                const config = audioMap[pageId];
+                audio = document.getElementById(config.audioId);
+            }
+
+            const controlsId = (pageId === 'slide-intrusion') ? 'controls-intrusion' : audioMap[pageId].controlsId;
+            const pauseBtn = document.querySelector(`#${controlsId} .control-btn:nth-child(2)`);
+
             if(audio.paused) { audio.play(); pauseBtn.innerText = '⏸ PAUSE'; } 
             else { audio.pause(); pauseBtn.innerText = '▶ RESUME'; }
         }
@@ -534,8 +590,7 @@
             document.body.addEventListener('click', () => {
                 const bgm1 = document.getElementById('bgm-1');
                 if(bgm1.paused && document.getElementById('slide-cover').classList.contains('active')) {
-                    bgm1.volume = 0.2; 
-                    bgm1.play();
+                    bgm1.volume = 0.2; bgm1.play();
                 }
             }, {once:true});
         });
@@ -566,7 +621,6 @@
             target.classList.add('active');
             
             if(targetId !== historyStack[historyStack.length-1]) historyStack.push(targetId);
-            
             if(targetId === 'slide-cover' || targetId === 'slide-intrusion') {
                 const title = target.querySelector('h1');
                 if(title) decodeText(title);
