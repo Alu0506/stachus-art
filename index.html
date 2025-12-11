@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>STACHUS: CLASSIFIED PROTOCOL</title>
+    <title>STACHUS: PROTOCOL V16 (STRICT BOUNDS)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,60 +25,95 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; cursor: crosshair; }
-        body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; scroll-behavior: smooth; }
-        body.fullscreen-mode { overflow: hidden !important; }
+        
+        body, html { 
+            width: 100%; height: 100%; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            font-family: var(--font-mono); 
+            overflow: hidden; 
+        }
 
-        /* ================= LOADER ================= */
-        #loader {
-            position: fixed; inset: 0; background: #000; z-index: 99999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 1s ease-out;
+        /* ================= NAVIGATION & LAYOUT ================= */
+        .game-section { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            background: var(--bg-color); z-index: 1;
+            opacity: 0; pointer-events: none; 
+            transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1); 
         }
-        .loader-text {
-            font-family: var(--font-tech); font-size: 20px; color: var(--accent-green);
-            margin-bottom: 10px; animation: blink 0.5s infinite;
-        }
-        .loader-bar {
-            width: 200px; height: 2px; background: #333; position: relative;
-        }
-        .loader-progress {
-            position: absolute; top: 0; left: 0; height: 100%; background: var(--accent-green);
-            width: 0%; animation: load-progress 2.5s ease-in-out forwards;
-        }
-        @keyframes load-progress { 0% {width: 0%;} 40% {width: 30%;} 70% {width: 80%;} 100% {width: 100%;} }
 
-        /* ================= HUD LAYER ================= */
+        .game-section.active { opacity: 1; pointer-events: auto; z-index: 10; }
+
+        .back-btn {
+            position: absolute; top: 40px; left: 40px;
+            font-family: var(--font-tech); color: #666; font-size: 14px;
+            cursor: pointer; border: 1px solid #333; padding: 5px 15px;
+            transition: 0.3s; z-index: 100; display: none; 
+        }
+        .back-btn:hover { border-color: var(--neon-blue); color: var(--neon-blue); }
+
+        .next-phase-btn {
+            position: absolute; bottom: 40px; right: 40px;
+            font-family: var(--font-tech); color: var(--accent-green); font-size: 14px;
+            cursor: pointer; border: 1px solid var(--accent-green); padding: 10px 20px;
+            background: rgba(0,0,0,0.8); z-index: 90;
+            animation: pulse-border 2s infinite;
+        }
+        .next-phase-btn:hover { background: var(--accent-green); color: #000; }
+
+        @keyframes pulse-border { 0% {box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.4);} 70% {box-shadow: 0 0 0 10px rgba(0, 255, 65, 0);} 100% {box-shadow: 0 0 0 0 rgba(0, 255, 65, 0);} }
+
+        /* ================= HUD LAYER (TOP RIGHT) ================= */
         #hud-layer { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            pointer-events: none; z-index: 99; 
+            position: fixed; inset: 0; pointer-events: none; z-index: 99; 
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 3px, 3px 100%;
         }
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.3); opacity: 0.5; animation: scan 6s linear infinite; }
-        @keyframes scan { 0% {top: -10%;} 100% {top: 110%;} }
-        
         .hud-corner { position: absolute; width: 30px; height: 30px; border: 2px solid #555; opacity: 0.5; }
         .tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
         .tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
         .bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
         .br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
 
-        .hud-data { position: absolute; font-family: var(--font-tech); font-size: 10px; color: var(--accent-green); letter-spacing: 1px; opacity: 0.8; }
-        .data-tl { top: 25px; left: 60px; } 
-        .data-br { bottom: 25px; right: 60px; text-align: right; }
+        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.3); opacity: 0.5; animation: scan 6s linear infinite; }
+        @keyframes scan { 0% {top: -10%;} 100% {top: 110%;} }
 
-        /* ================= GAME SLIDES (PPT STYLE) ================= */
-        .game-section { 
-            min-height: 100vh; width: 100%; position: relative; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            padding: 2rem; z-index: 2; text-align: center;
-            border-bottom: 1px solid #111;
+        /* HUD & DROPDOWN (RIGHT) */
+        .hud-container {
+            position: absolute; top: 30px; right: 40px;
+            pointer-events: auto; z-index: 101; text-align: right;
         }
+        .hud-trigger {
+            font-family: var(--font-tech); font-size: 12px; color: var(--accent-green);
+            border: 1px solid var(--accent-green); padding: 5px 10px;
+            background: rgba(0, 20, 0, 0.8); cursor: pointer; letter-spacing: 2px;
+            text-transform: uppercase; display: inline-block; transition: 0.2s;
+            animation: border-flicker 3s infinite;
+        }
+        .hud-trigger:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 10px var(--accent-green); }
+        .hud-trigger::before { content: "[ + ] "; }
+        .hud-trigger.active::before { content: "[ - ] "; }
 
-        /* Slide 1: Cover */
+        .hud-details {
+            margin-top: 10px; font-family: var(--font-mono); font-size: 10px; color: #bbb;
+            background: rgba(0, 0, 0, 0.9); border-right: 2px solid var(--alert-red); padding: 10px;
+            display: none; max-width: 250px; backdrop-filter: blur(5px); line-height: 1.6;
+            margin-left: auto;
+        }
+        .hud-details.visible { display: block; animation: slide-down 0.3s ease-out; }
+        .hud-label { color: var(--alert-red); font-weight: bold; display: block; margin-top: 5px; letter-spacing: 1px; }
+        .hud-value { color: var(--neon-blue); text-shadow: 0 0 2px var(--neon-blue); }
+
+        @keyframes border-flicker { 0%, 100% { border-color: var(--accent-green); opacity: 1; } 50% { border-color: transparent; opacity: 0.7; } 52% { border-color: var(--accent-green); opacity: 1; } }
+        @keyframes slide-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hud-data-br { position: absolute; bottom: 25px; right: 60px; text-align: right; font-family: var(--font-tech); font-size: 10px; color: var(--accent-green); letter-spacing: 1px; opacity: 0.8; }
+
+        /* ================= SLIDE STYLES ================= */
         #slide-cover { background: radial-gradient(circle at center, #111 0%, #000 90%); }
         .glitch-title { 
-            font-family: var(--font-title); font-size: 12vw; color: #fff; 
+            font-family: var(--font-title); font-size: 10vw; color: #fff; 
             text-transform: uppercase; letter-spacing: -2px; line-height: 0.9;
             text-shadow: 4px 4px 0px rgba(255, 0, 85, 0.5);
             animation: glitch-skew 3s infinite linear alternate-reverse;
@@ -88,10 +123,8 @@
         .mission-info { text-align: left; border-left: 3px solid var(--accent-green); padding-left: 20px; margin: 2rem 0; color: #888; font-size: 1.2rem;}
         .highlight { color: var(--accent-green); background: rgba(0, 255, 65, 0.1); padding: 0 5px; }
 
-        /* Slide 2: Briefing */
         #slide-briefing { background: #050505; }
         .section-title { font-family: var(--font-tech); font-size: 2rem; color: var(--alert-red); margin-bottom: 2rem; border-bottom: 2px solid var(--alert-red); display: inline-block; padding-bottom: 5px; }
-        
         .box-container { display: flex; gap: 2rem; margin-bottom: 3rem; flex-wrap: wrap; justify-content: center;}
         .data-box { border: 1px solid #333; padding: 20px; background: rgba(255,255,255,0.03); max-width: 400px; text-align: left; position: relative;}
         .data-box h3 { font-family: var(--font-tech); margin-bottom: 10px; color: var(--alert-red); }
@@ -102,7 +135,6 @@
             position: absolute; bottom: 10%; right: 10%;
         }
 
-        /* Slide 3: Mechanics */
         #slide-mechanics { background: #020202; }
         .mech-title { color: var(--neon-blue); border-color: var(--neon-blue); }
         .gps-mockup { 
@@ -124,12 +156,9 @@
         .action-btn:hover { background: #fff; box-shadow: 0 0 20px var(--accent-green); transform: translateY(-2px); }
         .action-btn.alert { background: var(--alert-red); color: #fff; }
         .action-btn.alert:hover { background: #fff; color: var(--alert-red); box-shadow: 0 0 20px var(--alert-red); }
-        
-        .scroll-down-hint { font-size: 0.8rem; color: #444; margin-top: 10px; animation: blink 1s infinite;}
 
-        /* ================= ORIGINAL PARTS ================= */
-        /* PART 3: MAP (VOID) */
-        #void { height: 100vh; width: 100%; position: relative; background-color: #000; overflow: hidden; padding: 0; }
+        /* ================= MAP (VOID) ================= */
+        #void { background-color: #000; }
         #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4) sepia(20%); z-index: 1; }
         #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
         
@@ -139,8 +168,8 @@
         .marker-label { position: absolute; left: 40px; top: -10px; font-size: 10px; font-family: var(--font-mono); color: var(--alert-red); background: #000; border: 1px solid var(--alert-red); padding: 2px 5px; white-space: nowrap; opacity: 0; transition: 0.3s; transform: rotate(-45deg); pointer-events: none; }
         .marker:hover .marker-label { opacity: 1; }
 
-        /* PART 4: 3D RECONSTRUCTION */
-        #reconstruction { height: 100vh; width: 100%; background: #000; position: relative; border-top: 1px solid #222; overflow: hidden; display: block; padding: 0; }
+        /* ================= 3D RECONSTRUCTION ================= */
+        #reconstruction { background: #000; }
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
         #three-container:active { cursor: grabbing; }
 
@@ -197,14 +226,19 @@
             width: 90vw; height: 85vh; background: #050505; border: 2px solid var(--alert-red);
             display: flex; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(255, 0, 85, 0.2);
             transform: perspective(1000px) rotateX(2deg) rotateY(-1deg); border-radius: 10px;
+            flex-direction: column; 
         }
+        @media(min-width: 768px) { .terminal-window { flex-direction: row; } }
+        
         .terminal-window::before { content: "SYSTEM CRITICAL // DATA CORRUPTION DETECTED"; position: absolute; top: 0; left: 0; width: 100%; background: var(--alert-red); color: #000; font-family: var(--font-tech); font-size: 10px; padding: 2px; text-align: center; animation: flicker 0.5s infinite; z-index: 20; }
         @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; background: var(--neon-blue); } }
 
         .close-terminal { position: absolute; top: 30px; right: 30px; color: var(--alert-red); border: 2px solid var(--alert-red); padding: 10px 20px; font-family: var(--font-tech); font-size: 14px; cursor: pointer; z-index: 100; background: #000; transition: 0.2s; }
         .close-terminal:hover { background: var(--alert-red); color: #000; box-shadow: 0 0 20px var(--alert-red); }
 
-        .terminal-visual { flex: 1.2; position: relative; overflow: hidden; border-right: 3px double var(--alert-red); filter: contrast(120%) brightness(0.9); }
+        .terminal-visual { flex: 1.2; position: relative; overflow: hidden; border-right: 3px double var(--alert-red); filter: contrast(120%) brightness(0.9); height: 30vh; }
+        @media(min-width: 768px) { .terminal-visual { height: auto; border-right: 3px double var(--alert-red); border-bottom: none; } }
+
         .glitch-img-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
         .glitch-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(150%) brightness(0.7) sepia(30%); transition: all 0.3s cubic-bezier(0.1, 0.7, 1.0, 0.1); opacity: 0.8; mix-blend-mode: luminosity; }
         .terminal-visual::after { content: ""; position: absolute; inset: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClIorXAAAAHlBMVEUAAAD///////////////////////////////////8f+B7AAAAAEHRSTlMABg8dHiQvMzY4PkxTVF1+c/4AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAASUlEQVQ4jWNgGAVDBQylMGiAMY0yplEw2AAjCjEIA6YmGGBiYqJgZ2JiZGRgZGRmZsZUZmZgYAAxGUDKGEQYGBgYmBgYGAAAVaYFqQ56270AAAAASUVORK5CYII='); opacity: 0.2; pointer-events: none; animation: noise-shift 0.2s infinite steps(4); z-index: 5;}
@@ -219,8 +253,8 @@
         .data-block { margin-bottom: 40px; padding: 20px; border: 1px dashed #333; position: relative; transform: rotate(0.5deg); background: rgba(255,255,255,0.02); }
         .data-block:nth-child(even) { transform: rotate(-0.8deg); background: rgba(0,0,0,0.3); border-color: var(--alert-red); }
         .block-label { font-family: var(--font-tech); font-size: 12px; color: var(--accent-green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--accent-green); display: inline-block;}
-        .human-text { color: #ccc; font-family: var(--font-serif); font-size: 1.1rem; line-height: 1.5; font-style: italic; white-space: pre-wrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        .history-text { color: #fff; font-family: var(--font-sans); font-size: 0.9rem; line-height: 1.4; border-left: 3px solid #555; padding-left: 10px; background: rgba(255,255,255,0.05); }
+        .human-text { color: #ccc; font-family: var(--font-serif); font-size: 1rem; line-height: 1.5; font-style: italic; white-space: pre-wrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .history-text { color: #fff; font-family: var(--font-sans); font-size: 0.8rem; line-height: 1.4; border-left: 3px solid #555; padding-left: 10px; background: rgba(255,255,255,0.05); }
         .ai-block { border: 2px solid var(--alert-red); background: rgba(255, 0, 85, 0.15); color: var(--alert-red); font-family: var(--font-tech); font-size: 0.9rem; }
         .ai-text { animation: text-flicker 0.1s infinite alternate; }
         @keyframes text-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; transform: translateX(1px); } }
@@ -237,21 +271,38 @@
     <div id="hud-layer">
         <div class="hud-corner tl"></div><div class="hud-corner tr"></div><div class="hud-corner bl"></div><div class="hud-corner br"></div>
         <div class="scan-line"></div>
-        <div class="hud-data data-tl">OPERATIVE: 007<br>MISSION: ACTIVE<br>STATUS: DEPLOYED</div>
-        <div class="hud-data data-br">LAT/LON: <span id="coords">WAITING GPS...</span></div>
+        
+        <div class="hud-container">
+            <div class="hud-trigger" onclick="toggleHud()">CLASSIFIED_INTEL</div>
+            <div class="hud-details" id="hud-details">
+                <span class="hud-label">>>> PROJECT NAME:</span>
+                <span class="hud-value">STACHUS_ABSENCE_PROTOCOL</span><br>
+                <span class="hud-label">>>> OPERATIVE:</span>
+                <span class="hud-value">RUNXUAN LIU</span><br>
+                <span class="hud-label">>>> MISSION:</span>
+                <span class="hud-value">ARTISTIC PROJECT 1</span><br>
+                <span class="hud-label">>>> SUPERVISOR:</span>
+                <span class="hud-value">PROF. DR. COSENTINO</span><br>
+                <span class="hud-label">>>> SYSTEM STATUS:</span>
+                <span class="hud-value" style="color:#00ff41">STABLE (LOCAL_LAYER)</span>
+            </div>
+        </div>
+
+        <div class="hud-data-br">LAT/LON: <span id="coords">WAITING GPS...</span></div>
     </div>
 
-    <main id="main-content">
+    <div class="back-btn" onclick="goBack()">[ < RETURN ]</div>
+
+    <div id="game-container">
         
-        <section id="slide-cover" class="game-section">
+        <section id="slide-cover" class="game-section active">
             <h1 class="glitch-title">PROJECT<br>STACHUS</h1>
             <div class="mission-info">
                 <p>TARGET: KARLSPLATZ_VOID</p>
                 <p>OBJECTIVE: <span class="highlight">RECOVER MEMORY</span></p>
                 <p>CLEARANCE: TOP SECRET</p>
             </div>
-            <button class="action-btn" onclick="goToSection('slide-briefing')">INITIALIZE SYSTEM</button>
-            <div class="scroll-down-hint">[ OR SCROLL DOWN ]</div>
+            <button class="action-btn" onclick="navigateTo('slide-briefing')">INITIALIZE SYSTEM</button>
         </section>
 
         <section id="slide-briefing" class="game-section">
@@ -267,7 +318,7 @@
                 </div>
             </div>
             <div class="stamp">CLASSIFIED</div>
-            <button class="action-btn alert" onclick="goToSection('slide-mechanics')">ACCEPT MISSION</button>
+            <button class="action-btn alert" onclick="navigateTo('slide-mechanics')">ACCEPT MISSION</button>
         </section>
 
         <section id="slide-mechanics" class="game-section">
@@ -281,19 +332,22 @@
                     <span style="color: var(--accent-green);">> TARGET LOCKED <</span>
                 </p>
             </div>
-            <button class="action-btn" onclick="goToSection('void')">ENTER THE VOID</button>
+            <button class="action-btn" onclick="navigateTo('void')">ENTER THE VOID</button>
         </section>
 
-        <section id="void" class="game-section" style="padding:0;">
+        <section id="void" class="game-section">
             <div id="map-bg"></div>
             <canvas id="map-canvas"></canvas>
+            
             <div class="marker" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"><div class="marker-label">01: THE LOOP</div></div>
             <div class="marker" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"><div class="marker-label">02: FLUID GHOST</div></div>
             <div class="marker" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"><div class="marker-label">03: IDENTITY WAR</div></div>
             <div class="marker" style="top: 75%; left: 60%;" onclick="event.stopPropagation(); openTerminal(3)"><div class="marker-label">04: DELETED WALL</div></div>
+            
+            <div class="next-phase-btn" onclick="navigateTo('reconstruction')">[ PHASE 2: RECONSTRUCTION ]</div>
         </section>
 
-        <section id="reconstruction">
+        <section id="reconstruction" class="game-section">
             <div id="three-container"></div>
             <div id="recon-console">
                 <h2>Memory Reconstruction</h2>
@@ -311,7 +365,8 @@
                 <div style="margin-top:5px; font-size:9px; color:#666; font-family:var(--font-mono);">[DEL] TO DELETE</div>
             </div>
         </section>
-    </main>
+
+    </div>
 
     <div id="fullscreen-stage">
         <div class="terminal-window">
@@ -341,18 +396,63 @@
     </div>
 
     <script>
-        // ================= LOADER & NAV =================
+        // ================= LOADER & HUD TOGGLE =================
         window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
-            }, 2500); // 2.5s loading time
+            setTimeout(() => { document.getElementById('loader').style.opacity = '0'; }, 2000);
         });
 
-        function goToSection(id) {
-            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-            if(id === 'void') {
-                setTimeout(resizeMap, 500); // Ensure map resizes correctly after scrolling
+        function toggleHud() {
+            const details = document.getElementById('hud-details');
+            const trigger = document.querySelector('.hud-trigger');
+            if(details.style.display === 'block') {
+                details.style.display = 'none';
+                details.classList.remove('visible');
+                trigger.classList.remove('active');
+            } else {
+                details.style.display = 'block';
+                setTimeout(() => details.classList.add('visible'), 10);
+                trigger.classList.add('active');
+            }
+        }
+
+        // ================= NAV =================
+        const historyStack = ['slide-cover']; 
+
+        function navigateTo(targetId) {
+            const current = document.querySelector('.game-section.active');
+            if(current) current.classList.remove('active');
+            const target = document.getElementById(targetId);
+            if(target) target.classList.add('active');
+
+            if(targetId !== historyStack[historyStack.length-1]) { historyStack.push(targetId); }
+
+            const backBtn = document.querySelector('.back-btn');
+            if(targetId === 'slide-cover') {
+                backBtn.style.display = 'none';
+                historyStack.length = 0; historyStack.push('slide-cover');
+            } else {
+                backBtn.style.display = 'block';
+            }
+
+            if(targetId === 'void') { setTimeout(resizeMap, 100); }
+            if(targetId === 'reconstruction') {
+                setTimeout(() => {
+                    if(camera && renderer) {
+                        camera.aspect = window.innerWidth / window.innerHeight;
+                        camera.updateProjectionMatrix();
+                        renderer.setSize(window.innerWidth, window.innerHeight);
+                    }
+                }, 100);
+            }
+        }
+
+        function goBack() {
+            if(historyStack.length > 1) {
+                historyStack.pop(); 
+                const prevId = historyStack[historyStack.length - 1]; 
+                document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(prevId).classList.add('active');
+                if(prevId === 'slide-cover') { document.querySelector('.back-btn').style.display = 'none'; }
             }
         }
 
@@ -378,21 +478,15 @@
             document.getElementById('term-history').innerText = data.history;
             document.getElementById('term-ai').innerText = data.ai;
             termStage.classList.add('active');
-            document.body.classList.add('fullscreen-mode');
         }
-        function closeTerminal() {
-            termStage.classList.remove('active');
-            document.body.classList.remove('fullscreen-mode');
-        }
+        function closeTerminal() { termStage.classList.remove('active'); }
 
         // ================= MAP LOGIC =================
         const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); let trails = []; let mouseX = -1000, mouseY = -1000; 
         window.addEventListener('resize', resizeMap); 
-        function resizeMap() { 
-            const voidSec = document.getElementById('void');
-            if(voidSec) { mapCanvas.width = voidSec.offsetWidth; mapCanvas.height = voidSec.offsetHeight; }
-        } 
+        function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; } 
         resizeMap(); loopMap();
+        
         document.getElementById('void').addEventListener('mousemove', (e) => { 
             const rect = mapCanvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top; 
             trails.push({ x: mouseX + (Math.random()-0.5)*10, y: mouseY + (Math.random()-0.5)*10, life: 1.0, size: Math.random() * 4 + 2, color: '#ff0000' }); 
@@ -417,9 +511,12 @@
             mapCtx.globalAlpha = 1.0; 
         }
 
-        // ================= 3D LOGIC (FINAL OPTIMIZED) =================
+        // ================= 3D LOGIC (V7 CORE + STRICT BOUNDS) =================
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse;
-        let targetRotationY = 0, targetRotationX = 0; let isDragging = false; let previousMousePosition = { x: 0, y: 0 }; const autoRotateSpeed = -0.002;
+        let targetRotationY = 0, targetRotationX = 0; let isDragging = false; let previousMousePosition = { x: 0, y: 0 }; 
+        const autoRotateSpeed = -0.002;
+        let isAutoRotating = false; 
+        let autoFocusTargetY = 0; 
 
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
         function submitMemory() { 
@@ -431,16 +528,25 @@
 
         function initThree() {
             const container = document.getElementById('three-container');
-            scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x020202, 0.012);
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 35, 60); camera.lookAt(0, 10, 0); 
-            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight); container.appendChild(renderer.domElement);
+            const isMobile = window.innerWidth < 768;
 
-            memoryGroup = new THREE.Group(); scene.add(memoryGroup); pointsMesh = new THREE.Group(); memoryGroup.position.y = -15;
+            scene = new THREE.Scene(); 
+            scene.fog = new THREE.FogExp2(0x020202, 0.005); // V7 FOG SETTING
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, isMobile ? 40 : 35, isMobile ? 90 : 60); 
+            camera.lookAt(0, 10, 0); 
+            
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+            renderer.setSize(window.innerWidth, window.innerHeight); 
+            container.appendChild(renderer.domElement);
+
+            memoryGroup = new THREE.Group(); scene.add(memoryGroup); pointsMesh = new THREE.Group(); 
+            pointsMesh.position.y = -15; memoryGroup.position.y = -15;
             raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
 
-            generateStructure(); loadSavedMemories();
+            generateStructure(isMobile); loadSavedMemories();
 
             window.addEventListener('keydown', (e) => { if ((e.key === 'Delete' || e.key === 'Backspace') && hoveredObject) removeMemory(hoveredObject); });
             
@@ -465,7 +571,13 @@
                 const threshold = 0.2; let explosionFactor = 0;
                 if(distToCenter > threshold) { explosionFactor = Math.pow((distToCenter - threshold) / (1.0 - threshold), 2) * 1.5; }
 
-                if(!isDragging) { targetRotationY += autoRotateSpeed; }
+                if (isAutoRotating) {
+                    targetRotationY += (autoFocusTargetY - targetRotationY) * 0.05;
+                    if(Math.abs(targetRotationY - autoFocusTargetY) < 0.01) isAutoRotating = false;
+                } else if(!isDragging) {
+                    targetRotationY += autoRotateSpeed;
+                }
+
                 if(pointsMesh) {
                     pointsMesh.rotation.y += (targetRotationY - pointsMesh.rotation.y) * 0.1;
                     pointsMesh.rotation.x += (targetRotationX - pointsMesh.rotation.x) * 0.1;
@@ -509,27 +621,53 @@
                 renderer.render(scene, camera);
             }
             animate();
-            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+            window.addEventListener('resize', () => { 
+                camera.aspect = window.innerWidth / window.innerHeight; 
+                camera.updateProjectionMatrix(); 
+                renderer.setSize(window.innerWidth, window.innerHeight); 
+            });
         }
+
         function getParticleTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d');
             ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
             const texture = new THREE.Texture(canvas); texture.needsUpdate = true; return texture;
         }
-        function generateStructure() {
+
+        // --- V7 STRUCTURE GENERATION ---
+        function generateStructure(isMobile) {
             const positions = []; const colors = []; const initials = []; const randomDirs = [];
             const baseRadius = 45; const groundLevel = -15;
+            
             function getRandomDir() { const v = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)); v.normalize(); return v; }
-            function addPoint(x, y, z) { positions.push(x, y, z); initials.push(x, y, z); colors.push(0.8, 0.8, 0.85); const dir = getRandomDir(); randomDirs.push(dir.x, dir.y, dir.z); }
+            function addPoint(x, y, z) { 
+                positions.push(x, y, z); initials.push(x, y, z); 
+                // V7 ORIGINAL COLORS (Grey-White)
+                colors.push(0.8, 0.8, 0.85); 
+                const dir = getRandomDir(); randomDirs.push(dir.x, dir.y, dir.z); 
+            }
+            
             for(let i=0; i<2500; i++) { const a = (Math.random() - 0.5) * 0.5; const h = groundLevel + Math.random() * 25; const d = Math.random() * 8; if (Math.abs(a) < 0.08 && h < -5) continue; const r = baseRadius - d - 2; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); }
             const wallCount = 4000;
             for(let i=0; i<wallCount; i++) { const side = Math.random() > 0.5 ? 1 : -1; const a = (0.28 + Math.random() * (Math.PI/1.7 - 0.28)) * side; const h = groundLevel + Math.random() * 35; const t = Math.random() * 4; const r = baseRadius + t; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); }
             for(let i = 0; i < 1200; i++) { const theta = Math.random() * Math.PI * 2; const rRatio = Math.sqrt(Math.random()); const x = 18 * rRatio * Math.cos(theta); const z = 30 * rRatio * Math.sin(theta); const y = groundLevel + 0.5; addPoint(x, y, z); }
             for(let i = 0; i < 800; i++) { const a = -Math.PI/1.5 + Math.random() * (Math.PI*1.3); const r = baseRadius + Math.random() * 40; const x = Math.cos(a) * r; const z = Math.sin(a) * r; if ((x*x)/(900) + (z*z)/(324) < 1.5) continue; addPoint(x, groundLevel, z); }
+            
             const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('initialPosition', new THREE.Float32BufferAttribute(initials, 3)); geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.setAttribute('randomDirection', new THREE.Float32BufferAttribute(randomDirs, 3));
-            const material = new THREE.PointsMaterial({ size: 0.7, vertexColors: true, transparent: true, opacity: 0.5, map: getParticleTexture(), depthWrite: false, sizeAttenuation: true });
-            pointsMesh = new THREE.Points(geometry, material); scene.add(pointsMesh); pointsMesh.position.y = -15;
+            
+            // --- MATERIAL: V7 ORIGINAL SETTINGS (No Additive) ---
+            const material = new THREE.PointsMaterial({ 
+                size: 0.7, 
+                vertexColors: true, 
+                transparent: true, 
+                opacity: 0.9, 
+                map: getParticleTexture(), 
+                depthWrite: false, 
+                sizeAttenuation: true 
+            });
+            pointsMesh = new THREE.Points(geometry, material); scene.add(pointsMesh); 
         }
+
         function saveMemories(text, x, y, z, colorHex) {
             let existing = JSON.parse(localStorage.getItem('stachus_memories')) || [];
             existing.push({ text, x, y, z, colorHex });
@@ -550,28 +688,53 @@
         window.purgeMemories = function() {
             if(confirm("WARNING: SYSTEM PURGE?")) { localStorage.removeItem('stachus_memories'); while(memoryGroup.children.length > 0){ memoryGroup.remove(memoryGroup.children[0]); } }
         };
+
         function createMemoryCrystal(text, x, y, z, colorHex) {
-            const geo = new THREE.IcosahedronGeometry(1.5, 0);
+            const geo = new THREE.IcosahedronGeometry(2.5, 0);
             const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.8 });
             const mesh = new THREE.Mesh(geo, mat);
-            const glowGeo = new THREE.SphereGeometry(0.8, 16, 16);
+            const glowGeo = new THREE.SphereGeometry(1.3, 16, 16);
             const glowMat = new THREE.MeshBasicMaterial({ color: colorHex });
             const glowMesh = new THREE.Mesh(glowGeo, glowMat);
             mesh.add(glowMesh);
             mesh.position.set(x, y, z); mesh.userData = { text: text, initialPos: {x, y, z} }; 
             memoryGroup.add(mesh);
         }
+
+        function getNeonColor() {
+            const hue = Math.random(); const sat = 0.9; const light = 0.6;
+            const col = new THREE.Color().setHSL(hue, sat, light); return col.getHex();
+        }
+
+        // --- STRICT SPAWN LOGIC: ONLY IN THE WALLS ---
         window.activateMemory = function(text) {
             if(!pointsMesh) return;
             const positions = pointsMesh.geometry.attributes.position.array;
+            
             let attempts = 0;
-            while(attempts < 500) {
+            // Increased attempts to ensure we find a valid spot
+            while(attempts < 2000) {
+                // Pick a random particle
                 const idx = Math.floor(Math.random() * (positions.length/3));
-                const x = positions[idx*3]; const y = positions[idx*3+1]; const z = positions[idx*3+2];
-                if(y > -14 && y < 30) {
-                    const randomColor = Math.random() * 0xffffff;
+                let x = positions[idx*3]; 
+                let y = positions[idx*3+1]; 
+                let z = positions[idx*3+2];
+                
+                // Calculate radius from center
+                const radius = Math.sqrt(x*x + z*z);
+
+                // STRICT FILTERING:
+                // 1. Height: Above floor (-5) but below ceiling (20)
+                // 2. Radius: Between 35 and 55. 
+                //    (The walls are around radius 45. <35 is the void, >55 is the scattered floor)
+                if(y > -5 && y < 20 && radius > 35 && radius < 55) {
+                    
+                    const randomColor = getNeonColor();
                     createMemoryCrystal(text, x, y, z, randomColor);
                     saveMemories(text, x, y, z, randomColor);
+                    
+                    autoFocusTargetY = -Math.atan2(x, z);
+                    isAutoRotating = true; 
                     return;
                 }
                 attempts++;
