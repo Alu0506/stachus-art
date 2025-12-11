@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>STACHUS: PROTOCOL V23 (VISUAL OVERLOAD)</title>
+    <title>STACHUS: PROTOCOL V24 (PURGE EDITION)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,17 +36,17 @@
             position: fixed; 
         }
 
-        /* ================= VFX LAYERS (NEW) ================= */
-        /* 1. Grain/Noise Effect */
+        /* ================= VFX LAYERS ================= */
+        /* Noise */
         .noise-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 90; opacity: 0.05;
             background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAA5OTkAAABMTExERERmZmYzMzNmZmYAAABw23E9AAAACHRSTlMABg8lKzM3Q0Z68C0AAAABYktHRACIBR1IAAAAJElEQVQ4jWNgYBASEGCYwIACTAwhDAwM5QwMDEA0hCFUA0YKBQA72QDbmK6+xAAAAABJRU5ErkJggg==');
             animation: noise 0.5s steps(2) infinite;
         }
-        @keyframes noise { 0% { transform: translate(0,0); } 10% { transform: translate(-5%,-5%); } 20% { transform: translate(-10%,5%); } 30% { transform: translate(5%,-10%); } 40% { transform: translate(-5%,15%); } 50% { transform: translate(-10%,5%); } 60% { transform: translate(15%,0); } 70% { transform: translate(0,10%); } 80% { transform: translate(-15%,0); } 90% { transform: translate(10%,5%); } 100% { transform: translate(5%,0); } }
+        @keyframes noise { 0% { transform: translate(0,0); } 100% { transform: translate(5%,5%); } }
 
-        /* 2. Moving Grid Background */
+        /* Moving Grid */
         .grid-bg {
             position: fixed; top: 0; left: 0; width: 200%; height: 200%;
             background-image: 
@@ -59,7 +59,7 @@
         }
         @keyframes grid-move { 0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); } 100% { transform: perspective(500px) rotateX(60deg) translateY(40px) translateZ(-200px); } }
 
-        /* ================= LOADER (BIOS STYLE) ================= */
+        /* ================= LOADER ================= */
         #loader {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;
@@ -70,52 +70,31 @@
         .progress-container { width: 100%; height: 4px; background: #111; position: relative; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background: var(--accent-green); transition: width 0.1s; box-shadow: 0 0 10px var(--accent-green); }
 
-        /* ================= HUD LAYER ================= */
+        /* ================= HUD ================= */
         #hud-layer { 
             position: fixed; inset: 0; pointer-events: none; z-index: 99; 
             background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.6) 100%);
         }
-        
         .scan-line { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1)); 
             background-size: 100% 4px; pointer-events: none; opacity: 0.5; z-index: 98;
         }
-
         .hud-top-bar {
             position: absolute; top: 0; left: 0; width: 100%; height: 60px;
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 20px; pointer-events: auto;
             background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
         }
-
-        .back-btn {
-            font-family: var(--font-tech); color: #888; font-size: 12px;
-            border: 1px solid #444; padding: 8px 15px; display: none; cursor: pointer;
-            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-        }
-
-        .hud-trigger {
-            font-family: var(--font-tech); font-size: 12px; color: var(--accent-green);
-            border: 1px solid var(--accent-green); padding: 8px 12px;
-            background: rgba(0, 20, 0, 0.8); cursor: pointer; letter-spacing: 1px;
-            animation: border-pulse 2s infinite;
-        }
+        .back-btn { font-family: var(--font-tech); color: #888; font-size: 12px; border: 1px solid #444; padding: 8px 15px; display: none; cursor: pointer; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        .hud-trigger { font-family: var(--font-tech); font-size: 12px; color: var(--accent-green); border: 1px solid var(--accent-green); padding: 8px 12px; background: rgba(0, 20, 0, 0.8); cursor: pointer; letter-spacing: 1px; animation: border-pulse 2s infinite; }
         @keyframes border-pulse { 0% {box-shadow: 0 0 0 var(--accent-green);} 50% {box-shadow: 0 0 10px var(--accent-green);} 100% {box-shadow: 0 0 0 var(--accent-green);} }
-
-        .hud-details {
-            position: absolute; top: 60px; right: 20px; width: 220px;
-            font-family: var(--font-mono); font-size: 10px; color: #bbb;
-            background: rgba(0, 0, 0, 0.95); border: 1px solid var(--accent-green); 
-            padding: 15px; display: none; text-align: left;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
-            border-left: 5px solid var(--accent-green);
-        }
+        .hud-details { position: absolute; top: 60px; right: 20px; width: 220px; font-family: var(--font-mono); font-size: 10px; color: #bbb; background: rgba(0, 0, 0, 0.95); border: 1px solid var(--accent-green); padding: 15px; display: none; text-align: left; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); border-left: 5px solid var(--accent-green); }
         .hud-details.visible { display: block; animation: slide-down 0.3s ease-out; }
         .hud-label { color: var(--alert-red); display: block; margin-top: 8px; font-weight: bold;}
         @keyframes slide-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ================= LAYOUT CONTAINERS ================= */
+        /* ================= LAYOUT ================= */
         .game-section { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; 
@@ -125,185 +104,125 @@
             transition: opacity 0.5s ease, transform 0.5s ease;
             padding: 20px; text-align: center;
         }
-
         .game-section.active { opacity: 1; pointer-events: auto; visibility: visible; z-index: 10; transform: scale(1); }
 
-        /* ================= TYPOGRAPHY & ELEMENTS ================= */
-        .glitch-title { 
-            font-family: var(--font-title); font-size: 15vw; color: #fff; line-height: 0.9; margin-bottom: 20px;
-            text-shadow: 3px 3px 0px rgba(255, 0, 85, 0.5);
-            /* animation: glitch-anim 3s infinite alternate; REMOVED JS handles decoding now */
-        }
+        /* ================= GENERAL UI ELEMENTS ================= */
+        .glitch-title { font-family: var(--font-title); font-size: 15vw; color: #fff; line-height: 0.9; margin-bottom: 20px; text-shadow: 3px 3px 0px rgba(255, 0, 85, 0.5); }
         
-        .section-title {
-            font-family: var(--font-tech); font-size: 8vw; color: var(--alert-red);
-            border-bottom: 2px solid var(--alert-red); padding-bottom: 10px; margin-bottom: 30px;
-            text-transform: uppercase; letter-spacing: 2px;
-            position: relative;
-        }
-        .section-title::after {
-            content: ''; position: absolute; bottom: -5px; left: 0; width: 30%; height: 2px; background: var(--accent-green);
-            animation: loading-bar 2s infinite ease-in-out;
-        }
+        .section-title { font-family: var(--font-tech); font-size: 8vw; color: var(--alert-red); border-bottom: 2px solid var(--alert-red); padding-bottom: 10px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; position: relative; }
+        .section-title::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 30%; height: 2px; background: var(--accent-green); animation: loading-bar 2s infinite ease-in-out; }
         @keyframes loading-bar { 0% {left:0; width:0;} 50% {width:100%;} 100% {left:100%; width:0;} }
 
-        /* INFO CARDS WITH SCAN EFFECT */
-        .info-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-left: 4px solid var(--accent-green);
-            padding: 20px; margin: 10px 0; width: 100%; max-width: 400px;
-            text-align: left; backdrop-filter: blur(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            position: relative; overflow: hidden;
-        }
-        .info-card::before {
-            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(rgba(255,255,255,0.1), transparent);
-            transform: rotate(45deg); animation: shine 3s infinite; pointer-events: none;
-        }
+        .info-card { background: rgba(255, 255, 255, 0.05); border-left: 4px solid var(--accent-green); padding: 20px; margin: 10px 0; width: 100%; max-width: 400px; text-align: left; backdrop-filter: blur(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+        .info-card::before { content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(rgba(255,255,255,0.1), transparent); transform: rotate(45deg); animation: shine 3s infinite; pointer-events: none; }
         @keyframes shine { 0% {top: -100%;} 100% {top: 100%;} }
-        
         .info-card h3 { font-family: var(--font-tech); color: var(--accent-green); font-size: 1.2rem; margin-bottom: 5px; }
         .info-card p { font-size: 0.9rem; color: #ccc; line-height: 1.5; }
         .info-card.alert { border-color: var(--alert-red); background: rgba(255, 0, 85, 0.05); }
         .info-card.alert h3 { color: var(--alert-red); }
 
-        .action-btn {
-            margin-top: 30px; width: 100%; max-width: 300px;
-            font-family: var(--font-tech); font-size: 1.2rem;
-            color: #000; background: var(--accent-green);
-            border: none; padding: 18px 0; cursor: pointer;
-            letter-spacing: 3px; text-transform: uppercase; font-weight: bold;
-            clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-            animation: btn-pulse 3s infinite;
-            position: relative; overflow: hidden;
-        }
-        .action-btn::after {
-            content: ">>"; position: absolute; right: 20px; opacity: 0.5; animation: arrow-blink 1s infinite;
-        }
+        .action-btn { margin-top: 30px; width: 100%; max-width: 300px; font-family: var(--font-tech); font-size: 1.2rem; color: #000; background: var(--accent-green); border: none; padding: 18px 0; cursor: pointer; letter-spacing: 3px; text-transform: uppercase; font-weight: bold; clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); animation: btn-pulse 3s infinite; position: relative; overflow: hidden; }
+        .action-btn::after { content: ">>"; position: absolute; right: 20px; opacity: 0.5; animation: arrow-blink 1s infinite; }
         @keyframes arrow-blink { 0%,100% {opacity:0.2} 50% {opacity:1} }
-        .action-btn:active { transform: scale(0.95); background: #fff; }
         .action-btn.alert { background: var(--alert-red); color: #fff; }
         @keyframes btn-pulse { 0% { box-shadow: 0 0 5px var(--accent-green); } 50% { box-shadow: 0 0 20px var(--accent-green); } 100% { box-shadow: 0 0 5px var(--accent-green); } }
 
-        /* Slide 1 & 3 Styles */
-        #slide-cover .mission-info { 
-            font-size: 1rem; color: #888; margin-bottom: 30px; 
-            border: 1px solid #333; padding: 15px; background: rgba(0,0,0,0.5); 
-            border-right: 3px solid var(--accent-green);
-        }
-        
+        /* Slide Styles */
+        #slide-cover .mission-info { font-size: 1rem; color: #888; margin-bottom: 30px; border: 1px solid #333; padding: 15px; background: rgba(0,0,0,0.5); border-right: 3px solid var(--accent-green); }
         .gps-container { width: 100%; max-width: 350px; border: 2px dashed var(--neon-blue); padding: 20px; background: rgba(0, 247, 255, 0.05); margin-bottom: 20px; position: relative; }
         .gps-coords { font-family: var(--font-tech); font-size: 1.5rem; color: var(--neon-blue); margin: 10px 0; animation: text-flicker 2s infinite; }
 
-        /* Slide 4: Intrusion (HEAVY FX) */
+        /* Slide 4: Intrusion */
         #slide-intrusion { background: #120003; }
-        #slide-intrusion.active { animation: shake-screen 0.5s infinite; }
-        
-        @keyframes shake-screen { 
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        .intrusion-alert {
-            width: 100%; border: 2px solid var(--alert-red); padding: 20px;
-            background: repeating-linear-gradient(45deg, rgba(255,0,85,0.1), rgba(255,0,85,0.1) 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
-            animation: bg-scroll 0.5s linear infinite reverse; /* Faster scroll */
-        }
+        .intrusion-alert { width: 100%; border: 2px solid var(--alert-red); padding: 20px; background: repeating-linear-gradient(45deg, rgba(255,0,85,0.1), rgba(255,0,85,0.1) 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px); animation: bg-scroll 0.5s linear infinite reverse; }
         @keyframes bg-scroll { 0% { background-position: 0 0; } 100% { background-position: 40px 0; } }
-        
-        .handwritten { 
-            font-family: 'Brush Script MT', cursive; color: var(--accent-green); 
-            font-size: 2.5rem; transform: rotate(-5deg); display: block; 
-            margin: 20px 0; text-shadow: 0 0 10px var(--accent-green);
-            animation: blink 0.1s infinite; /* Strobe effect */
-        }
+        .handwritten { font-family: 'Brush Script MT', cursive; color: var(--accent-green); font-size: 2.5rem; transform: rotate(-5deg); display: block; margin: 20px 0; text-shadow: 0 0 10px var(--accent-green); animation: blink 0.1s infinite; }
 
-        /* ================= MAP (RESTORED V19 LOOK) ================= */
+        /* ================= MAP ================= */
         #void { background-color: #000; }
         #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4) sepia(20%); z-index: 1; }
         #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
-        
         .map-ui-overlay { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; pointer-events: none; z-index: 50; }
-        .upload-btn { 
-            pointer-events: auto; background: rgba(0,0,0,0.8); border: 1px solid var(--accent-green); 
-            color: var(--accent-green); padding: 15px 30px; font-family: var(--font-tech); 
-            font-size: 1rem; letter-spacing: 2px; cursor: pointer; 
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
-            animation: pulse-border 2s infinite;
-        }
-
+        .upload-btn { pointer-events: auto; background: rgba(0,0,0,0.8); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 15px 30px; font-family: var(--font-tech); font-size: 1rem; letter-spacing: 2px; cursor: pointer; box-shadow: 0 0 15px rgba(0, 255, 65, 0.3); animation: pulse-border 2s infinite; }
         .marker { position: absolute; width: 30px; height: 30px; z-index: 30; cursor: pointer; background: rgba(255, 0, 85, 0.2); border: 1px solid var(--alert-red); box-shadow: 0 0 15px var(--alert-red); transform: rotate(45deg); transition: 0.3s; animation: pulse-marker 2s infinite; }
         @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-        /* ================= 3D RECONSTRUCTION (RESTORED PHYSICS) ================= */
+        /* ================= 3D RECONSTRUCTION ================= */
         #reconstruction { background: #000; }
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
         #three-container:active { cursor: grabbing; }
-
-        #recon-console {
-            position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 500px; z-index: 50; pointer-events: auto;
-            text-align: center;
-            background: rgba(0, 10, 0, 0.8); border: 1px solid var(--accent-green);
-            padding: 20px; backdrop-filter: blur(5px);
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
-        }
+        #recon-console { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; z-index: 50; pointer-events: auto; text-align: center; background: rgba(0, 10, 0, 0.8); border: 1px solid var(--accent-green); padding: 20px; backdrop-filter: blur(5px); box-shadow: 0 0 20px rgba(0, 255, 65, 0.1); }
         .input-area { display: flex; border-bottom: 1px solid var(--accent-green); margin-top: 10px; background: rgba(0,255,65,0.05); }
         input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-family: var(--font-mono); }
         .submit-btn { background: transparent; color: var(--accent-green); border: none; cursor: pointer; padding: 0 20px; font-weight: bold; font-family: var(--font-mono); transition:0.3s;}
-        
         #particles-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 60; }
         .floating-text { position: absolute; color: var(--accent-green); font-size: 0.8rem; animation: floatUp 4s linear forwards; font-family: var(--font-mono); }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.5); } }
+        #memory-3d-tooltip { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.95); border: 1px solid var(--alert-red); padding: 15px; max-width: 250px; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 1000; box-shadow: 0 0 20px rgba(255, 0, 85, 0.2); text-align: left; }
 
-        #memory-3d-tooltip { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: rgba(0, 0, 0, 0.95); border: 1px solid var(--alert-red); 
-            padding: 15px; max-width: 250px; pointer-events: none; 
-            opacity: 0; transition: opacity 0.1s; z-index: 1000; 
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.2); text-align: left;
-        }
-
-        /* ================= TERMINAL (MOBILE MODAL) ================= */
+        /* ================= RESTORED TERMINAL (GLITCH VISUALS) ================= */
         #fullscreen-stage {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200;
             display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
         #fullscreen-stage.active { opacity: 1; pointer-events: auto; }
+        #fullscreen-stage::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 10000; background: repeating-linear-gradient(rgba(0,0,0,0.2) 0, transparent 2px); animation: scanline-scroll 10s linear infinite; }
+        @keyframes scanline-scroll { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
 
         .terminal-window {
-            width: 100%; height: 90%; background: #080808; 
-            border-top: 2px solid var(--alert-red);
+            width: 100%; height: 95%; background: #080808; 
+            border-top: 4px solid var(--alert-red);
             display: flex; flex-direction: column; 
-            box-shadow: 0 -10px 30px rgba(255, 0, 85, 0.2);
-            overflow: hidden;
+            box-shadow: 0 -10px 50px rgba(255, 0, 85, 0.4);
+            position: relative;
         }
+
+        /* FIXED: CLOSE BUTTON VISIBLE INSIDE */
         .close-terminal { 
-            position: absolute; top: -50px; right: 20px; 
-            color: #fff; background: var(--alert-red); padding: 10px 20px; 
-            font-family: var(--font-tech); border: none; font-weight: bold;
+            position: absolute; top: 10px; right: 10px; z-index: 100;
+            color: #fff; background: var(--alert-red); padding: 5px 15px; 
+            font-family: var(--font-tech); border: 2px solid #fff; font-weight: bold;
+            cursor: pointer; box-shadow: 0 0 10px var(--alert-red);
         }
-        .terminal-visual { height: 35%; width: 100%; position: relative; border-bottom: 2px solid var(--alert-red); overflow: hidden; }
-        .glitch-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) sepia(50%) contrast(1.2); }
+
+        .terminal-visual { height: 30%; width: 100%; position: relative; border-bottom: 2px solid var(--alert-red); overflow: hidden; }
+        
+        /* RESTORED GLITCH EFFECTS */
+        .glitch-img-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
+        .glitch-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(150%) brightness(0.7) sepia(30%); }
+        .terminal-visual::after { content: ""; position: absolute; inset: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClIorXAAAAHlBMVEUAAAD///////////////////////////////////8f+B7AAAAAEHRSTlMABg8dHiQvMzY4PkxTVF1+c/4AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAASUlEQVQ4jWNgGAVDBQylMGiAMY0yplEw2AAjCjEIA6YmGGBiYqJgZ2JiZGRgZGRmZsZUZmZgYAAxGUDKGEQYGBgYmBgYGAAAVaYFqQ56270AAAAASUVORK5CYII='); opacity: 0.3; pointer-events: none; animation: noise-shift 0.2s infinite steps(4); z-index: 5;}
+        @keyframes noise-shift { 0% {background-position: 0 0;} 100% {background-position: 100px 100px;} }
+        
+        /* GLITCH TEXT RESTORATION */
+        .glitch-text { position: relative; display: inline-block; }
+        .glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; }
+        .glitch-text::before { color: var(--alert-red); z-index: -1; animation: glitch-shift 0.4s infinite linear alternate-reverse; }
+        .glitch-text::after { color: var(--neon-blue); z-index: -2; animation: glitch-shift 0.4s infinite linear alternate-reverse 0.2s; }
+        @keyframes glitch-shift { 0% { transform: translate(2px, 0) skew(0deg); } 20% { transform: translate(-2px, 0) skew(2deg); } 40% { transform: translate(0, 2px) skew(0deg); } 60% { transform: translate(2px, -2px) skew(-2deg); } 80% { transform: translate(-2px, 2px) skew(0deg); } 100% { transform: translate(0, 0) skew(0deg); } }
+
         .terminal-data { 
-            height: 65%; padding: 20px; overflow-y: auto; 
+            height: 70%; padding: 20px; overflow-y: auto; padding-bottom: 80px; /* Space for Purge Btn */
             background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px); background-size: 100% 20px;
         }
-        .data-title { font-size: 2rem; color: #fff; margin-bottom: 10px; line-height: 1; font-family: var(--font-tech); }
+        .data-title { font-size: 2rem; color: #fff; margin-bottom: 10px; line-height: 1; font-family: var(--font-tech); text-transform: uppercase;}
         .human-text { font-family: var(--font-serif); font-style: italic; color: #ccc; margin-bottom: 20px; border-left: 2px solid var(--accent-green); padding-left: 10px; }
         .history-text { color: #888; font-size: 0.9rem; }
-        .ai-text { color: var(--alert-red); font-family: var(--font-tech); font-size: 0.9rem; margin-top: 20px; animation: text-flicker 0.2s infinite; }
-        @keyframes text-flicker { 0% {opacity:1} 50% {opacity:0.7} 100% {opacity:1} }
+        .ai-text { color: var(--alert-red); font-family: var(--font-tech); font-size: 0.9rem; margin-top: 20px; animation: text-flicker 0.1s infinite alternate; }
+        @keyframes text-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; transform: translateX(1px); } }
+
+        /* NEW PURGE BUTTON */
+        .purge-btn-container {
+            position: absolute; bottom: 0; left: 0; width: 100%; 
+            padding: 15px; background: rgba(0,0,0,0.9); border-top: 1px solid #333;
+        }
+        .purge-btn {
+            width: 100%; background: rgba(255,0,0,0.1); border: 2px solid var(--alert-red);
+            color: var(--alert-red); font-family: var(--font-tech); font-size: 1.2rem;
+            padding: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            transition: 0.2s;
+        }
+        .purge-btn:active { background: var(--alert-red); color: #000; }
+
     </style>
 </head>
 <body>
@@ -317,7 +236,7 @@
             > MEMORY_CHECK... 64TB OK<br>
             > LOADING MAP_DATA... OK<br>
             > CONNECTING SATELLITE... OK<br>
-            > DECRYPTING PROTOCOL V23...<br>
+            > DECRYPTING PROTOCOL V24...<br>
         </div>
         <div class="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
@@ -379,10 +298,10 @@
             <div id="map-bg"></div>
             <canvas id="map-canvas"></canvas>
             
-            <div class="marker" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"></div>
-            <div class="marker" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"></div>
-            <div class="marker" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"></div>
-            <div class="marker" style="top: 75%; left: 60%;" onclick="event.stopPropagation(); openTerminal(3)"></div>
+            <div class="marker" id="marker-0" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"></div>
+            <div class="marker" id="marker-1" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"></div>
+            <div class="marker" id="marker-2" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"></div>
+            <div class="marker" id="marker-3" style="top: 75%; left: 60%;" onclick="event.stopPropagation(); openTerminal(3)"></div>
             
             <div class="map-ui-overlay">
                 <button class="upload-btn" onclick="navigateTo('slide-intrusion')">UPLOAD DATA >></button>
@@ -425,13 +344,13 @@
 
     <div id="fullscreen-stage">
         <div class="terminal-window">
-            <button class="close-terminal" onclick="closeTerminal()">CLOSE X</button>
+            <button class="close-terminal" onclick="closeTerminal()">[X] ABORT</button>
             <div class="terminal-visual">
                 <img id="term-img" class="glitch-img" src="" alt="NO DATA">
             </div>
             <div class="terminal-data">
                 <div style="color:var(--alert-red); font-size:10px; letter-spacing:2px;">ENCRYPTED_FILE</div>
-                <h2 class="data-title glitch-text" id="term-title">TITLE</h2>
+                <h2 class="data-title glitch-text" id="term-title" data-text="TITLE">TITLE</h2>
                 
                 <div style="margin: 20px 0;">
                     <div style="font-size:10px; color:var(--accent-green); margin-bottom:5px;">/// HUMAN INPUT</div>
@@ -444,6 +363,9 @@
                 </div>
 
                 <div class="ai-text" id="term-ai">SYSTEM ANALYSIS...</div>
+            </div>
+            <div class="purge-btn-container">
+                <button class="purge-btn" onclick="purgeCurrentMarker()">[ PURGE / CLEANSE ]</button>
             </div>
         </div>
     </div>
@@ -482,25 +404,19 @@
         // 2. Text Decoding Effect
         const chars = "!@#$%^&*()_+-=[]{}|;':,./<>?";
         function decodeText(element) {
-            const originalText = element.getAttribute('data-final').replace(/<br>/g, "\n"); // Handle breaks
-            const lines = originalText.split("\n");
-            let frame = 0;
-            
-            // Reconstruct HTML after effect
+            const originalText = element.getAttribute('data-final').replace(/<br>/g, "\n"); 
             const originalHTML = element.getAttribute('data-final');
 
             const interval = setInterval(() => {
                 let output = "";
-                // Simple random scramble for visual effect
                 for(let i=0; i<originalText.length; i++) {
                     if(originalText[i] === "\n") { output += "<br>"; continue; }
                     output += (Math.random() > 0.5) ? originalText[i] : chars[Math.floor(Math.random() * chars.length)];
                 }
                 element.innerHTML = output;
-                frame++;
-                if(frame > 10) {
+                if(Math.random() > 0.9) {
                     clearInterval(interval);
-                    element.innerHTML = originalHTML; // Restore clean HTML
+                    element.innerHTML = originalHTML; 
                 }
             }, 50);
         }
@@ -513,7 +429,6 @@
             
             if(targetId !== historyStack[historyStack.length-1]) historyStack.push(targetId);
             
-            // Trigger Effects
             if(targetId === 'slide-cover' || targetId === 'slide-intrusion') {
                 const title = target.querySelector('h1');
                 if(title) decodeText(title);
@@ -548,24 +463,47 @@
             d.classList.toggle('visible');
         }
 
-        // 3. Terminal Logic
+        // 3. Terminal Logic & Purge System
         const archives = [
             { id: "01", title: "THE LOOP", img: "./1.jpg", human: "\"Fifteen years underground... sunlight is a myth here.\"", history: "Built 1970. Europe's largest underground mall.", ai: "ERROR: EXIT NOT FOUND." },
             { id: "02", title: "FLUID GHOST", img: "./2.jpg", human: "\"At 4 AM, the fountain whispers names.\"", history: "1972 Olympics construction.", ai: "ANALYSIS: LIQUID MEMORY LEAK." },
             { id: "03", title: "IDENTITY", img: "./3.jpg", human: "\"Who is Karl? Why is he in the square?\"", history: "Renamed in 1797.", ai: "CONFLICT: ID MISMATCH." },
             { id: "04", title: "THE WALL", img: "./4.jpg", human: "\"I swear there was a wall here yesterday.\"", history: "Fortifications demolished 18th century.", ai: "SYSTEM: GHOST GEOMETRY." }
         ];
+        
+        let currentMarkerIndex = -1; // Track which marker is open
+
         function openTerminal(index) {
+            currentMarkerIndex = index;
             const d = archives[index];
             if(!d) return;
             document.getElementById('term-title').innerText = d.title;
+            document.getElementById('term-title').setAttribute('data-text', d.title);
             document.getElementById('term-img').src = d.img;
             document.getElementById('term-human').innerText = d.human;
             document.getElementById('term-history').innerText = d.history;
             document.getElementById('term-ai').innerText = d.ai;
             document.getElementById('fullscreen-stage').classList.add('active');
         }
-        function closeTerminal() { document.getElementById('fullscreen-stage').classList.remove('active'); }
+        
+        function closeTerminal() { 
+            document.getElementById('fullscreen-stage').classList.remove('active'); 
+            currentMarkerIndex = -1;
+        }
+
+        function purgeCurrentMarker() {
+            if(currentMarkerIndex !== -1) {
+                const marker = document.getElementById(`marker-${currentMarkerIndex}`);
+                if(marker) {
+                    // Visual effect for deletion
+                    marker.style.transition = "all 0.5s";
+                    marker.style.transform = "scale(3)";
+                    marker.style.opacity = "0";
+                    setTimeout(() => { marker.style.display = 'none'; }, 500);
+                }
+                closeTerminal();
+            }
+        }
 
         // 4. MAP LOGIC
         const mapCanvas = document.getElementById('map-canvas'); 
