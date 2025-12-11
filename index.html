@@ -769,7 +769,52 @@
         function removeMemory(mesh) { if (!mesh) return; memoryGroup.remove(mesh); let saved = JSON.parse(localStorage.getItem('stachus_memories')) || []; const updated = saved.filter(m => m.text !== mesh.userData.text); localStorage.setItem('stachus_memories', JSON.stringify(updated)); hoveredObject = null; document.getElementById('memory-3d-tooltip').style.opacity = 0; }
         function createMemoryCrystal(text, x, y, z, colorHex) { const geo = new THREE.IcosahedronGeometry(2.5, 0); const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.8 }); const mesh = new THREE.Mesh(geo, mat); const glowGeo = new THREE.SphereGeometry(1.3, 16, 16); const glowMat = new THREE.MeshBasicMaterial({ color: colorHex }); const glowMesh = new THREE.Mesh(glowGeo, glowMat); mesh.add(glowMesh); mesh.position.set(x, y, z); mesh.userData = { text: text, initialPos: {x, y, z} }; memoryGroup.add(mesh); }
         function getNeonColor() { const hue = Math.random(); const sat = 0.9; const light = 0.6; const col = new THREE.Color().setHSL(hue, sat, light); return col.getHex(); }
-        window.activateMemory = function(text) { if(!pointsMesh) return; const positions = pointsMesh.geometry.attributes.position.array; let attempts = 0; while(attempts < 2000) { const idx = Math.floor(Math.random() * (positions.length/3)); let x = positions[idx*3]; let y = positions[idx*3+1]; let z = positions[idx*3+2]; const radius = Math.sqrt(x*x + z*z); if(y > -5 && y < 20 && radius > 35 && radius < 55) { const randomColor = getNeonColor(); createMemoryCrystal(text, x, y, z, randomColor); saveMemories(text, x, y, z, randomColor); autoFocusTargetY = -Math.atan2(x, z); isAutoRotating = true; return; } attempts++; } };
+       // ==========================================
+        // FIXED: 修正后的记忆点生成逻辑 (防止跑出模型)
+        // ==========================================
+        window.activateMemory = function(text) {
+            if(!pointsMesh) return;
+            
+            // 【关键修改 1】读取 initialPosition 而不是 position
+            // 这样无论粒子特效怎么乱飞，生成的记忆点永远吸附在建筑物原本的结构上
+            const positions = pointsMesh.geometry.attributes.initialPosition.array;
+            
+            let attempts = 0;
+            // 增加尝试次数，确保一定能找到位置
+            while(attempts < 5000) {
+                const idx = Math.floor(Math.random() * (positions.length/3));
+                let x = positions[idx*3];
+                let y = positions[idx*3+1];
+                let z = positions[idx*3+2];
+                
+                const radius = Math.sqrt(x*x + z*z);
+                
+                // 【关键修改 2】重新定义卡尔广场(Stachus)的有效范围
+                // y > -16: 地面以上 (防止掉到虚空)
+                // y < 15:  不要太高 (防止飞到天上)
+                // radius < 52: 严格限制在模型半径内 (原本是45左右，给一点点余量)
+                // radius > 5:  避开绝对圆心 (那里太挤了)
+                if(y > -16 && y < 15 && radius < 52 && radius > 5) {
+                    
+                    const randomColor = getNeonColor();
+                    createMemoryCrystal(text, x, y, z, randomColor);
+                    saveMemories(text, x, y, z, randomColor);
+                    
+                    // 自动旋转相机的焦点对准新生成的点
+                    autoFocusTargetY = -Math.atan2(x, z);
+                    isAutoRotating = true;
+                    
+                    return;
+                }
+                attempts++;
+            }
+            
+            // 如果实在运气不好没找到点（极少情况），强制生成在广场中心上方
+            // 这样保证用户输入绝对不会丢失
+            console.log("Fallback position used");
+            createMemoryCrystal(text, 0, 0, 20, 0x00ff41);
+            saveMemories(text, 0, 0, 20, 0x00ff41);
+        };
 
         initThree();
     </script>
