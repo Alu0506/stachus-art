@@ -16,8 +16,8 @@
             --bg-color: #020202; 
             --text-main: #e0e0e0; 
             --font-title: 'Black Ops One', cursive;
-            --font-mono: 'Space Mono', monospace;          
-            --font-tech: 'Share Tech Mono', monospace;     
+            --font-mono: 'Space Mono', monospace;           
+            --font-tech: 'Share Tech Mono', monospace;       
             --font-serif: 'Playfair Display', serif;
             --accent-green: #00ff41; 
             --alert-red: #ff0055; 
@@ -170,10 +170,23 @@
         #reconstruction { background: #000; }
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
         #three-container:active { cursor: grabbing; }
-        #recon-console { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; z-index: 50; pointer-events: auto; text-align: center; background: rgba(0, 10, 0, 0.8); border: 1px solid var(--accent-green); padding: 20px; backdrop-filter: blur(5px); box-shadow: 0 0 20px rgba(0, 255, 65, 0.1); }
+        
+        /* [UPDATED CSS] 提高了层级，确保按钮可点击 */
+        #recon-console { 
+            position: absolute; top: 10%; left: 50%; transform: translateX(-50%); 
+            width: 90%; max-width: 500px; 
+            z-index: 100; /* 提高 Z-index，避免被 particles-container (z=60) 遮挡 */
+            pointer-events: auto; 
+            text-align: center; background: rgba(0, 10, 0, 0.8); 
+            border: 1px solid var(--accent-green); padding: 20px; 
+            backdrop-filter: blur(5px); 
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1); 
+            cursor: default;
+        }
         .input-area { display: flex; border-bottom: 1px solid var(--accent-green); margin-top: 10px; background: rgba(0,255,65,0.05); }
         input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-family: var(--font-mono); }
         .submit-btn { background: transparent; color: var(--accent-green); border: none; cursor: pointer; padding: 0 20px; font-weight: bold; font-family: var(--font-mono); transition:0.3s;}
+        
         #particles-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 60; }
         .floating-text { position: absolute; color: var(--accent-green); font-size: 0.8rem; animation: floatUp 4s linear forwards; font-family: var(--font-mono); }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.5); } }
@@ -337,7 +350,7 @@
                     <input type="text" id="memory-input" placeholder="Enter missing memory..." autocomplete="off">
                     <button class="submit-btn" onclick="submitMemory()">INJECT</button>
                 </div>
-                <div style="margin-top:10px; font-size:9px; color:#666;" onclick="purgeMemories()">[ PURGE SYSTEM ]</div>
+                <div style="margin-top:10px; font-size:9px; color:#666; cursor: pointer;" onclick="purgeMemories()">[ PURGE SYSTEM ]</div>
             </div>
             <div id="particles-container"></div>
             <div id="memory-3d-tooltip">
@@ -711,6 +724,26 @@
             const container = document.getElementById('particles-container'); const particle = document.createElement('div'); particle.classList.add('floating-text'); particle.innerText = val; particle.style.left = '50%'; particle.style.top = '20%'; container.appendChild(particle); setTimeout(() => { particle.remove(); }, 4000);
             setTimeout(() => { activateMemory(val); btn.innerText = "INJECT"; input.value = ""; input.placeholder = "SAVED"; }, 500); 
         }
+        
+        // [UPDATED] Added missing Purge Function
+        window.purgeMemories = function() {
+            if(confirm("⚠ WARNING: IRREVERSIBLE DELETION.\nAre you sure you want to PURGE all memory data?")) {
+                localStorage.removeItem('stachus_memories');
+                if(memoryGroup) {
+                    for(let i = memoryGroup.children.length - 1; i >= 0; i--) {
+                        memoryGroup.remove(memoryGroup.children[i]);
+                    }
+                }
+                const btn = document.querySelector('#recon-console div:last-child');
+                const originalText = btn.innerText;
+                btn.style.color = "var(--alert-red)";
+                btn.innerText = ">> SYSTEM FORMATTED <<";
+                setTimeout(() => { 
+                    btn.innerText = originalText; 
+                    btn.style.color = "#666";
+                }, 2000);
+            }
+        };
 
         function initThree() {
             const container = document.getElementById('three-container');
@@ -746,14 +779,22 @@
                 if(pointsMesh) {
                     pointsMesh.rotation.y += (targetRotationY - pointsMesh.rotation.y) * 0.1; pointsMesh.rotation.x += (targetRotationX - pointsMesh.rotation.x) * 0.1; memoryGroup.rotation.copy(pointsMesh.rotation); 
                     const positions = pointsMesh.geometry.attributes.position.array; const initials = pointsMesh.geometry.attributes.initialPosition.array; const randomDirs = pointsMesh.geometry.attributes.randomDirection.array;
+                    
+                    // [UPDATED] "Starry Sky" Logic: Limit flyDist based on screen size
+                    const isMobileScreen = window.innerWidth < 768;
+                    const maxDist = isMobileScreen ? 50 : 100; // 限制散开范围：手机50，电脑100
+                    const flyDist = maxDist * explosionFactor;
+                    
+                    const time = Date.now() * 0.001;
+                    
                     for(let i = 0; i < positions.length; i += 3) {
                         const ox = initials[i]; const oy = initials[i+1]; const oz = initials[i+2]; const randX = randomDirs[i]; const randY = randomDirs[i+1]; const randZ = randomDirs[i+2];
-                        const flyDist = 300 * explosionFactor; const time = Date.now() * 0.001; const breath = 0.5 * Math.sin(time + ox);
+                        const breath = 0.5 * Math.sin(time + ox);
                         positions[i] = ox + (randX * flyDist) + breath; positions[i+1] = oy + (randY * flyDist) + breath; positions[i+2] = oz + (randZ * flyDist) + breath;
                     }
                     pointsMesh.geometry.attributes.position.needsUpdate = true;
                 }
-                memoryGroup.children.forEach((mesh) => { mesh.rotation.x += 0.01; mesh.rotation.y += 0.02; if (mesh.userData.initialPos) { const init = mesh.userData.initialPos; const flyDist = 50 * explosionFactor; const dir = new THREE.Vector3(init.x, init.y, init.z).normalize(); mesh.position.x = init.x + dir.x * flyDist; mesh.position.y = init.y + dir.y * flyDist; mesh.position.z = init.z + dir.z * flyDist; } });
+                memoryGroup.children.forEach((mesh) => { mesh.rotation.x += 0.01; mesh.rotation.y += 0.02; if (mesh.userData.initialPos) { const init = mesh.userData.initialPos; const flyDist = (window.innerWidth<768 ? 50 : 100) * explosionFactor; const dir = new THREE.Vector3(init.x, init.y, init.z).normalize(); mesh.position.x = init.x + dir.x * flyDist; mesh.position.y = init.y + dir.y * flyDist; mesh.position.z = init.z + dir.z * flyDist; } });
                 raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(memoryGroup.children, true); const tooltip = document.getElementById('memory-3d-tooltip');
                 if (intersects.length > 0) { let crystalMesh = intersects[0].object; while(crystalMesh.parent && crystalMesh.parent !== memoryGroup) { crystalMesh = crystalMesh.parent; } hoveredObject = crystalMesh; document.body.style.cursor = 'pointer'; tooltip.style.opacity = 1; document.getElementById('tooltip-3d-content').innerText = crystalMesh.userData.text; crystalMesh.scale.setScalar(1.5 + Math.sin(Date.now()*0.02)*0.2); } else { hoveredObject = null; tooltip.style.opacity = 0; document.body.style.cursor = 'default'; memoryGroup.children.forEach(child => child.scale.setScalar(1)); }
                 renderer.render(scene, camera);
@@ -769,48 +810,30 @@
         function removeMemory(mesh) { if (!mesh) return; memoryGroup.remove(mesh); let saved = JSON.parse(localStorage.getItem('stachus_memories')) || []; const updated = saved.filter(m => m.text !== mesh.userData.text); localStorage.setItem('stachus_memories', JSON.stringify(updated)); hoveredObject = null; document.getElementById('memory-3d-tooltip').style.opacity = 0; }
         function createMemoryCrystal(text, x, y, z, colorHex) { const geo = new THREE.IcosahedronGeometry(2.5, 0); const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.8 }); const mesh = new THREE.Mesh(geo, mat); const glowGeo = new THREE.SphereGeometry(1.3, 16, 16); const glowMat = new THREE.MeshBasicMaterial({ color: colorHex }); const glowMesh = new THREE.Mesh(glowGeo, glowMat); mesh.add(glowMesh); mesh.position.set(x, y, z); mesh.userData = { text: text, initialPos: {x, y, z} }; memoryGroup.add(mesh); }
         function getNeonColor() { const hue = Math.random(); const sat = 0.9; const light = 0.6; const col = new THREE.Color().setHSL(hue, sat, light); return col.getHex(); }
-       // ==========================================
-        // FIXED: 修正后的记忆点生成逻辑 (防止跑出模型)
-        // ==========================================
+        
+        // [UPDATED] Fixed ActivateMemory (Bounds & initialPosition)
         window.activateMemory = function(text) {
             if(!pointsMesh) return;
-            
-            // 【关键修改 1】读取 initialPosition 而不是 position
-            // 这样无论粒子特效怎么乱飞，生成的记忆点永远吸附在建筑物原本的结构上
+            // Uses initialPosition so points stick to the building structure even when particles explode
             const positions = pointsMesh.geometry.attributes.initialPosition.array;
-            
             let attempts = 0;
-            // 增加尝试次数，确保一定能找到位置
             while(attempts < 5000) {
                 const idx = Math.floor(Math.random() * (positions.length/3));
                 let x = positions[idx*3];
                 let y = positions[idx*3+1];
                 let z = positions[idx*3+2];
-                
                 const radius = Math.sqrt(x*x + z*z);
-                
-                // 【关键修改 2】重新定义卡尔广场(Stachus)的有效范围
-                // y > -16: 地面以上 (防止掉到虚空)
-                // y < 15:  不要太高 (防止飞到天上)
-                // radius < 52: 严格限制在模型半径内 (原本是45左右，给一点点余量)
-                // radius > 5:  避开绝对圆心 (那里太挤了)
+                // Stachus Bounds: Ground(-16) to Height(15), Radius between 5 and 52
                 if(y > -16 && y < 15 && radius < 52 && radius > 5) {
-                    
                     const randomColor = getNeonColor();
                     createMemoryCrystal(text, x, y, z, randomColor);
                     saveMemories(text, x, y, z, randomColor);
-                    
-                    // 自动旋转相机的焦点对准新生成的点
                     autoFocusTargetY = -Math.atan2(x, z);
                     isAutoRotating = true;
-                    
                     return;
                 }
                 attempts++;
             }
-            
-            // 如果实在运气不好没找到点（极少情况），强制生成在广场中心上方
-            // 这样保证用户输入绝对不会丢失
             console.log("Fallback position used");
             createMemoryCrystal(text, 0, 0, 20, 0x00ff41);
             saveMemories(text, 0, 0, 20, 0x00ff41);
