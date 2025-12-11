@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>STACHUS: PROTOCOL V26 (AUDIO CONTROL)</title>
+    <title>STACHUS: PROTOCOL V27 (BGM SYNC)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -218,6 +218,10 @@
     <audio id="audio-briefing" src="1.mp3"></audio>
     <audio id="audio-mechanics" src="2.mp3"></audio>
     <audio id="audio-reconstruction" src="3.mp3"></audio>
+
+    <audio id="bgm-1" src="B1.mp3" loop></audio>
+    <audio id="bgm-2" src="B2.mp3" loop></audio>
+    <audio id="bgm-3" src="B3.mp3" loop></audio>
     
     <div id="loader">
         <div class="boot-log" id="boot-log">
@@ -225,7 +229,7 @@
             > MEMORY_CHECK... 64TB OK<br>
             > LOADING MAP_DATA... OK<br>
             > CONNECTING SATELLITE... OK<br>
-            > DECRYPTING PROTOCOL V26...<br>
+            > DECRYPTING PROTOCOL V27...<br>
         </div>
         <div class="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
@@ -375,7 +379,43 @@
     <script>
         // ================= JAVASCRIPT LOGIC =================
         
-        // --- 0. ADVANCED AUDIO CONTROLLER (V26) ---
+        // --- 0. BGM MANAGER (V27) ---
+        const bgmConfig = {
+            'slide-cover': 'bgm-1',
+            'slide-briefing': 'bgm-1',
+            'slide-mechanics': 'bgm-1',
+            'void': 'bgm-1',
+            'slide-intrusion': 'bgm-2',
+            'reconstruction': 'bgm-3'
+        };
+
+        function handleBGM(targetId) {
+            const requiredBGMId = bgmConfig[targetId];
+            
+            // 1. Stop all other BGMs
+            ['bgm-1', 'bgm-2', 'bgm-3'].forEach(id => {
+                const audio = document.getElementById(id);
+                if(id !== requiredBGMId) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+            });
+
+            // 2. Play required BGM (if not already playing)
+            if(requiredBGMId) {
+                const audio = document.getElementById(requiredBGMId);
+                // Set Volume logic (Half for B1, Loud for B2, Half for B3)
+                if(requiredBGMId === 'bgm-1') audio.volume = 0.4;
+                else if(requiredBGMId === 'bgm-2') audio.volume = 0.8;
+                else if(requiredBGMId === 'bgm-3') audio.volume = 0.4;
+
+                if(audio.paused) {
+                    audio.play().catch(e => console.log("BGM waiting for interaction"));
+                }
+            }
+        }
+
+        // --- 1. VOICE AUDIO LOGIC ---
         const audioMap = {
             'slide-briefing': { audioId: 'audio-briefing', btnId: 'btn-briefing', controlsId: 'controls-briefing', hintId: 'hint-briefing' },
             'slide-mechanics': { audioId: 'audio-mechanics', btnId: 'btn-mechanics', controlsId: 'controls-mechanics', hintId: 'hint-mechanics' },
@@ -393,8 +433,8 @@
                 
                 audio.addEventListener('ended', () => {
                     unlockButton(btn);
-                    controls.classList.add('visible'); // Show controls when done
-                    hint.classList.remove('visible');  // Hide hint when done
+                    controls.classList.add('visible');
+                    hint.classList.remove('visible');
                     completedAudios.add(pageId);
                 });
             });
@@ -405,11 +445,8 @@
             btnElement.classList.add('btn-unlocked');
         }
 
-        function handlePageAudio(targetId) {
-            // Stop all audio first
-            document.querySelectorAll('audio').forEach(a => { a.pause(); a.currentTime = 0; });
-            
-            // Reset pause buttons text
+        function handlePageVoice(targetId) {
+            document.querySelectorAll('audio:not([id^="bgm"])').forEach(a => { a.pause(); a.currentTime = 0; });
             document.querySelectorAll('.control-btn').forEach(b => { if(b.innerText.includes('RESUME')) b.innerText = '⏸ PAUSE'; });
 
             if(audioMap[targetId]) {
@@ -419,17 +456,13 @@
                 const controls = document.getElementById(config.controlsId);
                 const hint = document.getElementById(config.hintId);
 
-                // Play Logic
-                audio.play().catch(e => console.log("Autoplay blocked", e));
+                audio.play().catch(e => console.log("Voice blocked"));
 
-                // State Logic
                 if(completedAudios.has(targetId)) {
-                    // Visited before: Show buttons, show controls, HIDE HINT
                     unlockButton(btn);
                     controls.classList.add('visible');
                     hint.classList.remove('visible'); 
                 } else {
-                    // First visit: Hide buttons, hide controls, SHOW HINT
                     btn.classList.remove('btn-unlocked');
                     btn.classList.add('btn-locked');
                     controls.classList.remove('visible');
@@ -442,15 +475,9 @@
             const config = audioMap[pageId];
             const audio = document.getElementById(config.audioId);
             const hint = document.getElementById(config.hintId);
-            
-            // Restart audio
             audio.currentTime = 0;
             audio.play();
-            
-            // Show hint again during replay
-            hint.classList.add('visible');
-            
-            // Reset Pause Button Text
+            hint.classList.add('visible'); // Show hint again on replay
             const pauseBtn = document.querySelector(`#${config.controlsId} .control-btn:nth-child(2)`);
             if(pauseBtn) pauseBtn.innerText = '⏸ PAUSE';
         }
@@ -459,17 +486,11 @@
             const config = audioMap[pageId];
             const audio = document.getElementById(config.audioId);
             const pauseBtn = document.querySelector(`#${config.controlsId} .control-btn:nth-child(2)`);
-
-            if(audio.paused) {
-                audio.play();
-                pauseBtn.innerText = '⏸ PAUSE';
-            } else {
-                audio.pause();
-                pauseBtn.innerText = '▶ RESUME';
-            }
+            if(audio.paused) { audio.play(); pauseBtn.innerText = '⏸ PAUSE'; } 
+            else { audio.pause(); pauseBtn.innerText = '▶ RESUME'; }
         }
 
-        // --- 1. BIOS Loader ---
+        // --- 2. LOADER & INITIALIZATION ---
         window.addEventListener('load', () => { 
             initAudioLogic();
             let progress = 0;
@@ -488,12 +509,24 @@
                         document.getElementById('loader').style.opacity = '0'; 
                         setTimeout(()=>document.getElementById('loader').remove(), 500);
                         decodeText(document.querySelector('#slide-cover .glitch-title'));
+                        
+                        // TRY STARTING BGM 1 ON LOAD (Might be blocked)
+                        handleBGM('slide-cover');
                     }, 500);
                 }
             }, 50);
+
+            // GLOBAL UNLOCK FOR AUDIO (First Touch)
+            document.body.addEventListener('click', () => {
+                const bgm1 = document.getElementById('bgm-1');
+                if(bgm1.paused && document.getElementById('slide-cover').classList.contains('active')) {
+                    bgm1.volume = 0.4;
+                    bgm1.play();
+                }
+            }, {once:true});
         });
 
-        // --- 2. Text Decoder ---
+        // --- 3. NAVIGATION & TEXT DECODE ---
         const chars = "!@#$%^&*()_+-=[]{}|;':,./<>?";
         function decodeText(element) {
             const originalText = element.getAttribute('data-final').replace(/<br>/g, "\n"); 
@@ -511,14 +544,15 @@
 
         const historyStack = ['slide-cover'];
         function navigateTo(targetId) {
-            handlePageAudio(targetId); // TRIGGER AUDIO LOGIC
+            // SYNC AUDIO & BGM
+            handlePageVoice(targetId);
+            handleBGM(targetId);
 
             document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById(targetId);
             target.classList.add('active');
             
             if(targetId !== historyStack[historyStack.length-1]) historyStack.push(targetId);
-            
             if(targetId === 'slide-cover' || targetId === 'slide-intrusion') {
                 const title = target.querySelector('h1');
                 if(title) decodeText(title);
@@ -538,13 +572,13 @@
             if(historyStack.length > 1) {
                 historyStack.pop();
                 const prevId = historyStack[historyStack.length-1];
-                navigateTo(prevId); // Navigate properly to trigger audio logic
+                navigateTo(prevId); 
             }
         }
 
         function toggleHud() { document.getElementById('hud-details').classList.toggle('visible'); }
 
-        // --- 3. Terminal & Purge ---
+        // --- 4. TERMINAL & MAP LOGIC ---
         const archives = [
             { id: "01", title: "THE LOOP", img: "./1.jpg", human: "\"Fifteen years underground... sunlight is a myth here.\"", history: "Built 1970. Europe's largest underground mall.", ai: "ERROR: EXIT NOT FOUND." },
             { id: "02", title: "FLUID GHOST", img: "./2.jpg", human: "\"At 4 AM, the fountain whispers names.\"", history: "1972 Olympics construction.", ai: "ANALYSIS: LIQUID MEMORY LEAK." },
@@ -569,15 +603,11 @@
         function purgeCurrentMarker() {
             if(currentMarkerIndex !== -1) {
                 const marker = document.getElementById(`marker-${currentMarkerIndex}`);
-                if(marker) {
-                    marker.style.transition = "all 0.5s"; marker.style.transform = "scale(3)"; marker.style.opacity = "0"; marker.style.pointerEvents = "none";
-                    setTimeout(() => { marker.style.display = 'none'; }, 500);
-                }
+                if(marker) { marker.style.transition = "all 0.5s"; marker.style.transform = "scale(3)"; marker.style.opacity = "0"; marker.style.pointerEvents = "none"; setTimeout(() => { marker.style.display = 'none'; }, 500); }
                 closeTerminal();
             }
         }
 
-        // --- 4. MAP LOGIC ---
         const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); const voidSection = document.getElementById('void');
         let trails = []; let mouseX = -1000, mouseY = -1000; 
         window.addEventListener('resize', resizeMap); 
@@ -594,12 +624,7 @@
             requestAnimationFrame(loopMap); 
             mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height); 
             mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(0,0,0,0.95)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
-            if (mouseX > -100) { 
-                mapCtx.globalCompositeOperation = 'destination-out'; 
-                let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 50, mouseX, mouseY, 250); 
-                gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
-                mapCtx.beginPath(); mapCtx.arc(mouseX, mouseY, 250, 0, Math.PI*2); mapCtx.fillStyle = gradient; mapCtx.fill(); 
-            } 
+            if (mouseX > -100) { mapCtx.globalCompositeOperation = 'destination-out'; let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 50, mouseX, mouseY, 250); gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); mapCtx.beginPath(); mapCtx.arc(mouseX, mouseY, 250, 0, Math.PI*2); mapCtx.fillStyle = gradient; mapCtx.fill(); } 
             mapCtx.globalCompositeOperation = 'source-over'; 
             for(let i=0; i<trails.length; i++) { let p = trails[i]; mapCtx.fillStyle = '#ff0000'; mapCtx.globalAlpha = p.life; mapCtx.beginPath(); mapCtx.arc(p.x, p.y, p.size, 0, Math.PI*2); mapCtx.fill(); p.life -= 0.02; } 
             mapCtx.globalAlpha = 1.0; 
@@ -674,7 +699,6 @@
         function saveMemories(text, x, y, z, colorHex) { let existing = JSON.parse(localStorage.getItem('stachus_memories')) || []; existing.push({ text, x, y, z, colorHex }); localStorage.setItem('stachus_memories', JSON.stringify(existing)); }
         function loadSavedMemories() { let saved = JSON.parse(localStorage.getItem('stachus_memories')) || []; saved.forEach(mem => { createMemoryCrystal(mem.text, mem.x, mem.y, mem.z, mem.colorHex); }); }
         function removeMemory(mesh) { if (!mesh) return; memoryGroup.remove(mesh); let saved = JSON.parse(localStorage.getItem('stachus_memories')) || []; const updated = saved.filter(m => m.text !== mesh.userData.text); localStorage.setItem('stachus_memories', JSON.stringify(updated)); hoveredObject = null; document.getElementById('memory-3d-tooltip').style.opacity = 0; }
-        window.purgeMemories = function() { if(confirm("WARNING: SYSTEM PURGE?")) { localStorage.removeItem('stachus_memories'); while(memoryGroup.children.length > 0){ memoryGroup.remove(memoryGroup.children[0]); } } };
         function createMemoryCrystal(text, x, y, z, colorHex) { const geo = new THREE.IcosahedronGeometry(2.5, 0); const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.8 }); const mesh = new THREE.Mesh(geo, mat); const glowGeo = new THREE.SphereGeometry(1.3, 16, 16); const glowMat = new THREE.MeshBasicMaterial({ color: colorHex }); const glowMesh = new THREE.Mesh(glowGeo, glowMat); mesh.add(glowMesh); mesh.position.set(x, y, z); mesh.userData = { text: text, initialPos: {x, y, z} }; memoryGroup.add(mesh); }
         function getNeonColor() { const hue = Math.random(); const sat = 0.9; const light = 0.6; const col = new THREE.Color().setHSL(hue, sat, light); return col.getHex(); }
         window.activateMemory = function(text) { if(!pointsMesh) return; const positions = pointsMesh.geometry.attributes.position.array; let attempts = 0; while(attempts < 2000) { const idx = Math.floor(Math.random() * (positions.length/3)); let x = positions[idx*3]; let y = positions[idx*3+1]; let z = positions[idx*3+2]; const radius = Math.sqrt(x*x + z*z); if(y > -5 && y < 20 && radius > 35 && radius < 55) { const randomColor = getNeonColor(); createMemoryCrystal(text, x, y, z, randomColor); saveMemories(text, x, y, z, randomColor); autoFocusTargetY = -Math.atan2(x, z); isAutoRotating = true; return; } attempts++; } };
