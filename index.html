@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>STACHUS: PROTOCOL V27 (BGM SYNC)</title>
+    <title>STACHUS: PROTOCOL V28 (FINAL MIX)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -93,7 +93,16 @@
         .game-section.active { opacity: 1; pointer-events: auto; visibility: visible; z-index: 10; transform: scale(1); }
 
         /* ================= UI ELEMENTS ================= */
-        .glitch-title { font-family: var(--font-title); font-size: 15vw; color: #fff; line-height: 0.9; margin-bottom: 20px; text-shadow: 3px 3px 0px rgba(255, 0, 85, 0.5); }
+        .glitch-title { font-family: var(--font-title); font-size: 15vw; color: #fff; line-height: 0.9; margin-bottom: 5px; text-shadow: 3px 3px 0px rgba(255, 0, 85, 0.5); }
+        
+        /* NEW SUBTITLE STYLE */
+        .subtitle {
+            font-family: var(--font-tech); font-size: 1rem; color: #888;
+            letter-spacing: 3px; margin-bottom: 30px; text-transform: uppercase;
+            border-top: 1px solid var(--accent-green); padding-top: 10px;
+            width: 80%; opacity: 0.8;
+        }
+
         .section-title { font-family: var(--font-tech); font-size: 8vw; color: var(--alert-red); border-bottom: 2px solid var(--alert-red); padding-bottom: 10px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; position: relative; }
         .section-title::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 30%; height: 2px; background: var(--accent-green); animation: loading-bar 2s infinite ease-in-out; }
         @keyframes loading-bar { 0% {left:0; width:0;} 50% {width:100%;} 100% {left:100%; width:0;} }
@@ -217,7 +226,7 @@
     
     <audio id="audio-briefing" src="1.mp3"></audio>
     <audio id="audio-mechanics" src="2.mp3"></audio>
-    <audio id="audio-reconstruction" src="3.mp3"></audio>
+    <audio id="audio-intrusion" src="3.mp3"></audio>
 
     <audio id="bgm-1" src="B1.mp3" loop></audio>
     <audio id="bgm-2" src="B2.mp3" loop></audio>
@@ -229,7 +238,7 @@
             > MEMORY_CHECK... 64TB OK<br>
             > LOADING MAP_DATA... OK<br>
             > CONNECTING SATELLITE... OK<br>
-            > DECRYPTING PROTOCOL V27...<br>
+            > DECRYPTING PROTOCOL V28...<br>
         </div>
         <div class="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
@@ -254,6 +263,7 @@
         
         <section id="slide-cover" class="game-section active">
             <h1 class="glitch-title" data-final="PROJECT<br>STACHUS">PROJECT<br>STACHUS</h1>
+            <div class="subtitle">The Absence of City's Memory</div>
             <div class="mission-info">
                 TARGET: KARLSPLATZ<br>
                 OBJ: RECOVER MEMORY<br>
@@ -270,11 +280,11 @@
             <h2 class="section-title">BRIEFING</h2>
             <div class="info-card">
                 <h3>OFFICIAL DIRECTIVE</h3>
-                <p>"Massive 'Memory Devouring' confirmed. The Stachus zone is overrun with 'Cognitive Hallucinations' rewriting our history. If we don't purge them now, we lose control of the city's order."</p>
+                <p>"Citizens report anomalies. Delete all hallucinations immediately."</p>
             </div>
             <div class="info-card alert">
                 <h3>⚠ WARNING</h3>
-                <p>Proceed to the sector. Purge the hallucinations. Re-establish the Standardized City Memory Protocol！</p>
+                <p>The 'glitches' might be real memories. System compromise detected.</p>
             </div>
             <div id="hint-briefing" class="audio-hint">⚠ INCOMING TRANSMISSION // VOLUME UP</div>
             <button id="btn-briefing" class="action-btn alert btn-locked" onclick="navigateTo('slide-mechanics')">ACCEPT</button>
@@ -290,7 +300,7 @@
                 <div style="font-size:0.8rem; color:#666;">SATELLITE LINK: ACTIVE</div>
                 <div class="gps-coords">LAT: 48.139<br>LON: 11.565</div>
                 <p style="font-size:0.8rem; color:#ccc; margin-top:10px;">
-                    Proceed on foot to Karlsplatz, Munich. Physical presence is mandatory. Once you are in range of the red 'Anomaly Spikes', your GPS will trigger auto-acquisition and reveal the targets on your HUD.<br>Tap to 'Process' the targets. Neutralize the anomalies to sanitize the zone.
+                    Physical movement required.<br>Swipe map to reveal data.
                 </p>
             </div>
             <div id="hint-mechanics" class="audio-hint">⚠ SYSTEM GUIDE // LISTEN CAREFULLY</div>
@@ -312,6 +322,11 @@
         </section>
 
         <section id="slide-intrusion" class="game-section">
+            <div id="controls-intrusion" class="audio-controls">
+                <div class="control-btn" onclick="replayAudio('slide-intrusion')">🔊 REPLAY</div>
+                <div class="control-btn" onclick="togglePause('slide-intrusion')">⏸ PAUSE</div>
+            </div>
+
             <h1 style="font-family:var(--font-title); font-size:4rem; color:var(--alert-red); line-height:1;" data-final="SYSTEM<br>FAILURE">#@!%&<br>ERROR</h1>
             <div class="intrusion-alert" style="margin: 30px 0;">
                 <p style="color:#fff; font-size:0.9rem;">>> DECRYPTING...</p>
@@ -321,17 +336,15 @@
                     NARRATIVE REJECTED.<br>THEY ARE LYING TO YOU.
                 </p>
             </div>
-            <button class="action-btn alert" onclick="navigateTo('reconstruction')">OVERRIDE</button>
+            
+            <div id="hint-intrusion" class="audio-hint">⚠ FINAL TRUTH // DO NOT IGNORE</div>
+            <button id="btn-intrusion" class="action-btn alert btn-locked" onclick="navigateTo('reconstruction')">OVERRIDE</button>
         </section>
 
         <section id="reconstruction" class="game-section">
-            <div id="controls-reconstruction" class="audio-controls">
-                <div class="control-btn" onclick="replayAudio('reconstruction')">🔊 REPLAY</div>
-                <div class="control-btn" onclick="togglePause('reconstruction')">⏸ PAUSE</div>
-            </div>
             <div id="three-container"></div>
             
-            <div id="recon-console" class="btn-locked">
+            <div id="recon-console">
                 <h2 style="font-family:var(--font-tech); color:#fff; font-size:1.2rem; margin-bottom:10px;">MEMORY REBUILD</h2>
                 <div class="input-area">
                     <input type="text" id="memory-input" placeholder="Enter missing memory..." autocomplete="off">
@@ -340,7 +353,6 @@
                 <div style="margin-top:10px; font-size:9px; color:#666;" onclick="purgeMemories()">[ PURGE SYSTEM ]</div>
             </div>
             
-            <div id="hint-reconstruction" class="audio-hint">⚠ FINAL INSTRUCTION // DO NOT IGNORE</div>
             <div id="particles-container"></div>
             <div id="memory-3d-tooltip">
                 <div style="color:var(--accent-green); font-size:10px;">[ FRAGMENT ]</div>
@@ -379,7 +391,7 @@
     <script>
         // ================= JAVASCRIPT LOGIC =================
         
-        // --- 0. BGM MANAGER (V27) ---
+        // --- 0. BGM MANAGER (MIXED VOLUME) ---
         const bgmConfig = {
             'slide-cover': 'bgm-1',
             'slide-briefing': 'bgm-1',
@@ -401,13 +413,13 @@
                 }
             });
 
-            // 2. Play required BGM (if not already playing)
+            // 2. Play required BGM
             if(requiredBGMId) {
                 const audio = document.getElementById(requiredBGMId);
-                // Set Volume logic (Half for B1, Loud for B2, Half for B3)
-                if(requiredBGMId === 'bgm-1') audio.volume = 0.4;
-                else if(requiredBGMId === 'bgm-2') audio.volume = 0.8;
-                else if(requiredBGMId === 'bgm-3') audio.volume = 0.4;
+                // NEW VOLUME LEVELS: B1=0.2, B2=0.4, B3=0.2
+                if(requiredBGMId === 'bgm-1') audio.volume = 0.2;
+                else if(requiredBGMId === 'bgm-2') audio.volume = 0.4;
+                else if(requiredBGMId === 'bgm-3') audio.volume = 0.2;
 
                 if(audio.paused) {
                     audio.play().catch(e => console.log("BGM waiting for interaction"));
@@ -415,11 +427,11 @@
             }
         }
 
-        // --- 1. VOICE AUDIO LOGIC ---
+        // --- 1. VOICE AUDIO LOGIC (UPDATED MAPPING) ---
         const audioMap = {
             'slide-briefing': { audioId: 'audio-briefing', btnId: 'btn-briefing', controlsId: 'controls-briefing', hintId: 'hint-briefing' },
             'slide-mechanics': { audioId: 'audio-mechanics', btnId: 'btn-mechanics', controlsId: 'controls-mechanics', hintId: 'hint-mechanics' },
-            'reconstruction': { audioId: 'audio-reconstruction', btnId: 'recon-console', controlsId: 'controls-reconstruction', hintId: 'hint-reconstruction' }
+            'slide-intrusion': { audioId: 'audio-intrusion', btnId: 'btn-intrusion', controlsId: 'controls-intrusion', hintId: 'hint-intrusion' }
         };
         const completedAudios = new Set(); 
 
@@ -441,11 +453,14 @@
         }
 
         function unlockButton(btnElement) {
-            btnElement.classList.remove('btn-locked');
-            btnElement.classList.add('btn-unlocked');
+            if(btnElement) {
+                btnElement.classList.remove('btn-locked');
+                btnElement.classList.add('btn-unlocked');
+            }
         }
 
         function handlePageVoice(targetId) {
+            // Reset state
             document.querySelectorAll('audio:not([id^="bgm"])').forEach(a => { a.pause(); a.currentTime = 0; });
             document.querySelectorAll('.control-btn').forEach(b => { if(b.innerText.includes('RESUME')) b.innerText = '⏸ PAUSE'; });
 
@@ -456,6 +471,8 @@
                 const controls = document.getElementById(config.controlsId);
                 const hint = document.getElementById(config.hintId);
 
+                // FORCE VOICE VOLUME TO MAX
+                audio.volume = 1.0; 
                 audio.play().catch(e => console.log("Voice blocked"));
 
                 if(completedAudios.has(targetId)) {
@@ -476,8 +493,9 @@
             const audio = document.getElementById(config.audioId);
             const hint = document.getElementById(config.hintId);
             audio.currentTime = 0;
+            audio.volume = 1.0; 
             audio.play();
-            hint.classList.add('visible'); // Show hint again on replay
+            hint.classList.add('visible');
             const pauseBtn = document.querySelector(`#${config.controlsId} .control-btn:nth-child(2)`);
             if(pauseBtn) pauseBtn.innerText = '⏸ PAUSE';
         }
@@ -490,7 +508,7 @@
             else { audio.pause(); pauseBtn.innerText = '▶ RESUME'; }
         }
 
-        // --- 2. LOADER & INITIALIZATION ---
+        // --- 2. LOADER ---
         window.addEventListener('load', () => { 
             initAudioLogic();
             let progress = 0;
@@ -509,24 +527,20 @@
                         document.getElementById('loader').style.opacity = '0'; 
                         setTimeout(()=>document.getElementById('loader').remove(), 500);
                         decodeText(document.querySelector('#slide-cover .glitch-title'));
-                        
-                        // TRY STARTING BGM 1 ON LOAD (Might be blocked)
-                        handleBGM('slide-cover');
                     }, 500);
                 }
             }, 50);
 
-            // GLOBAL UNLOCK FOR AUDIO (First Touch)
             document.body.addEventListener('click', () => {
                 const bgm1 = document.getElementById('bgm-1');
                 if(bgm1.paused && document.getElementById('slide-cover').classList.contains('active')) {
-                    bgm1.volume = 0.4;
+                    bgm1.volume = 0.2; 
                     bgm1.play();
                 }
             }, {once:true});
         });
 
-        // --- 3. NAVIGATION & TEXT DECODE ---
+        // --- 3. NAV ---
         const chars = "!@#$%^&*()_+-=[]{}|;':,./<>?";
         function decodeText(element) {
             const originalText = element.getAttribute('data-final').replace(/<br>/g, "\n"); 
@@ -544,7 +558,6 @@
 
         const historyStack = ['slide-cover'];
         function navigateTo(targetId) {
-            // SYNC AUDIO & BGM
             handlePageVoice(targetId);
             handleBGM(targetId);
 
@@ -553,6 +566,7 @@
             target.classList.add('active');
             
             if(targetId !== historyStack[historyStack.length-1]) historyStack.push(targetId);
+            
             if(targetId === 'slide-cover' || targetId === 'slide-intrusion') {
                 const title = target.querySelector('h1');
                 if(title) decodeText(title);
@@ -578,7 +592,7 @@
 
         function toggleHud() { document.getElementById('hud-details').classList.toggle('visible'); }
 
-        // --- 4. TERMINAL & MAP LOGIC ---
+        // --- 4. TERMINAL & MAP ---
         const archives = [
             { id: "01", title: "THE LOOP", img: "./1.jpg", human: "\"Fifteen years underground... sunlight is a myth here.\"", history: "Built 1970. Europe's largest underground mall.", ai: "ERROR: EXIT NOT FOUND." },
             { id: "02", title: "FLUID GHOST", img: "./2.jpg", human: "\"At 4 AM, the fountain whispers names.\"", history: "1972 Olympics construction.", ai: "ANALYSIS: LIQUID MEMORY LEAK." },
