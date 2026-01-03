@@ -638,11 +638,61 @@ html {
     -webkit-text-size-adjust: 100%; /* 防止 iOS 旋转横屏时字体变大 */
 }
 
+/* --- 移动端专项修复：确保卡片居中且不遮挡按钮 --- */
 @media (max-width: 768px) {
-    .dream-title { font-size: 14vw !important; } /* 响应式标题 */
-    .memory-main-text { font-size: 1rem; line-height: 1.6; }
-    .archive-content { font-size: 0.75rem; }
-    .glitch-title { font-size: 1.2rem; }
+    /* 1. 修复卡片：限制高度，强制居中 */
+    .memory-story-card {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+        width: 92vw !important;
+        max-height: 80vh !important; /* 限制最高只占屏幕80% */
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        z-index: 10003 !important;
+        padding: 15px !important;
+    }
+
+    /* 2. 修复文字溢出：让文字在卡片内部滚动 */
+    .card-text.scroll-content {
+        flex: 1 !important; /* 自动占据图片和按钮中间的剩余空间 */
+        overflow-y: auto !important; /* 关键：开启内部滚动 */
+        max-height: 250px !important; /* 给文字一个明确的活动范围 */
+        margin-bottom: 10px !important;
+        padding: 10px !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 3. 修复按键无法点击：确保按钮在最上层且固定 */
+    .card-btn {
+        flex-shrink: 0 !important; /* 防止按钮被挤扁 */
+        position: relative !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 50px !important;
+        z-index: 10005 !important;
+        margin-top: auto !important; /* 推到最底部 */
+    }
+
+    /* 4. 统一移动端字体大小（修复与电脑端不一致） */
+    .dream-title { 
+        font-size: 3.5rem !important; /* 弃用 vw，改用固定 rem 保证一致性 */
+        line-height: 1.1 !important;
+    }
+    .memory-main-text { 
+        font-size: 1.1rem !important; 
+        line-height: 1.6 !important; 
+    }
+    .archive-content { font-size: 0.85rem !important; }
+    .glitch-title { font-size: 1.4rem !important; }
+
+    /* 5. 缩小图片高度，为文字留空间 */
+    .card-img-placeholder {
+        height: 140px !important;
+        min-height: 140px !important;
+    }
 }
 
    </style>
