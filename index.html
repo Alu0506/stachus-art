@@ -641,6 +641,104 @@
     margin-bottom: 15px;
     background-color: rgba(0,0,0,0.2);
 }
+
+/* ================= MOBILE OPTIMIZATION (ADD THIS AT THE END) ================= */
+@media screen and (max-width: 768px) {
+    
+    /* --- 1. 全局字体与布局调整 --- */
+    .dream-title { font-size: 15vw; line-height: 1.1; }
+    .subtitle { font-size: 0.6rem; letter-spacing: 2px; }
+    
+    /* --- 2. 剧情页/信封页适配 (解决按钮看不见的问题) --- */
+    #slide-briefing, #letter-stage {
+        height: 100%; 
+        padding: 20px;
+        justify-content: flex-start; /*以此保证内容从顶部开始 */
+        overflow-y: auto; /* 允许垂直滚动 */
+    }
+    
+    /* 调整打字机容器，防止太高 */
+    .typewriter-container {
+        padding: 20px;
+        margin-top: 60px; /* 给顶部留空间 */
+        margin-bottom: 20px;
+        min-height: auto;
+        max-height: 60vh; /* 限制最大高度 */
+        overflow-y: auto; /* 文字过多可滚动 */
+    }
+    
+    .letter-text { font-size: 0.9rem; line-height: 1.6; }
+    
+    /* 确保按钮在移动端始终可见且易按 */
+    .action-btn {
+        padding: 15px 30px;
+        font-size: 0.8rem;
+        margin-top: 10px;
+        margin-bottom: 40px; /* 底部留白防止被系统手势条遮挡 */
+        width: 80%;
+    }
+
+    /* --- 3. 地图页适配 (左右滑动 + 标记缩小) --- */
+    #void {
+        overflow-x: auto; /* 允许横向滑动 */
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch; /* 平滑滚动 */
+    }
+
+    #map-zoom-wrapper {
+        width: 160vw; /* 地图宽度放大到屏幕的 1.6 倍，展示更多细节 */
+        height: 100%;
+        position: relative;
+        left: 0;
+        transform-origin: left center;
+    }
+    
+    /* 修复 Canvas 大小，使其跟随容器宽度 */
+    #map-canvas, #map-bg, #aurora-layer {
+        width: 100% !important; /* 强制填满 160vw */
+        height: 100% !important;
+    }
+
+    /* 缩小梦泡标记，防止拥挤 */
+    .marker {
+        width: 40px; height: 40px;
+    }
+    .marker::after { inset: -10px; } /* 缩小热区 */
+
+    /* --- 4. 交互弹窗适配 (解决重叠与居中) --- */
+    #fullscreen-stage {
+        padding: 10px;
+        align-items: center; /* 垂直居中 */
+    }
+    
+    /* 窥视孔适配 */
+    .dream-peephole {
+        width: 90vw; height: 90vw;
+        max-width: 350px; max-height: 350px;
+        padding: 20px;
+    }
+    .glitch-title { font-size: 1.2rem; margin-bottom: 10px; }
+    .dream-img-placeholder { height: 120px; }
+    .dream-quote { font-size: 0.8rem; line-height: 1.4; height: 80px; overflow-y: auto;}
+
+    /* 记忆卡片适配 */
+    .memory-story-card {
+        width: 90vw;
+        max-height: 80vh; /* 防止超出屏幕高度 */
+        padding: 20px;
+    }
+    .card-img-placeholder { height: 140px; }
+    .scroll-content { padding: 0 10px 20px 10px; }
+    
+    /* 奖励卡片适配 */
+    .reward-card {
+        width: 80vw;
+        aspect-ratio: auto;
+        height: auto;
+        padding: 30px 20px;
+    }
+}
+
    </style>
 </head>
 <body>
@@ -1647,19 +1745,25 @@ const AudioManager = {
             if(particleInterval) { clearTimeout(particleInterval); particleInterval = null; }
         }
 
-        function finishDreamHold() {
-            isDreamHolding = false; isCracking = true;
+       function finishDreamHold() {
+            isDreamHolding = false; 
+            isCracking = true;
             if(navigator.vibrate) navigator.vibrate([50, 50, 100]);
+            
             const btn = document.getElementById('dream-trigger-btn');
-            btn.classList.remove('holding'); btn.style.transform = 'scale(1.5)'; btn.style.opacity = '0';
-
-            const layer = document.querySelector('.dream-content-layer');
+            btn.classList.remove('holding'); 
+            
+            // 隐藏窥视孔 (Peephole)
             const peephole = document.querySelector('.dream-peephole');
-            layer.style.transition = 'opacity 1s ease'; layer.style.opacity = 0;
-            peephole.style.transition = 'transform 1.2s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s';
-            peephole.style.transform = 'scale(2)'; peephole.style.opacity = 0;
-
-            setTimeout(() => { peephole.style.display = 'none'; showRefinedMemoryCard(); }, 800);
+            peephole.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            peephole.style.opacity = 0;
+            peephole.style.transform = 'scale(1.5)';
+            
+            // 延迟后彻底隐藏 DOM 并显示记忆卡片
+            setTimeout(() => { 
+                peephole.style.display = 'none'; 
+                showRefinedMemoryCard(); 
+            }, 500);
         }
 
         function spawnConvergenceParticles() {
@@ -1679,41 +1783,55 @@ const AudioManager = {
         // --- 优化版：显示记忆卡片 (排版升级) ---
         // --- 修复版：显示记忆卡片 ---
         function showRefinedMemoryCard() {
-    const card = document.querySelector('.memory-story-card'); 
-    const d = dreams[currentDreamIndex];
-    const id = currentDreamIndex + 1;
+            const card = document.querySelector('.memory-story-card'); 
+            const rewardCard = document.querySelector('.reward-card');
+            
+            // 确保其他卡片关闭
+            rewardCard.classList.remove('show');
+            
+            const d = dreams[currentDreamIndex];
+            const id = currentDreamIndex + 1;
+            const memImgName = `${id}${id}${id}.png`;
+            
+            const imgDiv = card.querySelector('.card-img-placeholder');
+            imgDiv.style.backgroundImage = `url('${memImgName}')`;
 
-    // 图片路径
-    const memImgName = `${id}${id}${id}.png`;
-    const imgDiv = card.querySelector('.card-img-placeholder');
-    imgDiv.style.backgroundImage = `url('${memImgName}')`;
+            // 填充内容
+            const textContainer = card.querySelector('.card-text');
+            textContainer.innerHTML = `
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <span class="memory-section-title">${d.subTitle}</span>
+                </div>
+                <p class="memory-main-text">${d.memoryText}</p>
+                <div class="archive-block">
+                    <span class="archive-tag">/// ${d.archiveYear}</span>
+                    <p class="archive-content">${d.archiveText}</p>
+                </div>
+                <div style="height: 40px;"></div>
+            `;
 
-    // 填充文本
-    const textContainer = card.querySelector('.card-text');
-    textContainer.className = 'card-text scroll-content'; 
-    textContainer.innerHTML = `
-        <div style="text-align: center; margin-bottom: 10px;">
-            <span class="memory-section-title">${d.subTitle}</span>
-        </div>
-        <p class="memory-main-text">${d.memoryText}</p>
-        <div class="archive-block">
-            <span class="archive-tag">/// ${d.archiveYear}</span>
-            <p class="archive-content">${d.archiveText}</p>
-        </div>
-        <div style="height: 20px;"></div>
-    `;
+            const btn = card.querySelector('.card-btn');
+            if(btn) {
+                btn.style.display = 'block';
+                btn.innerText = "Peek into the Secret";
+            }
 
-    // 强制显示按钮
-    const btn = card.querySelector('.card-btn');
-    if(btn) {
-        btn.style.display = 'block';
-        btn.innerText = "Peek into the Secret";
-    }
+            // 核心修复：重置位置并显示
+            card.style.display = 'flex'; // 确保是 flex 布局
+            // 强制居中
+            card.style.top = '50%';
+            card.style.left = '50%';
+            card.style.transform = 'translate(-50%, -50%) scale(0.9)'; 
+            
+            // 触发动画
+            requestAnimationFrame(() => {
+                card.classList.add('show');
+                card.style.transform = 'translate(-50%, -50%) scale(1)';
+            });
 
-    card.classList.add('show');
-    setTimeout(() => { isCracking = false; }, 800);
-    initCardAtmosphere(card);
-}
+            isCracking = false; 
+            initCardAtmosphere(card);
+        }
 
         function initCardAtmosphere(card) {
             const old = card.querySelectorAll('.card-dust'); old.forEach(o => o.remove());
@@ -1781,14 +1899,15 @@ const AudioManager = {
             
             const card = document.querySelector('.reward-card');
             
-            // 动画效果：卡片飞向右上角指南针
-            card.style.transition = "all 0.8s ease-in"; 
-            // 简单向上飞出淡出，模拟飞入罗盘
-            card.style.transform = `translate(100px, -300px) scale(0.1)`; 
+            // 动画：向右上角飞出并缩小
+            card.style.transition = "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)"; 
+            // 使用 fixed 定位逻辑的偏移
+            card.style.transform = `translate(40vw, -40vh) scale(0.1)`; 
             card.style.opacity = 0;
             
             setTimeout(() => {
-                // 1. 更新 UI 计数器
+                // ... (原有的计数器更新代码保持不变) ...
+                
                 const dotId = `compass-dot-${collectedCount}`;
                 const dot = document.getElementById(dotId);
                 if(dot) dot.classList.add('active');
@@ -1796,36 +1915,34 @@ const AudioManager = {
                 collectedCount++;
                 document.getElementById('compass-label').innerText = `COLLECTED: ${collectedCount}/9`;
                 
-                // 2. 地图标记变化：气泡 -> 记忆残留 (Residue)
                 const marker = document.getElementById(`marker-${currentDreamIndex}`);
                 if(marker) {
-                    marker.style.display = 'none'; // 隐藏原始大光圈
-                    marker.classList.add('collected'); // 标记为已收集
+                    marker.style.display = 'none'; 
+                    marker.classList.add('collected'); 
                     
-                    // 在原地创建残留水晶
                     const container = document.getElementById('marker-container');
                     const residue = document.createElement('div');
                     residue.className = 'residue-crystal';
-                    residue.style.top = marker.style.top; 
-                    residue.style.left = marker.style.left;
+                    // 确保 Residue 位置正确 (使用百分比)
+                    residue.style.top = dreamPositions[currentDreamIndex].t + '%'; 
+                    residue.style.left = dreamPositions[currentDreamIndex].l + '%';
+                    
                     residue.innerHTML = `<div class="residue-body"></div><div class="residue-ring"></div>`;
                     
-                    // 绑定回顾事件
-                    const savedIndex = currentDreamIndex; 
-                    // 确保点击穿透和事件冒泡正确
+                    // 重新绑定触摸事件，防止点不中
+                    residue.addEventListener('touchstart', (e) => { 
+                        e.preventDefault(); e.stopPropagation(); 
+                        reviewMemory(currentDreamIndex); 
+                    }, {passive: false});
+                    
                     residue.onclick = (e) => { 
                         e.preventDefault(); e.stopPropagation(); 
-                        reviewMemory(savedIndex); 
-                    };
-                    residue.ontouchstart = (e) => { 
-                        e.preventDefault(); e.stopPropagation(); 
-                        reviewMemory(savedIndex); 
+                        reviewMemory(currentDreamIndex); 
                     };
                     
                     container.appendChild(residue);
                 }
                 
-                // 3. 检查是否通关并关闭弹窗
                 checkProgress(); 
                 closeDream();
                 
@@ -1860,52 +1977,80 @@ const AudioManager = {
         }
 
         // --- 7. 地图 Canvas 逻辑 ---
-        const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); const voidSection = document.getElementById('void'); 
+       // --- 7. 地图 Canvas 逻辑 (手机适配版) ---
+        const mapCanvas = document.getElementById('map-canvas'); 
+        const mapCtx = mapCanvas.getContext('2d'); 
+        const voidSection = document.getElementById('void'); 
+        const zoomWrapper = document.getElementById('map-zoom-wrapper');
+
         let mouseX = -1000, mouseY = -1000;
-        window.addEventListener('resize', resizeMap); function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; }
-        
-        function handleInput(x, y) { 
+
+        // 调整 Canvas 尺寸以匹配 CSS 中设定的 160vw (手机端) 或 100vw (电脑端)
+        function resizeMap() { 
+            const rect = zoomWrapper.getBoundingClientRect();
+            mapCanvas.width = rect.width; 
+            mapCanvas.height = rect.height; 
+        }
+        window.addEventListener('resize', resizeMap);
+
+        // 核心坐标转换函数
+        function handleInput(clientX, clientY) { 
+            // 获取 Canvas 元素在视口中的实时位置（会自动计算滚动偏移）
             const rect = mapCanvas.getBoundingClientRect(); 
-            mouseX = x - rect.left; 
-            mouseY = y - rect.top; 
             
-            // 这两行是关键：它们决定了手指位置是否被判定为“你在那里”
+            // 计算相对于 Canvas 内部的坐标
+            mouseX = clientX - rect.left; 
+            mouseY = clientY - rect.top; 
+            
+            // 转换为百分比，用于碰撞检测
             simulatedUserX = (mouseX / mapCanvas.width) * 100; 
             simulatedUserY = (mouseY / mapCanvas.height) * 100;
         }
-        
-        voidSection.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
-        voidSection.addEventListener('touchstart', (e) => {
+
+        // 触摸事件监听 (支持滑动地图的同时移动光标)
+        zoomWrapper.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
+
+        zoomWrapper.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            handleInput(touch.clientX, touch.clientY);
+        }, {passive: false});
+
+        zoomWrapper.addEventListener('touchmove', (e) => {
+            // 允许地图横向滚动，但同时也更新光标位置
+            // 注意：这里不要 preventDefault，否则无法滑动地图
+            if(e.touches.length > 0) {
                 const touch = e.touches[0];
                 handleInput(touch.clientX, touch.clientY);
-            }, {passive: false});
+            }
+        }, {passive: false});
 
-            voidSection.addEventListener('touchmove', (e) => {
-                // 阻止手机默认的滚动行为，这样手指滑动时地图不会上下乱跳
-                e.preventDefault(); 
-                if(e.touches.length > 0) {
-                    const touch = e.touches[0];
-                    handleInput(touch.clientX, touch.clientY);
-                }
-            }, {passive: false});
-
-            voidSection.addEventListener('touchend', () => {
-                // 如果想让手指离开后灯熄灭，可以把 mouseX 设回 -1000
-                // mouseX = -1000; mouseY = -1000;
-            });
-        
+        // 更新 Canvas 绘制逻辑，确保遮罩位置准确
         function loopMap() { 
             requestAnimationFrame(loopMap); 
-            checkProximity(); 
-            mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(10, 15, 40, 0.96)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
-            if (mouseX > -100) { 
+            checkProximity(); // 距离检测
+            
+            // 绘制深色背景
+            mapCtx.globalCompositeOperation = 'source-over'; 
+            mapCtx.fillStyle = 'rgba(10, 15, 40, 0.96)'; 
+            mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
+            
+            // 绘制擦除效果 (光标)
+            if (mouseX > -500) { // 只要有坐标就绘制
                 mapCtx.globalCompositeOperation = 'destination-out'; 
-                let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 50, mouseX, mouseY, 250); 
-                gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
-                mapCtx.beginPath(); mapCtx.arc(mouseX, mouseY, 250, 0, Math.PI*2); mapCtx.fillStyle = gradient; mapCtx.fill(); 
+                let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 30, mouseX, mouseY, 180); // 手机端稍微调小光圈
+                gradient.addColorStop(0, 'rgba(255,255,255,1)'); 
+                gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
+                mapCtx.beginPath(); 
+                mapCtx.arc(mouseX, mouseY, 180, 0, Math.PI*2); 
+                mapCtx.fillStyle = gradient; 
+                mapCtx.fill(); 
             }
             mapCtx.globalCompositeOperation = 'source-over';
         }
+        // 确保进入地图时调整一次大小
+        document.getElementById('btn-mechanics').addEventListener('click', () => {
+            setTimeout(resizeMap, 200);
+        });
         loopMap();
 
         // --- 8. 3D 逻辑 ---
