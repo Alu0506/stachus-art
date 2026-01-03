@@ -640,6 +640,58 @@ html {
 
 /* --- 移动端专项修复：确保卡片居中且不遮挡按钮 --- */
 @media (max-width: 768px) {
+    /* 1. 缩小页面整体内边距 */
+    #slide-mechanics {
+        padding: 20px 15px !important;
+        justify-content: flex-start !important; /* 让内容从顶部开始排，防止中间堆叠 */
+        overflow-y: auto !important; /* 万一屏幕极小，允许整页滚动 */
+    }
+
+    /* 2. 缩小标题大小和间距 */
+    #slide-mechanics .dream-title {
+        font-size: 2.2rem !important; /* 电脑端 3rem 太大，手机改为 2.2rem */
+        margin-bottom: 15px !important;
+        margin-top: 10px !important;
+    }
+
+    /* 3. 压缩文字容器间距 */
+    .mech-container {
+        gap: 10px !important; /* 减少元素间的自然间距 */
+    }
+
+    .mech-container > p:first-of-type {
+        margin-bottom: 15px !important; /* 缩小顶部引导词的间距 */
+        font-size: 0.75rem !important;
+    }
+
+    /* 4. 关键：缩小中间那段“太大的字” */
+    .mech-zone {
+        margin-bottom: 15px !important; /* 减少区域间距 */
+        padding: 10px !important;
+    }
+
+    .blur-reveal-text {
+        font-size: 1rem !important; /* 电脑端 1.25rem 改为 1rem */
+        line-height: 1.5 !important;
+    }
+
+    /* 5. 缩小互动泡泡的大小，释放垂直空间 */
+    .interactive-bubble {
+        width: 55px !important;
+        height: 55px !important;
+    }
+
+    .bubble-zone {
+        gap: 10px !important;
+    }
+
+    /* 6. 确保底部的开始按钮始终可见 */
+    .singularity-btn {
+        margin-top: 20px !important;
+        padding: 15px 35px !important;
+        font-size: 0.8rem !important;
+        flex-shrink: 0 !important; /* 防止按钮被挤扁 */
+    }
 
     /* 针对信件页容器的精准修复 */
 .typewriter-container {
