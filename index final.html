@@ -2,587 +2,1976 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STACHUS: THE ABSENCE (OPTIMIZED)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>STACHUS: DREAM ARCHITECT</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
-        /* ================= GLOBAL ================= */
-        ::-webkit-scrollbar { width: 4px; background: #000; }
-        ::-webkit-scrollbar-thumb { background: #ff0055; border-radius: 2px; }
-        
+        /* ================= 1. 全局视觉基调 ================= */
         :root { 
-            --bg-color: #020202; 
-            --text-main: #e0e0e0; 
-            --font-serif: 'Playfair Display', serif;       
-            --font-sans: 'Inter', sans-serif;              
-            --font-mono: 'Space Mono', monospace;          
-            --font-tech: 'Share Tech Mono', monospace;     
-            --accent-green: #00ff41; 
-            --alert-red: #ff0055; 
-            --neon-blue: #00f7ff;    
+            --bg-color: #0b0c15; 
+            --text-main: #f0f4f8; 
+            --text-dim: #94a3b8;
+            --font-title: 'Playfair Display', serif;
+            --font-body: 'Montserrat', sans-serif;
+            --font-tech: 'Share Tech Mono', monospace;
+            
+            --dream-gold: #ffeebb; 
+            --dream-cyan: #a2d2ff;
+            --dream-purple: #c4b5fd;
+            --platinum-gold: #fffbf0; 
+            --gps-gold: #ffeebb; 
+            
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; cursor: crosshair; }
-        body, html { width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-mono); overflow-x: hidden; }
-        body.fullscreen-mode { overflow: hidden !important; }
-
-        /* HUD & Scanline */
-        #hud-layer { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            pointer-events: none; z-index: 99; 
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            opacity: 1; 
+        /* 为所有长按按钮添加 CSS 样式，防止手机弹出系统菜单 */
+        /* 在 <style> 中添加 */
+        .hold-btn, .crack-btn, .marker, .residue-crystal {
+            -webkit-touch-callout: none; /* 禁用系统长按菜单 */
+            -webkit-user-select: none;   /* 禁用文字选中 */
         }
-        .hud-line { position: absolute; background: rgba(255,255,255,0.1); }
-        .hud-top { top: 40px; left: 40px; right: 40px; height: 1px; } .hud-bottom { bottom: 40px; left: 40px; right: 40px; height: 1px; }
-        .hud-left { top: 40px; bottom: 40px; left: 40px; width: 1px; } .hud-right { top: 40px; bottom: 40px; right: 40px; width: 1px; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.3); opacity: 0.5; animation: scan 4s linear infinite; }
-        @keyframes scan { 0% {top: -10%;} 100% {top: 110%;} }
+        body, html { 
+            width: 100%; height: 100%; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            font-family: var(--font-body); 
+            overflow: hidden; 
+            overscroll-behavior: none;
+            position: fixed; 
+        }
 
-        .hud-data { position: absolute; font-family: var(--font-mono); font-size: 10px; color: var(--accent-green); letter-spacing: 1px; opacity: 0.8; }
-        .data-tl { top: 20px; left: 40px; } .data-br { bottom: 20px; right: 40px; text-align: right; }
+        .noise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 9000; opacity: 0.3; mix-blend-mode: overlay;
+        }
 
-        .section { min-height: 100vh; width: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; z-index: 2; }
+        /* ================= 2. 动态背景 ================= */
+        #cover-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; mix-blend-mode: screen; transition: opacity 1.5s ease; }
+        #ghost-text-layer { position: fixed; inset: 0; pointer-events: none; z-index: 2; transition: opacity 1s; }
+        .ghost-word { position: absolute; color: var(--text-dim); font-family: var(--font-title); font-style: italic; opacity: 0; pointer-events: none; white-space: nowrap; animation: floatAndFade 14s linear forwards; text-shadow: 0 0 10px rgba(255, 255, 255, 0.15); }
+        @keyframes floatAndFade { 0% { opacity: 0; transform: translateY(30px) scale(0.9) rotate(-3deg); filter: blur(5px); } 10% { opacity: 0.35; transform: translateY(0) scale(1) rotate(0deg); filter: blur(0); } 80% { opacity: 0.2; transform: translateY(-30px) scale(1.05); filter: blur(1px); } 100% { opacity: 0; transform: translateY(-60px) scale(1.1) rotate(3deg); filter: blur(10px); } }
+        #dream-blobs { position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0; pointer-events: none; opacity: 0.85; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.45; animation: floatBlob 25s infinite alternate cubic-bezier(0.4, 0, 0.2, 1); mix-blend-mode: screen; }
+        .blob-1 { top: -20%; left: -10%; width: 60vw; height: 60vw; background: #283593; animation-delay: 0s; opacity: 0.5; }
+        .blob-2 { bottom: -20%; right: -10%; width: 70vw; height: 70vw; background: #1565c0; animation-delay: -8s; opacity: 0.4; }
+        .blob-3 { top: 40%; left: 30%; width: 40vw; height: 40vw; background: #29b6f6; animation-delay: -15s; opacity: 0.25; }
+        @keyframes floatBlob { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(25px, -35px) scale(1.05); } 100% { transform: translate(-25px, 25px) scale(0.95); } }
+        .stars-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(1px 1px at 10% 10%, rgba(255,255,255,0.6) 50%, transparent 100%), radial-gradient(1px 1px at 80% 40%, rgba(255,255,255,0.5) 50%, transparent 100%); background-size: 400px 400px; animation: star-float 120s linear infinite; z-index: 1; pointer-events: none; opacity: 0.6; }
+        @keyframes star-float { 0% { background-position: 0 0; } 100% { background-position: 50px 50px; } }
+        .vignette { position: fixed; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(circle, transparent 40%, #0b0c15 120%); }
 
-        /* PART 1: HERO */
-        #hero { z-index: 10; background: radial-gradient(circle at center, #111 0%, #000 80%); }
-        .hero-title { font-family: var(--font-serif); font-size: 9vw; font-weight: 400; color: #fff; letter-spacing: -2px; mix-blend-mode: exclusion; }
-        .hero-glitch { animation: glitch-text-hero 3s infinite alternate-reverse; }
-        @keyframes glitch-text-hero { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
-        .hero-subtitle { margin-top: 2rem; font-family: var(--font-mono); font-size: 1rem; letter-spacing: 4px; text-transform: uppercase; color: #888; border-top: 1px solid #333; padding-top: 1.5rem; }
-        .scroll-indicator { position: absolute; bottom: 60px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 4px; color: #555; animation: blink 1s infinite; }
+        /* ================= 3. 剧情页样式 ================= */
+        #slide-briefing { display: flex; justify-content: center; align-items: center; }
+        #tuning-stage { position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; background: rgba(11, 12, 21, 0.85); transition: opacity 1.5s ease; padding-bottom: 90px; overflow: hidden; width: 100%; height: 100%; }
+        #noise-fog-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; perspective: 600px; z-index: 1; }
+        .noise-fragment { position: absolute; font-family: var(--font-body); color: rgba(255, 255, 255, 0.3); white-space: nowrap; user-select: none; will-change: transform, opacity, filter; animation: urbanFloat 20s infinite linear; }
+        .nf-icon { font-size: 2rem; opacity: 0.8; filter: blur(0.5px); text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .nf-text-lg { font-size: 3rem; font-weight: 800; opacity: 0.05; letter-spacing: -2px; z-index: 0; filter: blur(4px); }
+        .nf-text-sm { font-size: 0.8rem; font-family: 'Courier New', monospace; opacity: 0.6; letter-spacing: 1px; }
+        .nf-alert { color: #ffcccc; opacity: 0.6; text-shadow: 0 0 5px rgba(255,0,0,0.4); font-weight: bold;}
+        @keyframes urbanFloat { 0% { transform: translate3d(0, 100vh, 0) rotate(0deg); opacity: 0; } 10% { opacity: var(--max-opacity); } 90% { opacity: var(--max-opacity); } 100% { transform: translate3d(var(--drift-x), -20vh, var(--drift-z)) rotate(var(--rot)); opacity: 0; } }
+        #story-monologue { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 600px; text-align: center; z-index: 55; pointer-events: none; }
+        .monologue-line { font-family: var(--font-title); font-size: 1.4rem; color: #fff; line-height: 1.6; font-style: italic; font-weight: 400; text-shadow: 0 0 20px rgba(162, 210, 255, 0.6); opacity: 0; position: absolute; width: 100%; top: 0; left: 0; transition: opacity 1s, transform 1s; transform: translateY(10px); }
+        .monologue-line.active { opacity: 1; transform: translateY(0); }
+        .slider-wrapper { position: relative; width: 100%; max-width: 320px; display: flex; flex-direction: column; align-items: center; z-index: 60; margin-bottom: 20px; }
+        .tuning-hint { margin-bottom: 25px; font-family: var(--font-body); font-size: 0.75rem; font-weight: 300; color: var(--dream-cyan); letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 15px var(--dream-cyan); opacity: 0.9; }
+        .slider-track-container { position: relative; width: 100%; height: 40px; display: flex; align-items: center; }
+        .track-line { position: absolute; left: 0; width: 100%; height: 1px; background: rgba(255,255,255,0.15); }
+        .track-active-line { position: absolute; left: 0; height: 1px; width: 0%; background: linear-gradient(90deg, transparent, var(--dream-cyan)); box-shadow: 0 0 15px var(--dream-cyan); }
+        .slider-knob { position: absolute; left: 0; width: 44px; height: 44px; background: rgba(11, 12, 21, 0.8); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 50%; transform: translateX(-50%); cursor: grab; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(255, 255, 255, 0.1); backdrop-filter: blur(4px); transition: transform 0.1s, border-color 0.3s; }
+        .slider-knob:active { cursor: grabbing; border-color: var(--dream-cyan); transform: translateX(-50%) scale(1.1); }
+        .knob-inner { width: 6px; height: 6px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px #fff; }
+        #revelation-stage { position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #000; pointer-events: none; opacity: 0; transition: opacity 1.5s ease; }
+        #revelation-container { width: 100%; padding: 0 40px; }
+        .rev-line { font-family: var(--font-title); font-size: 1.6rem; color: #fff; text-align: center; margin: 0; opacity: 0; text-shadow: 0 0 20px rgba(255, 255, 255, 0.4); font-weight: 400; line-height: 1.6; transform: scale(0.95); filter: blur(5px); }
+        .rev-line.show { animation: cinemaFadeIn 4.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        @keyframes cinemaFadeIn { 0% { opacity: 0; transform: scale(0.95) translateY(10px); filter: blur(10px); } 20% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } 85% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); } 100% { opacity: 0; transform: scale(1.05) translateY(-10px); filter: blur(5px); } }
+        #envelope-stage { display: none; position: relative; cursor: pointer; z-index: 20; transition: transform 0.3s; }
+        #envelope-stage:hover { transform: scale(1.05); }
+        .envelope { width: 140px; height: 90px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; position: relative; box-shadow: 0 0 30px rgba(162, 210, 255, 0.1); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; }
+        .envelope-seal { width: 28px; height: 28px; background: var(--dream-gold); border-radius: 50%; box-shadow: 0 0 15px var(--dream-gold); position: absolute; z-index: 2; }
+        .envelope-flap { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-top: 45px solid rgba(255, 255, 255, 0.1); border-left: 70px solid transparent; border-right: 70px solid transparent; pointer-events: none; }
+        .tap-hint { position: absolute; bottom: -40px; width: 200px; text-align: center; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; animation: blink 2s infinite; }
+        #letter-stage { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 600px; z-index: 20; position: relative; }
+        .signal-header { font-family: var(--font-body); font-size: 0.7rem; color: var(--dream-cyan); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px; opacity: 0.8; animation: pulse 2s infinite; display: flex; align-items: center; gap: 10px; }
+        .signal-dot { width: 6px; height: 6px; background: var(--dream-cyan); border-radius: 50%; }
+        .typewriter-container { background: linear-gradient(180deg, rgba(11, 12, 21, 0.8) 0%, rgba(11, 12, 21, 0.6) 100%); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 4px; padding: 40px; min-height: 200px; position: relative; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); margin-bottom: 40px; }
+        .corner { position: absolute; width: 10px; height: 10px; border: 1px solid var(--text-dim); opacity: 0.5; }
+        .tl { top: -1px; left: -1px; border-bottom: none; border-right: none; } .tr { top: -1px; right: -1px; border-bottom: none; border-left: none; } .bl { bottom: -1px; left: -1px; border-top: none; border-right: none; } .br { bottom: -1px; right: -1px; border-top: none; border-left: none; }
+        .letter-text { font-family: var(--font-body); font-size: 1.05rem; line-height: 1.9; color: var(--text-main); text-align: left; white-space: pre-wrap; font-weight: 300; }
+        .cursor { display: inline-block; width: 2px; height: 1.2rem; background: var(--dream-gold); margin-left: 5px; vertical-align: middle; animation: blink 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        /* PART 2: CONCEPT */
-        #concept { background: #000; overflow: hidden; border-top: 1px solid #222; }
-        .parallax-container { display: flex; gap: 10%; max-width: 1100px; align-items: center; width: 100%; }
-        .text-block { flex: 1; padding: 2rem; border-left: 2px solid var(--alert-red); }
-        .text-block h2 { font-family: var(--font-serif); font-size: 3.5rem; margin-bottom: 2rem; color: #fff; }
-        .text-block p { font-family: var(--font-mono); color: #bbb; line-height: 1.8; font-size: 1rem; }
-        .visual-block { flex: 1; height: 60vh; background-image: url('https://images.unsplash.com/photo-1470723710355-171b443c6589?q=80&w=2070'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(110%); opacity: 0.6; transform: translateY(50px); transition: transform 0.1s ease-out; }
+        /* ================= 4. 页面通用样式 ================= */
+        .game-section { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; opacity: 0; pointer-events: none; visibility: hidden; transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1), transform 1.2s cubic-bezier(0.22, 1, 0.36, 1); padding: 40px; text-align: center; }
+        .game-section.active { opacity: 1; pointer-events: auto; visibility: visible; z-index: 15; transform: scale(1); }
+        .fade-in-up { animation: fadeInUp 1s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        .delay-1 { animation-delay: 0.2s; } .delay-2 { animation-delay: 0.4s; } .delay-3 { animation-delay: 0.6s; }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
-        /* PART 3: MAP */
-        #void { height: 100vh; width: 100%; position: relative; background-color: #000; cursor: crosshair; overflow: hidden; padding: 0; }
-        #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(100%) contrast(150%) brightness(0.4) sepia(20%); z-index: 1; }
-        #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
+        /* --- Resonance (Mechanics) --- */
+        #pulse-canvas { position: absolute; top:0; left:0; width:100%; height:100%; z-index:-1; opacity: 0.4; pointer-events: none; }
+        .mech-container { width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center; z-index: 20; position: relative; }
+        .mech-zone { width: 100%; margin-bottom: 50px; text-align: left; position: relative; padding: 20px; transition: all 0.5s ease; }
+        .blur-reveal-text { font-family: var(--font-title); font-size: 1.25rem; line-height: 1.8; color: var(--text-main); font-style: italic; opacity: 0; filter: blur(12px); animation: textUnblur 3s cubic-bezier(0.22, 1, 0.36, 1) forwards; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+        .blur-delay-1 { animation-delay: 0.5s; } .blur-delay-2 { animation-delay: 1.8s; }
+        @keyframes textUnblur { 0% { opacity: 0; filter: blur(12px); transform: translateY(10px); } 100% { opacity: 1; filter: blur(0); transform: translateY(0); } }
+        .tuning-hint-text { font-family: var(--font-tech); font-size: 0.7rem; color: var(--dream-cyan); letter-spacing: 2px; margin-bottom: 15px; opacity: 0.8; text-transform: uppercase; }
+        .bubble-zone { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+        .bubble-text-content { flex: 1; text-align: right; }
+        .bubble-wrapper { display: flex; flex-direction: column; align-items: center; animation: fadeInUp 1s ease-out 2s backwards;}
+        .interactive-bubble { width: 70px; height: 70px; border-radius: 50%; flex-shrink: 0; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 0%, rgba(162, 210, 255, 0.4) 40%, rgba(255,255,255,0.1) 80%, rgba(255,255,255,0) 100%); box-shadow: inset -5px -5px 15px rgba(255,255,255,0.2), 0 0 20px rgba(162, 210, 255, 0.3); cursor: pointer; position: relative; animation: bubbleFloat 4s ease-in-out infinite; transition: transform 0.2s; }
+        .interactive-bubble:hover { transform: scale(1.1); }
+        .bubble-inner-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.8); font-size: 1.5rem; opacity: 0.7; }
+        @keyframes bubbleFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .click-hint { margin-top: 15px; font-family: var(--font-tech); font-size: 0.6rem; letter-spacing: 1px; color: var(--dream-gold); border: 1px solid rgba(255, 238, 187, 0.3); padding: 4px 8px; border-radius: 4px; opacity: 0.7; animation: pulseHint 2s infinite; pointer-events: none; }
+        @keyframes pulseHint { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); box-shadow: 0 0 10px rgba(255,238,187,0.2); } }
+        .brick-word { transition: all 0.8s ease; display: inline-block; }
+        .brick-highlight { color: var(--platinum-gold); font-weight: 700; text-shadow: 0 0 15px var(--platinum-gold), 0 0 30px var(--dream-gold); transform: scale(1.1); }
+        .singularity-btn { position: relative; margin-top: 40px; padding: 20px 50px; background: #000; border: 1px solid var(--dream-gold); border-radius: 50px; color: var(--dream-gold); font-family: var(--font-body); font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; overflow: hidden; box-shadow: 0 0 20px rgba(255, 238, 187, 0.1); transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+        .singularity-btn::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0%; height: 0%; background: var(--dream-gold); border-radius: 50%; transition: width 0.4s, height 0.4s; opacity: 0.1; z-index: 0; }
+        .singularity-btn:hover::before { width: 300px; height: 300px; }
+        .singularity-btn:hover { box-shadow: 0 0 50px rgba(255, 238, 187, 0.5); color: #fff; border-color: #fff; letter-spacing: 5px; }
+        .btn-text { position: relative; z-index: 1; }
+        .particle-burst { position: absolute; width: 6px; height: 6px; background: var(--dream-gold); border-radius: 50%; pointer-events: none; opacity: 1; z-index: 100; }
+
+        /* --- Common --- */
+        .dream-blur-in { animation: blurFadeIn 2.5s ease-out forwards; opacity: 0; }
+        @keyframes blurFadeIn { 0% { opacity: 0; filter: blur(20px); transform: scale(0.95); } 100% { opacity: 1; filter: blur(0); transform: scale(1); } }
+        .title-container { z-index: 20; position: relative; margin-bottom: 70px; }
+        .dream-title { font-family: var(--font-title); font-size: 10vw; color: #fff; line-height: 1.0; margin-bottom: 20px; font-weight: 400; background: linear-gradient(180deg, #fff 40%, #a2d2ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 60px rgba(162, 210, 255, 0.3); letter-spacing: -2px; }
+        .subtitle { font-family: var(--font-body); font-size: 0.75rem; color: var(--text-dim); letter-spacing: 5px; text-transform: uppercase; opacity: 0.8; }
+        .interaction-container { display: flex; flex-direction: column; align-items: center; position: relative; opacity: 0; animation: fadeInUp 1.5s ease-out 1.2s forwards; z-index: 20; }
+        .hold-btn { position: relative; width: 80px; height: 80px; border-radius: 50%; background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(2px); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); -webkit-user-select: none; user-select: none; touch-action: none; }
+        .hold-btn:active { transform: scale(0.95); }
+        .hold-icon { width: 8px; height: 8px; background: #fff; border-radius: 50%; box-shadow: 0 0 15px #fff, 0 0 30px var(--dream-cyan); opacity: 0.8; transition: all 0.3s; }
+        .ring-svg { position: absolute; top: -5px; left: -5px; width: 90px; height: 90px; transform: rotate(-90deg); pointer-events: none; }
+        .ring-circle { fill: none; stroke: var(--dream-gold); stroke-width: 1.5; stroke-dasharray: 251; stroke-dashoffset: 251; transition: stroke-dashoffset 0s linear; opacity: 0.6; filter: drop-shadow(0 0 5px var(--dream-gold)); }
+        .hold-btn.holding .hold-icon { transform: scale(3); background: var(--dream-gold); box-shadow: 0 0 40px var(--dream-gold), 0 0 80px #fff; opacity: 1; }
+        .chromatic-aberration { animation: glitchShift 0.2s infinite; }
+        @keyframes glitchShift { 0% { text-shadow: 2px 0 rgba(255,0,0,0.3), -2px 0 rgba(0,255,255,0.3); } 50% { text-shadow: -2px 0 rgba(255,0,0,0.3), 2px 0 rgba(0,255,255,0.3); } 100% { text-shadow: 2px 0 rgba(255,0,0,0.3), -2px 0 rgba(0,255,255,0.3); } }
+        .hold-hint { margin-top: 30px; font-family: var(--font-body); font-size: 0.6rem; letter-spacing: 4px; color: var(--text-dim); text-transform: uppercase; opacity: 0.5; }
+        .audio-cue { margin-top: 15px; font-family: var(--font-title); font-size: 0.9rem; color: var(--dream-cyan); font-style: italic; opacity: 0.0; transition: opacity 1s; max-width: 300px; line-height: 1.6; text-shadow: 0 0 10px rgba(162, 210, 255, 0.4); }
+
+        #hud-layer { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
+        .hud-top-bar { position: absolute; top: 0; left: 0; width: 100%; height: 90px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; pointer-events: auto; }
+        .gps-status { font-family: var(--font-tech); font-size: 10px; color: var(--platinum-gold); text-shadow: 0 0 10px var(--dream-gold); position: absolute; bottom: 20px; right: 20px; text-align: right; opacity: 0.8; letter-spacing: 1px; }
+        .back-btn { font-family: var(--font-body); color: var(--text-dim); font-size: 11px; border: 1px solid var(--glass-border); padding: 10px 24px; border-radius: 30px; display: none; cursor: pointer; background: rgba(255,255,255,0.02); backdrop-filter: blur(10px); transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; }
+        .back-btn:hover { background: rgba(255,255,255,0.1); color: #fff; transform: translateX(-5px); }
+        .hud-trigger { font-family: var(--font-body); font-size: 11px; color: var(--text-dim); letter-spacing: 2px; cursor: pointer; opacity: 0.7;}
+        .info-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 35px; margin: 15px 0; width: 100%; max-width: 500px; text-align: left; backdrop-filter: blur(12px); box-shadow: 0 10px 40px rgba(0,0,0,0.2); transition: transform 0.3s ease; }
+        .info-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.05); }
+        .info-card h3 { font-family: var(--font-body); color: var(--dream-gold); font-size: 0.8rem; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid rgba(255,238,187,0.15); padding-bottom: 12px; }
+        .info-card p { font-family: var(--font-title); font-size: 1.15rem; color: var(--text-main); line-height: 1.8; font-style: italic; }
+        .action-btn { margin-top: 50px; width: auto; min-width: 200px; font-family: var(--font-body); font-size: 0.8rem; color: #0b0c15; background: linear-gradient(135deg, var(--dream-gold), #fff); border: none; padding: 18px 45px; cursor: pointer; border-radius: 50px; letter-spacing: 2px; font-weight: 600; text-transform: uppercase; box-shadow: 0 0 30px rgba(255, 238, 187, 0.2); transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1); opacity: 0; transform: translateY(20px); }
+        .action-btn:hover { transform: translateY(0) scale(1.05); box-shadow: 0 0 50px rgba(255, 238, 187, 0.4); }
+        .btn-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
         
-        .marker { position: absolute; width: 30px; height: 30px; z-index: 30; cursor: pointer; background: rgba(255, 0, 85, 0.2); border: 1px solid var(--alert-red); box-shadow: 0 0 15px var(--alert-red); transform: rotate(45deg); transition: 0.3s; animation: pulse-marker 2s infinite; }
-        .marker:hover { background: var(--alert-red); transform: rotate(45deg) scale(1.2); box-shadow: 0 0 30px var(--alert-red), 0 0 10px #fff inset; }
-        @keyframes pulse-marker { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        .marker-label { position: absolute; left: 40px; top: -10px; font-size: 10px; font-family: var(--font-mono); color: var(--alert-red); background: #000; border: 1px solid var(--alert-red); padding: 2px 5px; white-space: nowrap; opacity: 0; transition: 0.3s; transform: rotate(-45deg); pointer-events: none; }
-        .marker:hover .marker-label { opacity: 1; }
-
-        /* PART 4: 3D RECONSTRUCTION (UPDATED) */
-        #reconstruction { height: 100vh; width: 100%; background: #000; position: relative; border-top: 1px solid #222; overflow: hidden; display: block; padding: 0; }
+        #reconstruction { background: #0b0c15; }
         #three-container { position: absolute; inset: 0; z-index: 1; cursor: grab; }
         #three-container:active { cursor: grabbing; }
-
-        #recon-console {
-            position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 500px; z-index: 50; pointer-events: auto;
-            text-align: center;
-            background: rgba(0, 10, 0, 0.8); border: 1px solid var(--accent-green);
-            padding: 20px; backdrop-filter: blur(5px);
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
-        }
-        #recon-console h2 { font-family: var(--font-serif); font-size: 1.5rem; color: #fff; margin-bottom: 1rem; letter-spacing: 2px; text-transform: uppercase;}
-        #recon-console p { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green); margin-bottom: 15px;}
-        
-        .input-area { display: flex; border-bottom: 1px solid var(--accent-green); margin-top: 10px; background: rgba(0,255,65,0.05); }
-        input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-family: var(--font-mono); }
-        .submit-btn { background: transparent; color: var(--accent-green); border: none; cursor: pointer; padding: 0 20px; font-weight: bold; font-family: var(--font-mono); transition:0.3s;}
-        .submit-btn:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 15px var(--accent-green);}
-        #purge-btn { margin-top: 10px; font-size: 10px; color: #666; cursor: pointer; display: inline-block; border: 1px solid #333; padding: 5px; font-family: var(--font-mono); transition:0.3s;}
-        #purge-btn:hover { color: var(--alert-red); border-color: var(--alert-red); background: rgba(255,0,85,0.1); }
-
+        #recon-console { position: absolute; top: 12%; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; z-index: 50; pointer-events: auto; text-align: center; background: rgba(11, 12, 21, 0.4); border: 1px solid var(--glass-border); padding: 25px; backdrop-filter: blur(15px); border-radius: 24px; animation: fadeInDown 1s ease 0.5s backwards; }
+        @keyframes fadeInDown { from{opacity:0; transform:translate(-50%, -20px);} to{opacity:1; transform:translate(-50%,0);} }
+        .input-area { display: flex; border-bottom: 1px solid rgba(255,255,255,0.2); margin-top: 15px; }
+        input { flex: 1; background: transparent; border: none; color: #fff; padding: 12px; outline: none; font-family: var(--font-body); font-size: 1rem; letter-spacing: 1px; }
+        input::placeholder { color: rgba(255,255,255,0.3); font-style: italic; }
+        .submit-btn { background: transparent; color: var(--dream-gold); border: none; cursor: pointer; padding: 0 20px; font-weight: 600; font-family: var(--font-body); font-size: 0.8rem; letter-spacing: 1px; transition:0.3s; opacity: 0.8; }
+        .submit-btn:hover { opacity: 1; text-shadow: 0 0 10px var(--dream-gold); }
+        .clear-all-btn { margin-left: 10px; background: transparent; border: 1px solid rgba(255, 100, 100, 0.5); color: rgba(255, 150, 150, 0.8); font-size: 0.7rem; padding: 12px 15px; border-radius: 4px; cursor: pointer; transition: 0.3s; font-family: var(--font-tech); }
+        .clear-all-btn:hover { background: rgba(255, 0, 0, 0.2); color: #ffcccc; box-shadow: 0 0 15px rgba(255, 0, 0, 0.3); }
         #particles-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 60; }
-        .floating-text { position: absolute; color: var(--accent-green); font-size: 0.8rem; animation: floatUp 4s linear forwards; font-family: var(--font-mono); }
+        .floating-text { position: absolute; color: var(--dream-gold); font-size: 1.2rem; animation: floatUp 5s ease-out forwards; font-family: var(--font-title); font-style: italic; text-shadow: 0 0 20px rgba(255,238,187,0.6); pointer-events: none; }
+        @keyframes floatUp { 0% { opacity: 0; transform: translateY(20px) scale(0.8); } 20% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-150px) scale(0.8); } }
+        #memory-3d-tooltip { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -130%); background: rgba(255, 255, 255, 0.9); color: #0b0c15; border-radius: 12px; padding: 12px 20px; padding-bottom: 35px; max-width: 240px; pointer-events: auto !important; opacity: 0; transition: opacity 0.3s; z-index: 1000; box-shadow: 0 15px 40px rgba(0,0,0,0.3); text-align: center; font-family: var(--font-title); font-style: italic; font-size: 1rem; }
+        #memory-3d-tooltip::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: rgba(255,255,255,0.9) transparent transparent transparent; }
+        .delete-single-btn { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); background: none; border: none; color: #ff6b6b; font-size: 0.7rem; cursor: pointer; letter-spacing: 1px; opacity: 0.7; font-family: var(--font-body); text-transform: uppercase; transition: 0.2s; padding: 5px; }
+        .delete-single-btn:hover { opacity: 1; text-decoration: underline; }
 
-        #memory-3d-tooltip { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: rgba(0, 0, 0, 0.95); border: 1px solid var(--alert-red); 
-            padding: 15px; max-width: 250px; pointer-events: none; 
-            opacity: 0; transition: opacity 0.1s; z-index: 1000; 
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.2); text-align: left;
+        /* --- 新增：地图页优化样式 (Map & Peephole) --- */
+        
+        /* 1. 地图容器与缩放层 */
+        #map-zoom-wrapper {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+            transform-origin: center center;
+            pointer-events: none; /* 核心修复：确保容器穿透 */
         }
-        #tooltip-3d-content { color: #fff; font-family: var(--font-serif); font-size: 1rem; line-height: 1.4; }
 
-        /* TERMINAL OVERLAY */
-        .glitch-text { position: relative; display: inline-block; font-family: var(--font-tech); }
-        .glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; }
-        .glitch-text::before { color: var(--alert-red); z-index: -1; animation: glitch-shift 0.4s infinite linear alternate-reverse; }
-        .glitch-text::after { color: var(--neon-blue); z-index: -2; animation: glitch-shift 0.4s infinite linear alternate-reverse 0.2s; }
-        @keyframes glitch-shift { 0% { transform: translate(2px, 0) skew(0deg); } 20% { transform: translate(-2px, 0) skew(2deg); } 40% { transform: translate(0, 2px) skew(0deg); } 60% { transform: translate(2px, -2px) skew(-2deg); } 80% { transform: translate(-2px, 2px) skew(0deg); } 100% { transform: translate(0, 0) skew(0deg); } }
-
-        #fullscreen-stage {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 9999;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s steps(5);
-            display: flex; justify-content: center; align-items: center;
-            background-image: radial-gradient(circle at center, rgba(20,20,20,0.8) 0%, #000 100%);
+        /* 2. 记忆星盘 (Memory Compass) */
+        .memory-compass {
+            position: absolute; top: 100px; right: 30px; width: 60px; height: 60px; z-index: 90;
+            display: flex; justify-content: center; align-items: center; opacity: 0; transition: opacity 1s; pointer-events: none; flex-direction: column;
         }
-        #fullscreen-stage.active { opacity: 1; pointer-events: auto; }
-        #fullscreen-stage::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 10000; background: repeating-linear-gradient(rgba(0,0,0,0.2) 0, transparent 2px); animation: scanline-scroll 10s linear infinite; }
-        @keyframes scanline-scroll { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
-
-        .terminal-window {
-            width: 90vw; height: 85vh; background: #050505; border: 2px solid var(--alert-red);
-            display: flex; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(255, 0, 85, 0.2);
-            transform: perspective(1000px) rotateX(2deg) rotateY(-1deg); border-radius: 10px;
+        .compass-ring {
+            position: absolute; width: 100%; height: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%;
+            animation: spinSlow 60s linear infinite; top:0; left:0;
         }
-        .terminal-window::before { content: "SYSTEM CRITICAL // DATA CORRUPTION DETECTED"; position: absolute; top: 0; left: 0; width: 100%; background: var(--alert-red); color: #000; font-family: var(--font-tech); font-size: 10px; padding: 2px; text-align: center; animation: flicker 0.5s infinite; z-index: 20; }
-        @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; background: var(--neon-blue); } }
+        .compass-dot {
+            position: absolute; width: 4px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 50%;
+            top: 50%; left: 50%; transform-origin: 0 0;
+        }
+        .compass-dot.active {
+            background: var(--dream-gold); box-shadow: 0 0 8px var(--dream-gold); transform: scale(1.5);
+        }
+        .compass-label {
+            position: absolute; bottom: -20px; width: 100px; text-align: center;
+            font-family: var(--font-tech); font-size: 0.6rem; color: var(--platinum-gold); letter-spacing: 1px;
+        }
+        @keyframes spinSlow { to { transform: rotate(360deg); } }
 
-        .close-terminal { position: absolute; top: 30px; right: 30px; color: var(--alert-red); border: 2px solid var(--alert-red); padding: 10px 20px; font-family: var(--font-tech); font-size: 14px; cursor: pointer; z-index: 100; background: #000; transition: 0.2s; }
-        .close-terminal:hover { background: var(--alert-red); color: #000; box-shadow: 0 0 20px var(--alert-red); }
+        /* 3. 地图标记优化 (梦幻光效) - 修复交互层级 */
+        #marker-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 200; /* 极高层级 */
+            pointer-events: none; /* 容器穿透 */
+        }
+        .marker {
+            position: absolute; width: 60px; height: 60px; border-radius: 50%;
+            background: conic-gradient(from 0deg, rgba(255,255,255,0), rgba(162, 210, 255, 0.6), rgba(255, 238, 187, 0.8), rgba(255,255,255,0));
+            cursor: pointer; z-index: 201; transform: translate(-50%, -50%);
+            opacity: 0; transition: opacity 0.8s ease-in-out, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: spinGlow 4s linear infinite;
+            pointer-events: auto !important; /* 强制可点 */
+        }
+        .marker::before {
+            content: ''; position: absolute; inset: 6px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fff, var(--dream-cyan));
+            box-shadow: 0 0 20px var(--dream-cyan);
+            animation: breathe 3s ease-in-out infinite;
+        }
+        .marker::after { /* 扩大热区 */
+            content: ''; position: absolute; inset: -20px; border-radius: 50%;
+            border: 1px dashed rgba(255,255,255,0.3); opacity: 0.5;
+            animation: rippleOut 2s infinite linear;
+            z-index: 202;
+        }
+        
+        .marker.revealed { opacity: 1; }
+        
+        @keyframes spinGlow { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes breathe { 0%, 100% { transform: scale(0.9); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+        @keyframes rippleOut { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.5); opacity: 0; } }
 
-        .terminal-visual { flex: 1.2; position: relative; overflow: hidden; border-right: 3px double var(--alert-red); filter: contrast(120%) brightness(0.9); }
-        .glitch-img-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
-        .glitch-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(150%) brightness(0.7) sepia(30%); transition: all 0.3s cubic-bezier(0.1, 0.7, 1.0, 0.1); opacity: 0.8; mix-blend-mode: luminosity; }
-        .terminal-visual::after { content: ""; position: absolute; inset: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClIorXAAAAHlBMVEUAAAD///////////////////////////////////8f+B7AAAAAEHRSTlMABg8dHiQvMzY4PkxTVF1+c/4AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAASUlEQVQ4jWNgGAVDBQylMGiAMY0yplEw2AAjCjEIA6YmGGBiYqJgZ2JiZGRgZGRmZsZUZmZgYAAxGUDKGEQYGBgYmBgYGAAAVaYFqQ56270AAAAASUVORK5CYII='); opacity: 0.2; pointer-events: none; animation: noise-shift 0.2s infinite steps(4); z-index: 5;}
-        @keyframes noise-shift { 0% {background-position: 0 0;} 100% {background-position: 100px 100px;} }
-        .terminal-visual:hover .glitch-img { filter: grayscale(0%) contrast(130%) brightness(1.2); box-shadow: -5px 0 var(--neon-blue), 5px 0 var(--alert-red); animation: strong-glitch 0.2s infinite linear alternate-reverse; transform: scale(1.02) translate(-2px, 2px); }
-        @keyframes strong-glitch { 0% { clip-path: inset(10% 0 40% 0); transform: translate(-5px, 2px); } 50% { clip-path: inset(0 30% 20% 0); transform: translate(-2px, 5px); filter: hue-rotate(90deg) contrast(180%);} 100% { clip-path: inset(0 0 0 0); transform: translate(0, 0); filter: hue-rotate(0deg); } }
+        /* 5. 弹窗容器 */
+        #fullscreen-stage { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); 
+            z-index: 10000; display: flex; align-items: center; justify-content: center; 
+            opacity: 0; pointer-events: none; transition: opacity 0.5s; 
+        }
+        #fullscreen-stage.active { opacity: 1; pointer-events: auto !important; }
+        
+        .stage-close-btn {
+            position: absolute; top: 20px; right: 20px; z-index: 20;
+            background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3); color: #fff; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; font-family: monospace;
+        }
 
-        .terminal-data { flex: 1; padding: 50px 30px; overflow-y: auto; font-family: var(--font-mono); background: #020202; background-image: linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px); background-size: 20px 20px; background-position: -5px -5px; }
-        .data-header { border-bottom: 4px solid var(--alert-red); padding-bottom: 20px; margin-bottom: 30px; transform: rotate(-1deg); }
-        .data-id { color: var(--alert-red); font-family: var(--font-tech); font-size: 14px; letter-spacing: 4px; animation: flicker 1s infinite; }
-        .data-title { font-family: var(--font-tech); font-size: 3rem; color: #fff; margin: 10px 0; text-transform: uppercase; letter-spacing: -2px; }
-        .data-block { margin-bottom: 40px; padding: 20px; border: 1px dashed #333; position: relative; transform: rotate(0.5deg); background: rgba(255,255,255,0.02); }
-        .data-block:nth-child(even) { transform: rotate(-0.8deg); background: rgba(0,0,0,0.3); border-color: var(--alert-red); }
-        .block-label { font-family: var(--font-tech); font-size: 12px; color: var(--accent-green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--accent-green); display: inline-block;}
-        .human-text { color: #ccc; font-family: var(--font-serif); font-size: 1.1rem; line-height: 1.5; font-style: italic; white-space: pre-wrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        .history-text { color: #fff; font-family: var(--font-sans); font-size: 0.9rem; line-height: 1.4; border-left: 3px solid #555; padding-left: 10px; background: rgba(255,255,255,0.05); }
-        .ai-block { border: 2px solid var(--alert-red); background: rgba(255, 0, 85, 0.15); color: var(--alert-red); font-family: var(--font-tech); font-size: 0.9rem; }
-        .ai-text { animation: text-flicker 0.1s infinite alternate; }
-        @keyframes text-flicker { 0% { opacity: 1; } 100% { opacity: 0.8; transform: translateX(1px); } }
-        @keyframes blink { 0%,100% {opacity:1} 50% {opacity:0.3} }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.5); } }
+        /* --- 1. 梦境窥视孔 (Peephole) - 回归上一版半透明背景 --- */
+        .dream-peephole {
+            width: 85vw; height: 85vw; max-width: 500px; max-height: 500px; border-radius: 50%; 
+            position: absolute; overflow: visible; 
+            /* 修正：回归之前的半透明深色背景 */
+            background: rgba(10, 10, 20, 0.6); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 40px;
+            transform: scale(0.9); transition: transform 0.5s, opacity 0.5s;
+            box-shadow: 0 0 30px rgba(162, 210, 255, 0.2), inset 0 0 100px rgba(0,0,0,0.8);
+            animation: peepholeFloat 6s ease-in-out infinite;
+            z-index: 10002;
+        }
 
-    </style>
+        /* 动态边框流光 */
+        .dream-peephole::before {
+            content: ''; position: absolute; inset: -3px; border-radius: 50%; z-index: -1;
+            background: conic-gradient(from 0deg, transparent, var(--dream-cyan), var(--dream-purple), var(--dream-gold), transparent);
+            animation: spinBorder 8s linear infinite; opacity: 0.6; mask: radial-gradient(transparent 69%, black 70%); -webkit-mask: radial-gradient(transparent 69%, black 70%);
+        }
+
+        @keyframes peepholeFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.02); } }
+        @keyframes spinBorder { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- 彩虹泡泡 (Ambient Bubbles) --- */
+        .rainbow-bubble {
+            position: absolute; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.1) 60%, transparent 80%);
+            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+            pointer-events: none; opacity: 0; z-index: -1;
+            animation: bubbleDrift linear forwards;
+        }
+        @keyframes bubbleDrift {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(1.5); opacity: 0; }
+        }
+
+        /* --- 聚合粒子 (Convergence Particles) --- */
+        .convergence-particle {
+            position: absolute; top: 50%; left: 50%;
+            width: 4px; height: 4px; border-radius: 50%;
+            background: var(--dream-gold);
+            box-shadow: 0 0 10px var(--dream-gold);
+            pointer-events: none; z-index: 10;
+            animation: convergeIn 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes convergeIn {
+            0% { transform: translate(var(--start-x), var(--start-y)) scale(0.5); opacity: 0; }
+            50% { opacity: 1; transform: translate(var(--mid-x), var(--mid-y)) scale(1.2); }
+            100% { transform: translate(0, 0) scale(0.2); opacity: 0; }
+        }
+
+        .dream-content-layer { position: relative; z-index: 2; width: 80%; height: 80%; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s; }
+        .glitch-title { font-family: var(--font-title); font-size: 1.8rem; color: #fff; margin-bottom: 20px; letter-spacing: 1px; }
+        .dream-img-placeholder { width: 100%; height: 160px; background: rgba(255,255,255,0.05); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: rgba(255,255,255,0.3); font-size: 0.8rem; font-family: var(--font-tech); }
+        .dream-quote { font-family: var(--font-body); font-size: 0.9rem; color: #e2e8f0; line-height: 1.6; font-style: italic; opacity: 0.9; margin-bottom: 30px; }
+        
+        .crack-btn {
+            width: 60px; height: 60px; border-radius: 50%; margin-top: 20px;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--dream-gold);
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+            transition: 0.1s; position: relative; overflow: visible;
+        }
+        .crack-btn:active { transform: scale(0.9); background: rgba(255,238,187,0.3); }
+        .fingerprint-icon { width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.7); border-radius: 50%; position: relative; }
+        .fingerprint-icon::after { content:''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; }
+        .crack-btn.holding { transform: scale(0.9); background: rgba(255, 238, 187, 0.15); border-color: rgba(255, 238, 187, 0.8); box-shadow: 0 0 30px rgba(255, 238, 187, 0.3); }
+
+        /* --- 2. 修正：记忆卡片 (Rectangular with Boundaries) --- */
+      .memory-story-card {
+    position: absolute; 
+    width: 85vw; max-width: 420px;
+    height: auto; max-height: 85vh;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.05) 0%, rgba(20, 20, 30, 0.8) 100%);
+    backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px; 
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
+    text-align: center;
+    opacity: 0; pointer-events: none; transform: scale(0.95) translateY(20px); 
+    transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(162, 210, 255, 0.05);
+    overflow: hidden; 
+    z-index: 10005;
+    padding: 25px; /* 增加内边距 */
+}
+
+        /* --- 修正：碎片卡片 (Small Reward Card) --- */
+        .reward-card {
+            position: absolute; 
+            /* 修正：更小的卡牌尺寸 */
+            width: 65vw; max-width: 260px;
+            aspect-ratio: 3/5; /* 竖向卡牌比例 */
+            height: auto;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            opacity: 0; pointer-events: none; transform: scale(0.95) translateY(20px); transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(162, 210, 255, 0.1);
+            overflow: hidden; 
+            z-index: 10005;
+        }
+
+        .memory-story-card.show, .reward-card.show { opacity: 1; pointer-events: auto; transform: scale(1) translateY(0); }
+        
+        /* 流光溢彩背景层 */
+        .memory-story-card::before, .reward-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(162, 210, 255, 0.1), rgba(255, 238, 187, 0.15), rgba(196, 181, 253, 0.1), transparent);
+            animation: holographicSpin 10s linear infinite;
+            pointer-events: none; z-index: 0; mix-blend-mode: overlay;
+        }
+        @keyframes holographicSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* 漂浮粒子 (Ambient Dust) */
+        .card-dust {
+            position: absolute; background: #fff; border-radius: 50%; opacity: 0;
+            animation: dustFloat 5s infinite ease-in-out; pointer-events: none;
+        }
+        @keyframes dustFloat {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: translateY(-60px) translateX(20px); opacity: 0; }
+        }
+        
+        .memory-main-text {
+    font-family: 'Playfair Display', serif; /* 优雅的衬线体 */
+    font-style: italic; /* 斜体增加叙事感 */
+    font-size: 1.15rem; 
+    line-height: 1.8; /* 宽松的行距 */
+    color: #e2e8f0; 
+    text-shadow: 0 0 15px rgba(226, 232, 240, 0.3); /* 文字微发光 */
+    margin-bottom: 20px;
+    position: relative;
+}
+/* 增加一个大的引号装饰 */
+.memory-main-text::before {
+    content: '“'; position: absolute; top: -15px; left: -20px;
+    font-family: 'Playfair Display', serif; font-size: 4rem; 
+    color: var(--dream-gold); opacity: 0.2; line-height: 1;
+}
+
+     .card-img-placeholder {
+    width: 100%;
+    height: 240px; 
+    flex-shrink: 0;
+    background-size: cover; background-position: center;
+    border-radius: 12px; /* 恢复四角圆角 */
+    margin-bottom: 25px; 
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.card-img-placeholder::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 60%, rgba(11, 12, 21, 0.8) 100%);
+}
+        .card-text { font-family: var(--font-body); font-size: 1rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px; padding: 0 20px; position:relative; z-index:2; }
+        .card-btn { 
+    background: var(--dream-gold); 
+    color: #0b0c15; 
+    border: none; 
+    padding: 14px 28px; 
+    border-radius: 30px; 
+    font-weight: 600; 
+    font-size: 0.8rem; 
+    cursor: pointer; 
+    letter-spacing: 2px; 
+    text-transform: uppercase; 
+    position: relative; 
+    z-index: 10; 
+    display: block; 
+    margin-top: auto; 
+}
+.card-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 238, 187, 0.4);
+}
+        /* --- 3. 记忆残留点 (Residue Crystal) --- */
+        .residue-crystal {
+            position: absolute; width: 40px; height: 40px; transform: translate(-50%, -50%);
+            transform-style: preserve-3d;
+            cursor: pointer; z-index: 150;
+            animation: crystalFloat 4s ease-in-out infinite;
+            pointer-events: auto !important;
+        }
+        .residue-body {
+            position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
+            background: rgba(162, 210, 255, 0.4); border: 1px solid rgba(255, 255, 255, 0.6);
+            transform: translate(-50%, -50%) rotate(45deg);
+            box-shadow: 0 0 15px var(--dream-cyan), inset 0 0 10px rgba(255,255,255,0.5);
+            backdrop-filter: blur(2px); transition: all 0.3s;
+        }
+        .residue-crystal:hover .residue-body {
+            background: rgba(255, 238, 187, 0.6); box-shadow: 0 0 25px var(--dream-gold);
+            transform: translate(-50%, -50%) rotate(225deg) scale(1.2);
+        }
+        .residue-ring {
+            position: absolute; top: 50%; left: 50%; width: 100%; height: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
+            transform: translate(-50%, -50%) rotateX(70deg);
+            animation: spinRing 4s linear infinite;
+        }
+        @keyframes crystalFloat { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-10px); } }
+        @keyframes spinRing { 0% { transform: translate(-50%, -50%) rotateX(70deg) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotateX(70deg) rotate(360deg); } }
+
+        /* 完成通关卡片 (浮现) - 样式优化 */
+        #completion-card {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; max-width: 400px; background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(30px); border: 1px solid var(--dream-cyan); border-radius: 24px;
+            padding: 40px 30px; text-align: center; z-index: 10001;
+            display: none; opacity: 0; transition: opacity 1.5s;
+            box-shadow: 0 0 100px rgba(162, 210, 255, 0.3);
+            flex-direction: column; align-items: center;
+        }
+        #completion-card.visible { display: flex; opacity: 1; }
+
+        /* 心跳动画 */
+        .heart-pulse {
+            font-size: 3rem; margin: 20px 0;
+            animation: heartBeat 1.5s infinite ease-in-out;
+            text-shadow: 0 0 30px #ff9999;
+            filter: drop-shadow(0 0 10px rgba(255,0,0,0.5));
+        }
+        @keyframes heartBeat {
+            0% { transform: scale(1); opacity: 0.8; }
+            15% { transform: scale(1.3); opacity: 1; }
+            30% { transform: scale(1); opacity: 0.8; }
+            45% { transform: scale(1.15); opacity: 0.9; }
+            60% { transform: scale(1); opacity: 0.8; }
+        }
+        .completion-note {
+            font-family: var(--font-body);
+            font-size: 0.75rem; color: var(--text-dim); 
+            font-style: italic; margin-bottom: 30px; 
+            line-height: 1.8; max-width: 100%;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px; margin-top: 10px;
+        }
+
+        /* Map Styles */
+        #void { background-color: #0b0c15; touch-action: none; overflow: hidden; }
+        #map-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('./map.jpg'); background-size: cover; background-position: center; filter: grayscale(80%) brightness(0.6) sepia(20%) contrast(1.1); z-index: 1; pointer-events: none; }
+        #aurora-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; background: linear-gradient(120deg, rgba(0,255,170,0.1), rgba(0,60,255,0.15), rgba(200,0,255,0.1)); background-size: 200% 200%; mix-blend-mode: screen; animation: auroraFlow 15s ease infinite; opacity: 0.6; }
+        @keyframes auroraFlow { 0% { background-position: 0% 50%; filter: hue-rotate(0deg); } 50% { background-position: 100% 50%; filter: hue-rotate(30deg); } 100% { background-position: 0% 50%; filter: hue-rotate(0deg); } }
+        #map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
+        
+        #user-cursor { position: absolute; width: 12px; height: 12px; background: var(--platinum-gold); border-radius: 50%; transform: translate(-50%, -50%); z-index: 50; display: none; pointer-events: none; box-shadow: 0 0 15px var(--dream-gold); transition: top 1s cubic-bezier(0.1, 0.7, 1.0, 0.1), left 1s cubic-bezier(0.1, 0.7, 1.0, 0.1); }
+        .radar-ping { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; border: 1px solid var(--dream-gold); border-radius: 50%; opacity: 0; animation: ping 2s infinite; }
+        @keyframes ping { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(3.5); opacity: 0; } }
+        .user-label { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); color: var(--platinum-gold); font-family: var(--font-tech); font-size: 10px; text-shadow: 0 0 10px var(--dream-gold); white-space: nowrap; }
+   /* --- 优化：卡片内排版与滚动条 --- */
+.dream-content-layer {
+    width: 85%; height: 90%; justify-content: flex-start; padding-top: 20px;
+}
+
+/* 标题样式微调 */
+.glitch-title {
+    font-size: 1.5rem; margin-bottom: 15px; text-shadow: 0 0 10px rgba(162, 210, 255, 0.5);
+    min-height: 40px; display: flex; align-items: center; justify-content: center;
+}
+
+/* 图片容器：确保图片覆盖但不变形 */
+.dream-img-placeholder, .card-img-placeholder {
+    width: 100%; flex-shrink: 0; 
+    background-size: cover; background-position: center; background-repeat: no-repeat;
+    border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+.dream-img-placeholder { height: 180px; margin-bottom: 20px; }
+.card-img-placeholder { height: 160px; margin-bottom: 15px; }
+
+/* 滚动区域容器 */
+.scroll-content {
+    width: 100%; flex: 1; overflow-y: auto; 
+    padding: 10px 35px 30px 35px; /* 增加左右留白，增加呼吸感 */
+    text-align: left; /* 左对齐更像阅读信件 */
+    display: flex; flex-direction: column; gap: 15px;
+    mask-image: linear-gradient(to bottom, black 90%, transparent 100%); /* 底部渐隐效果 */
+    -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+}
+
+/* 自定义滚动条 (Webkit) */
+.scroll-content::-webkit-scrollbar { width: 4px; }
+.scroll-content::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+.scroll-content::-webkit-scrollbar-thumb { background: var(--dream-gold); border-radius: 2px; opacity: 0.5; }
+
+/* 文本排版优化 */
+.dream-quote {
+    font-size: 0.95rem; line-height: 1.7; color: #e2e8f0; font-style: normal; font-weight: 300;
+    text-align: justify; text-justify: inter-word;
+}
+.memory-section-title {
+    font-family: var(--font-body); font-weight: 300; 
+    color: var(--dream-cyan); font-size: 0.7rem; 
+    letter-spacing: 4px; margin-bottom: 8px; text-transform: uppercase; 
+    opacity: 0.9; display: block; text-align: center;
+}
+.archive-block {
+    margin-top: 15px; padding: 15px 20px;
+    background: rgba(255,255,255,0.03); border-radius: 12px;
+    border-left: 2px solid var(--dream-gold);
+}
+
+.archive-tag {
+    display: inline-block; font-family: var(--font-tech); 
+    font-size: 0.65rem; color: var(--dream-gold); margin-bottom: 6px; letter-spacing: 1px;
+}
+.archive-content {
+    font-family: var(--font-body); font-size: 0.8rem; color: #94a3b8; 
+    line-height: 1.6; font-style: normal;
+}
+
+/* 记忆碎片卡片特定样式 */
+.fragment-icon {
+    width: 80px; height: 80px; margin-bottom: 20px; border-radius: 50%;
+    background-size: cover; background-position: center;
+    box-shadow: 0 0 20px var(--dream-cyan);
+}
+   
+/* 添加到 style 区域 */
+
+/* 确保碎片图标有明确大小 */
+.fragment-icon {
+    width: 90px; 
+    height: 90px; 
+    margin-bottom: 15px; 
+    border-radius: 50%;
+    background-size: cover; 
+    background-position: center; 
+    border: 2px solid rgba(255,255,255,0.2);
+    box-shadow: 0 0 20px var(--dream-cyan);
+    display: block; /* 防止 collapsed */
+    background-color: rgba(0,0,0,0.3); /* 图片加载失败时的底色 */
+}
+
+/* 确保梦境和记忆卡片图片区域有明确大小 */
+.dream-img-placeholder {
+    width: 100%;
+    height: 180px; /* 必须指定高度 */
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background-color: rgba(0,0,0,0.2);
+}
+
+.card-img-placeholder {
+    width: 100%;
+    height: 160px; /* 必须指定高度 */
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background-color: rgba(0,0,0,0.2);
+}
+   </style>
 </head>
 <body>
 
+    <div id="audio-system" style="display:none;">
+    <audio id="bgm-pre" loop src="background.mp3"></audio>
+    <audio id="bgm-map" loop src="map.mp3"></audio>
+    <audio id="bgm-end" loop src="end.mp3"></audio>
+</div>
+
+    <canvas id="cover-canvas"></canvas>
+    <div id="ghost-text-layer"></div>
+
+    <div id="dream-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+    <div class="stars-bg"></div>
+    <div class="vignette"></div>
+    <div class="noise-overlay"></div>
+    
     <div id="hud-layer">
-        <div class="hud-line hud-top"></div><div class="hud-line hud-bottom"></div><div class="hud-line hud-left"></div><div class="hud-line hud-right"></div><div class="scan-line"></div>
-        <div class="hud-data data-tl">SYSTEM: ONLINE<br>MODE: RESTORATION<br>NAME: RUNXUAN LIU<br>COURSE: ARTISTIC PROJECT 1<br>TEACHER: Prof. Dr. Cosentino, Dominik</div>
-        <div class="hud-data data-br">COORDS: <span id="coords">00.00</span></div>
+        <div class="hud-top-bar">
+            <div class="back-btn" onclick="goBack()">Back</div>
+            <div class="hud-trigger">/// MENU</div>
+        </div>
+        <div class="gps-status" id="gps-status-text">ACQUIRING SIGNAL...</div>
     </div>
 
-    <main id="main-content">
-        <section id="hero" class="section">
-            <h1 class="hero-title hero-glitch"> STACHUS GLITCH</h1>
-            <div class="hero-subtitle">The Unreliable Guide to the Absence of Urban Memory.</div>
-            <div class="scroll-indicator">[ SCROLL TO BEGIN ]</div>
-        </section>
-
-        <section id="concept" class="section">
-            <div class="parallax-container">
-                <div class="text-block">
-                    <h2>The Reconstruction</h2>
-                    <p>This project confronts the void of urban memory: Is absence a state failure, or a radical, open invitation for possibility? <br><br>We launch a literary act of resistance using digital satire and AI's absurdity. Subjective whispers are weaponized to dismantle the sterile, official monument.<br><br>The meaning is intentionally surrendered to the user—the ultimate cartographer of the city's self-erasure.</p>
-                </div>
-                <div class="visual-block"></div>
-            </div>
-        </section>
+    <div id="game-container">
         
-        <section id="void" class="section" style="padding:0;">
-            <div id="map-bg"></div>
-            <canvas id="map-canvas"></canvas>
-            <div class="marker" style="top: 45%; left: 20%;" onclick="event.stopPropagation(); openTerminal(0)"><div class="marker-label">01: THE LOOP</div></div>
-            <div class="marker" style="top: 50%; left: 48%;" onclick="event.stopPropagation(); openTerminal(1)"><div class="marker-label">02: FLUID GHOST</div></div>
-            <div class="marker" style="top: 60%; left: 75%;" onclick="event.stopPropagation(); openTerminal(2)"><div class="marker-label">03: IDENTITY WAR</div></div>
-            <div class="marker" style="top: 75%; left: 60%;" onclick="event.stopPropagation(); openTerminal(3)"><div class="marker-label">04: DELETED WALL</div></div>
-        </section>
-
-        <section id="reconstruction">
-            <div id="three-container"></div>
-            <div id="recon-console">
-                <h2>Memory Reconstruction</h2>
-                <p>Inject data to stabilize the structure</p>
-                <div class="input-area">
-                    <input type="text" id="memory-input" placeholder="Enter missing memory..." autocomplete="off">
-                    <button class="submit-btn" onclick="submitMemory()">INJECT</button>
+        <section id="slide-cover" class="game-section active">
+            <div class="title-container dream-blur-in">
+                <h1 class="dream-title" id="main-title">Stachus<br>Dreams</h1>
+                <div id="subtitle-rotator" class="subtitle" style="min-height: 20px; transition: opacity 1s;">
+                    An Architect's Guide to the Urban Soul
                 </div>
-                <div id="purge-btn" onclick="purgeMemories()">[ PURGE DATABASE ]</div>
             </div>
-            <div id="particles-container"></div>
-            <div id="memory-3d-tooltip">
-                <div style="color:var(--accent-green); font-size:10px; margin-bottom:5px; font-family:var(--font-mono);">[ MEMORY FRAGMENT ]</div>
-                <div id="tooltip-3d-content">...</div>
-                <div style="margin-top:5px; font-size:9px; color:#666; font-family:var(--font-mono);">[DEL] TO DELETE</div>
+            
+            <div class="interaction-container">
+                <div class="hold-btn" id="enter-trigger" 
+                     onmousedown="startHold()" onmouseup="endHold()" onmouseleave="endHold()"
+                     ontouchstart="startHold(event)" ontouchend="endHold()" ontouchcancel="endHold()">
+                    <svg class="ring-svg" viewBox="0 0 100 100">
+                        <circle class="ring-circle" cx="50" cy="50" r="40"></circle>
+                    </svg>
+                    <div class="hold-icon"></div>
+                </div>
+                <div class="hold-hint">Hold to Connect</div>
+                <p class="audio-cue" id="audio-cue">"The world outside is noisy,<br>but here, only the wind remains."</p>
             </div>
         </section>
-    </main>
 
-    <div id="fullscreen-stage">
-        <div class="terminal-window">
-            <div class="close-terminal" onclick="closeTerminal()">[x] ABORT</div>
-            <div class="terminal-visual">
-                <div class="glitch-img-container"><img id="term-img" class="glitch-img" src="" alt="NO DATA"></div>
-            </div>
-            <div class="terminal-data">
-                <div class="data-header">
-                    <div class="data-id glitch-text" id="term-id" data-text="ID">ID</div>
-                    <h2 class="data-title glitch-text" id="term-title" data-text="TITLE">TITLE</h2>
-                </div>
-                <div class="data-block human-block">
-                    <div class="block-label">/// HUMAN INPUT</div>
-                    <p class="human-text" id="term-human">...</p>
-                </div>
-                <div class="data-block history-block" style="border-color: #555;">
-                    <div class="block-label" style="color: #888; border-color: #555;">/// HISTORICAL FACTS</div>
-                    <p class="history-text" id="term-history">...</p>
-                </div>
-                <div class="data-block ai-block">
-                    <div class="block-label" style="color: var(--alert-red); border-color: var(--alert-red);">⚠ SYSTEM FAILURE REPORT (AI)</div>
-                    <div class="ai-text" id="term-ai">...</div>
+        <section id="slide-briefing" class="game-section">
+            <div id="tuning-stage">
+                <div id="noise-fog-container"></div>
+                <div id="story-monologue"></div>
+                <div class="slider-wrapper">
+                    <div class="tuning-hint">Slide to Clear the Noise</div>
+                    <div class="slider-track-container" id="slider-track">
+                        <div class="track-line"></div>
+                        <div class="track-active-line" id="track-fill"></div>
+                        <div class="slider-knob" id="slider-knob">
+                            <div class="knob-inner"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <div id="revelation-stage">
+                <div id="revelation-container"></div>
+            </div>
+            <div id="envelope-stage" onclick="openEnvelope()">
+                <div class="envelope"><div class="envelope-seal"></div><div class="envelope-flap"></div></div>
+                <div class="tap-hint">Tap to Open</div>
+            </div>
+            <div id="letter-stage">
+                <div class="signal-header"><div class="signal-dot"></div><span>Incoming Soul Transmission...</span></div>
+                <div class="typewriter-container fade-in-up">
+                    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+                    <p id="letter-content" class="letter-text"></p>
+                </div>
+                <button id="btn-briefing" class="action-btn" onclick="navigateTo('slide-mechanics')">I am ready</button>
+            </div>
+        </section>
+
+        <section id="slide-mechanics" class="game-section">
+            <canvas id="pulse-canvas"></canvas>
+            
+            <h2 class="dream-title fade-in-up" style="font-size: 3rem; margin-bottom: 30px;">Resonance</h2>
+            
+            <div class="mech-container">
+                <p class="fade-in-up delay-1" style="font-family: var(--font-body); font-size: 0.9rem; letter-spacing: 2px; color: var(--dream-cyan); margin-bottom: 40px; text-transform: uppercase;">
+                    Please drift through the physical square. Do not rush.
+                </p>
+
+                <div class="mech-zone" style="padding-left: 0;">
+                    <div class="tuning-hint-text fade-in-up delay-1">/// STEP I : DRIFTING</div>
+                    <p class="blur-reveal-text blur-delay-1">
+                        Phase I: Drifting: Your footsteps are the resonance. Walk through the physical square. When you align with a hidden memory, a Dream Bubble will appear.
+                    </p>
+                </div>
+
+                <div class="mech-zone bubble-zone">
+                    <div class="bubble-text-content">
+                        <div class="tuning-hint-text fade-in-up delay-2" style="text-align: right;">/// STEP II : CRACKING</div>
+                        <p class="blur-reveal-text blur-delay-2">
+                            Phase II: Cracking: Touch the bubbles to crack the absurd shell and retrieve the <span id="memory-brick-word" class="brick-word">'Memory Brick'</span> hidden inside.
+                        </p>
+                    </div>
+                    
+                    <div class="bubble-wrapper">
+                        <div class="interactive-bubble" onclick="popBubble(this)">
+                            <div class="bubble-inner-icon">?</div>
+                        </div>
+                        <div class="click-hint">TAP TO CRACK</div>
+                    </div>
+                </div>
+
+                <button id="btn-mechanics" class="singularity-btn fade-in-up delay-3" onclick="navigateTo('void')">
+                    <span class="btn-text">START DRIFTING</span>
+                </button>
+            </div>
+        </section>
+
+        <section id="void" class="game-section">
+            <div id="map-zoom-wrapper">
+                <div id="map-bg"></div>
+                <div id="aurora-layer"></div>
+                <canvas id="map-canvas"></canvas>
+                <div id="marker-container"></div>
+            </div>
+            
+            <div id="user-cursor">
+                <div class="radar-ping"></div>
+                <div class="user-label">YOU</div>
+            </div>
+            
+            <div class="memory-compass" id="memory-compass">
+                <div class="compass-ring"></div>
+                <div class="compass-label" id="compass-label">COLLECTED: 0/9</div>
+            </div>
+        </section>
+
+        <div id="completion-card">
+    <h2 style="font-family:var(--font-title); color:#fff; margin-bottom:10px; font-size:1.2rem; line-height:1.4;">
+        You have gathered every fragment of memory scattered across the map.<br>
+        They have awakened the last fragment within your chest.
+    </h2>
+
+    <div class="fragment-container-dynamic" style="display: flex; flex-direction: column; align-items: center; width: 100%; margin: 20px 0;">
+        <div class="fragment-icon" style="background-image: url('11111.png'); width: 120px; height: 120px; border: 3px solid var(--dream-gold); box-shadow: 0 0 30px rgba(255, 238, 187, 0.4); animation: gold-breathe-final 4s ease-in-out infinite;"></div>
+        <div style="font-family:var(--font-tech); font-size:0.75rem; color:var(--dream-gold); opacity:0.9; margin-top: 10px; letter-spacing: 2px;">
+            ULTIMATE FRAGMENT
         </div>
     </div>
+    
+    <h3 style="font-family:var(--font-body); color:var(--dream-gold); margin-bottom:20px; font-size:1.1rem; letter-spacing:1px; text-transform:uppercase;">
+        Acquire [The Rhythm of Your Heart]
+    </h3>
 
+    <p class="completion-note">
+        “You have walked through the entire city, witnessed all its landscapes and history, only to realize that the only thing truly alive here is the pulse of memory within your chest.<br>Welcome home.”
+    </p>
+    
+    <button class="action-btn btn-visible" style="margin-top:0; min-width:auto; padding:15px 30px; font-size:0.8rem;" onclick="finishAndReconstruct()">
+        Use fragments to form the "Memory Stone Bricks"
+    </button>
+</div>
+
+        <section id="slide-revelation" class="game-section">
+            <h1 class="dream-title fade-in-up" style="font-size: 3.5rem;">The Truth</h1>
+            <div class="info-card fade-in-up delay-1" style="max-width: 600px;">
+                <p style="font-size: 1.4rem;">"Real history gives the city its skeleton, but your memories give it flesh and blood. Now, use the memory fragments you collected to make up the "Memory Brick" torebuild the Stachus in your heart."</p>
+            </div>
+            <button id="btn-revelation" class="action-btn btn-visible fade-in-up delay-2" onclick="navigateTo('reconstruction')">To set the Memory Brick</button>
+        </section>
+
+        <section id="reconstruction" class="game-section">
+            <div id="three-container"></div>
+            <div id="recon-console">
+                <h2 style="font-family:var(--font-body); color:#fff; font-size:0.85rem; margin-bottom:10px; letter-spacing:3px; opacity:0.7;">MEMORY RECONSTRUCTION</h2>
+                <div class="input-area">
+                    <input type="text" id="memory-input" placeholder="Enter missing memory..." autocomplete="off">
+                    <button class="submit-btn" onclick="submitMemory()">Set the Memory Brick</button>
+                </div>
+                <div style="margin-top: 15px; display:flex; justify-content:center;">
+                     <button class="clear-all-btn" onclick="clearAllMemories()">⚠ FORGET ALL MEMORIES</button>
+                </div>
+            </div>
+            <div id="particles-container"></div>
+            <div id="memory-3d-tooltip"></div>
+        </section>
+
+    </div>
+
+    <div id="fullscreen-stage" onclick="closeDream()">
+        
+        <div class="dream-peephole">
+            <div class="stage-close-btn" onclick="closeDream()">×</div>
+            <div class="dream-content-layer">
+                <div class="glitch-title">The Dream Title</div>
+                <div class="dream-img-placeholder">[ Abstraction ]</div>
+                <div class="dream-quote" id="dream-quote">"Quote here..."</div>
+            </div>
+            
+            <div class="crack-btn" id="dream-trigger-btn"
+                 onclick="event.stopPropagation()"
+                 onmousedown="startDreamHold(event)" 
+                 onmouseup="endDreamHold()" 
+                 onmouseleave="endDreamHold()"
+                 ontouchstart="startDreamHold(event)" 
+                 ontouchend="endDreamHold()"
+                 ontouchcancel="endDreamHold()">
+                <div class="fingerprint-icon"></div>
+            </div>
+            <div style="margin-top:15px; font-size:0.6rem; color:var(--text-dim); letter-spacing:2px; text-transform:uppercase; opacity:0.7;">
+                Hold to Resonate
+            </div>
+        </div>
+
+        <div class="memory-story-card" onclick="event.stopPropagation()">
+    <div class="stage-close-btn" onclick="closeDream()">×</div>
+    
+    <div class="card-img-placeholder"></div>
+    
+    <div class="card-text scroll-content"> 
+        </div>
+    
+    <button class="card-btn" onclick="revealFragment()">Peek into the Secret</button>
+</div>
+
+        <div class="reward-card" onclick="collectDream(); event.stopPropagation()">
+            <div class="stage-close-btn" onclick="closeDream()" style="top:10px; right:10px; width:24px; height:24px; font-size:14px;">×</div>
+            <div class="card-img-placeholder" style="height:140px; border:none; background:rgba(255,255,255,0.02);">[ Fragment Image ]</div>
+            <div class="fragment-name" id="fragment-name-text">Fragment 1:<br>Weightless Stone</div>
+            <div style="margin-top:20px; font-size:0.6rem; color:#fff; opacity:0.5; letter-spacing:1px;">TAP TO COLLECT</div>
+        </div>
+
+    </div>
+
+    
     <script>
-        document.addEventListener('mousemove', (e) => { document.getElementById('coords').innerText = (e.clientX).toFixed(0) + ", " + (e.clientY).toFixed(0); });
-        window.addEventListener('scroll', () => {
-            const visualBlock = document.querySelector('.visual-block');
-            if(visualBlock) visualBlock.style.transform = `translateY(${window.scrollY * 0.05}px)`;
+        // ================= 音频管理系统 =================
+const AudioManager = {
+    current: null,
+    tracks: {
+        pre: document.getElementById('bgm-pre'),
+        map: document.getElementById('bgm-map'),
+        end: document.getElementById('bgm-end')
+    },
+    
+    async play(trackKey) {
+        this.stopAll();
+        const target = this.tracks[trackKey];
+        if (target) {
+            try {
+                target.currentTime = 0;
+                // 关键：尝试播放并捕获异常
+                await target.play();
+                this.current = target;
+            } catch (e) {
+                console.log("等待用户交互以播放音频...");
+                // 记录下想播放但没成功的曲目，等用户一点屏幕就补播
+                this.pendingTrack = trackKey;
+            }
+        }
+    },
+    
+    stopAll() {
+        Object.values(this.tracks).forEach(track => {
+            track.pause();
+            track.currentTime = 0;
         });
+        this.current = null;
+    }
+};
+        // ================= JAVASCRIPT LOGIC =================
 
-        // ================= TERMINAL DATA =================
-        const archives = [
+        // 1. 全局柔光粒子
+        const coverCanvas = document.getElementById('cover-canvas');
+        const coverCtx = coverCanvas.getContext('2d');
+        let coverParticles = []; let isHolding = false; let animationFrameId;
+
+        function resizeCoverCanvas() { coverCanvas.width = window.innerWidth; coverCanvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCoverCanvas); resizeCoverCanvas();
+
+        class DreamParticle {
+            constructor(x, y, isBurst = false) {
+                this.isBurst = isBurst;
+                if(isBurst) {
+                    this.x = x; this.y = y; this.size = Math.random() * 4 + 2;
+                    const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 8 + 2;
+                    this.baseSpeedX = Math.cos(angle) * speed; this.baseSpeedY = Math.sin(angle) * speed;
+                    this.alpha = 1; this.life = 1.0; this.color = Math.random() > 0.5 ? '#ffeebb' : '#ffffff';
+                } else { this.reset(); }
+            }
+            reset() {
+                this.x = Math.random() * coverCanvas.width; this.y = Math.random() * coverCanvas.height;
+                this.size = Math.random() * 3 + 1; 
+                this.baseSpeedX = (Math.random() - 0.5) * 0.3; this.baseSpeedY = (Math.random() - 0.5) * 0.3;
+                this.alpha = Math.random() * 0.2 + 0.05; this.maxAlpha = Math.random() * 0.3 + 0.1;
+                this.fadeDir = Math.random() > 0.5 ? 0.002 : -0.002;
+                const colors = ['#ffffff', '#e0f2fe', '#fffbeb']; this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.isBurst = false;
+            }
+            update(btnRect) {
+                if(this.isBurst) {
+                    this.x += this.baseSpeedX; this.y += this.baseSpeedY; this.alpha -= 0.02; this.size *= 0.95; this.life -= 0.02; return;
+                }
+                if (isHolding) {
+                    const centerX = btnRect.left + btnRect.width / 2; const centerY = btnRect.top + btnRect.height / 2;
+                    const dx = centerX - this.x; const dy = centerY - this.y; const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 10) { this.reset(); const angle = Math.random() * Math.PI * 2; this.x = centerX + Math.cos(angle) * (window.innerWidth * 0.6); this.y = centerY + Math.sin(angle) * (window.innerHeight * 0.6); } 
+                    else { this.x += dx * 0.06; this.y += dy * 0.06; this.alpha = Math.min(this.alpha + 0.02, 0.6); }
+                } else {
+                    this.x += this.baseSpeedX; this.y += this.baseSpeedY; this.alpha += this.fadeDir;
+                    if(this.alpha <= 0.02 || this.alpha >= this.maxAlpha) this.fadeDir *= -1;
+                    if(this.x < -50) this.x = coverCanvas.width + 50; if(this.x > coverCanvas.width + 50) this.x = -50; if(this.y < -50) this.y = coverCanvas.height + 50; if(this.y > coverCanvas.height + 50) this.y = -50;
+                }
+            }
+            draw() {
+                if(this.isBurst && this.alpha <= 0) return;
+                coverCtx.globalAlpha = Math.max(0, this.alpha); coverCtx.shadowBlur = this.size * (this.isBurst ? 5 : 3); 
+                coverCtx.shadowColor = this.color; coverCtx.fillStyle = this.color;
+                coverCtx.beginPath(); coverCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2); coverCtx.fill();
+                coverCtx.shadowBlur = 0; coverCtx.globalAlpha = 1;
+            }
+        }
+        function initCoverParticles() { coverParticles = []; for(let i=0; i<120; i++) coverParticles.push(new DreamParticle()); loopCoverParticles(); }
+        function loopCoverParticles() {
+            const activeSection = document.querySelector('.game-section.active').id;
+            const isRevelation = document.getElementById('revelation-stage').style.opacity === '1';
+            
+            if((activeSection !== 'slide-cover' && activeSection !== 'slide-briefing' && activeSection !== 'slide-mechanics') || isRevelation) { 
+                document.getElementById('cover-canvas').style.opacity = '0'; 
+                animationFrameId = requestAnimationFrame(loopCoverParticles); return; 
+            }
+            document.getElementById('cover-canvas').style.opacity = '1';
+
+            coverCtx.clearRect(0, 0, coverCanvas.width, coverCanvas.height);
+            let btnRect = {left:0, top:0, width:0, height:0};
+            let btn = document.getElementById('enter-trigger');
+            if(btn && activeSection === 'slide-cover') btnRect = btn.getBoundingClientRect();
+
+            coverParticles = coverParticles.filter(p => !p.isBurst || p.alpha > 0);
+            for(let p of coverParticles) { p.update(btnRect); p.draw(); }
+            animationFrameId = requestAnimationFrame(loopCoverParticles);
+        }
+
+        const ghostPhrases = [ "The city is forgetting...", "Can you hear the fountain sigh?", "Stachus needs your memory.", "Fragments of time...", "Lost in the neon light..." ];
+        let ghostInterval;
+        function spawnGhostWord() {
+            const layer = document.getElementById('ghost-text-layer'); const el = document.createElement('div'); el.classList.add('ghost-word'); el.innerText = ghostPhrases[Math.floor(Math.random() * ghostPhrases.length)]; el.style.left = (Math.random() * 80 + 10) + '%'; el.style.top = (Math.random() * 80 + 10) + '%'; el.style.fontSize = (0.8 + Math.random()) + 'rem'; layer.appendChild(el); setTimeout(() => el.remove(), 14000);
+        }
+        function startGhostText() {
+            for(let i=0; i<3; i++) spawnGhostWord();
+            const layer = document.getElementById('ghost-text-layer');
+            ghostInterval = setInterval(() => { 
+                const activeSection = document.querySelector('.game-section.active').id; 
+                const isRevelation = document.getElementById('revelation-stage').style.opacity === '1';
+                if((activeSection !== 'slide-cover' && activeSection !== 'slide-briefing') || isRevelation) { layer.style.opacity = '0'; return; } 
+                layer.style.opacity = '1'; spawnGhostWord(); 
+            }, 3000);
+        }
+
+        let holdTimer = null; const holdDuration = 1800; 
+        function startHold(e) {
+    if(e) {
+        // 如果是触摸事件，防止触发模拟鼠标点击
+        if(e.type === 'touchstart') e.preventDefault(); 
+    }
+    
+    // 交互瞬间再次尝试激活音频（如果 onload 时的点击没触发）
+    if (!AudioManager.current) {
+        AudioManager.play('pre');
+    }
+
+    const btn = document.getElementById('enter-trigger'); const title = document.getElementById('main-title'); const audioCue = document.getElementById('audio-cue'); const ringCircle = document.querySelector('.ring-circle'); isHolding = true; btn.classList.add('holding'); title.classList.add('chromatic-aberration'); audioCue.style.opacity = 1; if(navigator.vibrate) navigator.vibrate(20); ringCircle.style.transition = `stroke-dashoffset ${holdDuration}ms linear`; ringCircle.style.strokeDashoffset = '0'; holdTimer = setTimeout(() => { enterDream(); }, holdDuration); }
+        function endHold() { const btn = document.getElementById('enter-trigger'); const title = document.getElementById('main-title'); const audioCue = document.getElementById('audio-cue'); const ringCircle = document.querySelector('.ring-circle'); isHolding = false; btn.classList.remove('holding'); title.classList.remove('chromatic-aberration'); audioCue.style.opacity = 0; ringCircle.style.transition = 'stroke-dashoffset 0.3s ease-out'; ringCircle.style.strokeDashoffset = '251'; if(holdTimer) { clearTimeout(holdTimer); holdTimer = null; } }
+        function enterDream() {
+            const btn = document.getElementById('enter-trigger'); btn.style.transform = "scale(60)"; btn.style.opacity = "0"; btn.style.transition = "transform 0.8s ease-in, opacity 0.5s ease 0.3s";
+            setTimeout(() => { navigateTo('slide-briefing'); initTuningPhase(); setTimeout(() => { btn.style.transform = ""; btn.style.opacity = ""; btn.style.transition = ""; btn.classList.remove('holding'); document.querySelector('.ring-circle').style.strokeDashoffset = '251'; }, 1000); }, 600);
+        }
+        const subTitles = [ "An Architect's Guide to the Urban Soul", "Listening to the Concrete Whispers", "Recovering the Lost Time" ];
+        let subIndex = 0; setInterval(() => { const el = document.getElementById('subtitle-rotator'); if(el && document.getElementById('slide-cover').classList.contains('active')) { el.style.opacity = 0; setTimeout(() => { subIndex = (subIndex + 1) % subTitles.length; el.innerText = subTitles[subIndex]; el.style.opacity = 0.8; }, 1000); } }, 5000);
+
+        window.onload = function() {
+    startGhostText();
+    initCoverParticles();
+    initPulseLine();
+
+    // --- 新增：点击任意位置激活音频 ---
+    const initAudioOnFirstClick = async () => {
+        // 尝试播放封面背景音乐
+        if (!AudioManager.current) {
+            await AudioManager.play('pre');
+        }
+        // 移除监听，只需执行一次
+        document.removeEventListener('click', initAudioOnFirstClick);
+        document.removeEventListener('touchstart', initAudioOnFirstClick);
+    };
+
+    document.addEventListener('click', initAudioOnFirstClick);
+    document.addEventListener('touchstart', initAudioOnFirstClick);
+};
+        // --- 2. 剧情页逻辑 ---
+        
+        const urbanDebris = [
+            { text: "📶", type: "nf-icon" }, { text: "🔔", type: "nf-icon" }, { text: "🔋", type: "nf-icon" }, 
+            { text: "💬", type: "nf-icon" }, { text: "📢", type: "nf-icon" }, { text: "🚄", type: "nf-icon" },
+            { text: "📱", type: "nf-icon" }, { text: "🫧", type: "nf-icon" }, { text: "❕", type: "nf-icon" },
+            { text: "SALE", type: "nf-text-lg" }, { text: "50% OFF", type: "nf-text-lg" }, 
+            { text: "BUY", type: "nf-alert" }, { text: "Stachus", type: "nf-text-sm" }, { text: "U-Bahn", type: "nf-text-sm" },
+            { text: "Nächster Halt", type: "nf-text-sm" }, { text: "Verbindung...", type: "nf-text-sm" }, { text: "NO SIGNAL", type: "nf-alert" },
+            { text: "System Error", type: "nf-text-sm" }, { text: "%", type: "nf-text-lg" }, { text: "Bitte zurückbleiben", type: "nf-text-sm" }
+        ];
+        
+        const introMonologues = [
+            "Stachus is not merely stone and square...",
+            "...it is a vessel for millions of passing souls.",
+            "But the modern roar has drowned its ancient pulse.",
+            "Lost between eras, it creates these fragmented 'Glitch Dreams'..."
+        ];
+        let monologueInterval;
+
+        function initTuningPhase() {
+            document.getElementById('tuning-stage').style.display = 'flex';
+            document.getElementById('tuning-stage').style.opacity = '1';
+            document.getElementById('revelation-stage').style.display = 'flex'; 
+            document.getElementById('revelation-stage').style.opacity = '0';
+            document.getElementById('envelope-stage').style.display = 'none';
+            document.getElementById('letter-stage').style.display = 'none';
+            document.getElementById('revelation-container').innerHTML = ''; 
+            document.getElementById('story-monologue').innerHTML = '';
+            
+            const knob = document.getElementById('slider-knob');
+            const fill = document.getElementById('track-fill');
+            knob.style.left = '0'; fill.style.width = '0%';
+            
+            const container = document.getElementById('noise-fog-container');
+            container.innerHTML = '';
+            for(let i=0; i<40; i++) {
+                const item = urbanDebris[Math.floor(Math.random() * urbanDebris.length)];
+                const span = document.createElement('span');
+                span.classList.add('noise-fragment', item.type);
+                span.innerText = item.text;
+                const left = Math.random() * 100;
+                span.style.left = left + '%'; span.style.top = (Math.random() * 100) + '%';
+                const duration = 15 + Math.random() * 20; const delay = -Math.random() * 20; 
+                const driftX = (Math.random() - 0.5) * 50 + 'vw'; const driftZ = (Math.random() - 0.5) * 200 + 'px';
+                const rot = (Math.random() - 0.5) * 60 + 'deg'; const maxOpacity = Math.random() * 0.5 + 0.4; 
+                span.style.setProperty('--drift-x', driftX); span.style.setProperty('--drift-z', driftZ);
+                span.style.setProperty('--rot', rot); span.style.setProperty('--max-opacity', maxOpacity);
+                span.style.animationDuration = duration + 's'; span.style.animationDelay = delay + 's';
+                container.appendChild(span);
+            }
+            startIntroMonologue(); initSliderEvents();
+        }
+
+        function startIntroMonologue() {
+            const container = document.getElementById('story-monologue');
+            let idx = 0;
+            function showNextLine() {
+                container.innerHTML = ''; if(idx >= introMonologues.length) { idx = 0; } 
+                const p = document.createElement('p'); p.classList.add('monologue-line'); p.innerText = introMonologues[idx];
+                container.appendChild(p); void p.offsetWidth; p.classList.add('active'); idx++;
+            }
+            showNextLine(); monologueInterval = setInterval(showNextLine, 4000); 
+        }
+
+        function initSliderEvents() {
+            const container = document.getElementById('slider-track'); const knob = document.getElementById('slider-knob'); const fill = document.getElementById('track-fill');
+            const noiseContainer = document.getElementById('noise-fog-container'); const monologueContainer = document.getElementById('story-monologue');
+            let isDraggingSlider = false;
+            function updateSlider(clientX) {
+                const rect = container.getBoundingClientRect(); let x = clientX - rect.left;
+                if(x < 0) x = 0; if(x > rect.width) x = rect.width;
+                const percent = (x / rect.width) * 100;
+                knob.style.transform = `translateX(-50%)`; knob.style.left = x + 'px'; fill.style.width = percent + '%';
+                const progress = percent / 100;
+                noiseContainer.style.opacity = 1 - progress; noiseContainer.style.transform = `scale(${1 + progress * 0.5}) perspective(600px) translateZ(${progress * 200}px)`;
+                if(progress > 0.1) { monologueContainer.style.opacity = 0; clearInterval(monologueInterval); }
+                if(navigator.vibrate && percent % 10 < 1) navigator.vibrate(5);
+                if(percent >= 98) { finishTuning(); }
+            }
+            function startDrag(e) { isDraggingSlider = true; updateSlider(e.clientX || e.touches[0].clientX); }
+            function moveDrag(e) { if(isDraggingSlider) updateSlider(e.clientX || e.touches[0].clientX); }
+            function endDrag() { isDraggingSlider = false; }
+            const wrapper = document.querySelector('.slider-wrapper');
+            wrapper.addEventListener('mousedown', startDrag); document.addEventListener('mousemove', moveDrag); document.addEventListener('mouseup', endDrag);
+            wrapper.addEventListener('touchstart', startDrag); document.addEventListener('touchmove', moveDrag); document.addEventListener('touchend', endDrag);
+        }
+
+        function finishTuning() {
+            clearInterval(monologueInterval);
+            const wrapper = document.querySelector('.slider-wrapper'); const clone = wrapper.cloneNode(true); wrapper.parentNode.replaceChild(clone, wrapper);
+            const tuningStage = document.getElementById('tuning-stage'); tuningStage.style.transition = 'opacity 1.5s ease-out'; tuningStage.style.opacity = '0';
+            setTimeout(() => { tuningStage.style.display = 'none'; }, 1500); showRevelation();
+        }
+
+        function showRevelation() {
+            const stage = document.getElementById('revelation-stage'); stage.style.opacity = '1'; const container = document.getElementById('revelation-container');
+            const lines = [ "The city has Urban Amnesia.", "Modern noise has drowned out the ancient soul.", "You are the only cure." ];
+            let delay = 1000;
+            lines.forEach((text) => { setTimeout(() => { container.innerHTML = ''; const p = document.createElement('p'); p.classList.add('rev-line'); p.innerText = text; container.appendChild(p); void p.offsetWidth; p.classList.add('show'); }, delay); delay += 4000; });
+            setTimeout(() => { stage.style.transition = 'opacity 1.5s'; stage.style.opacity = '0'; setTimeout(() => { stage.style.display = 'none'; showEnvelope(); }, 1500); }, delay + 1500);
+        }
+
+        function showEnvelope() {
+            const env = document.getElementById('envelope-stage'); env.style.display = 'block'; env.style.opacity = 0; env.style.transform = "scale(0.5)";
+            setTimeout(() => { env.style.transition = "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)"; env.style.opacity = 1; env.style.transform = "scale(1)"; }, 50);
+        }
+
+        const fullLetterText = `Dear Memory Architect, you have finally come.\n\nThe neon lights here are too blinding; they leave no shadows for memories to hide.\n\nThe fountain has forgotten it was once a river.\nThe Karlstor has forgotten how many partings it has witnessed.\n\nThey are turning into empty shells.\n\nPlease help us... use your senses to capture those fleeing dreams.`;
+        let isLetterOpen = false;
+
+        function openEnvelope() {
+            if(isLetterOpen) return; isLetterOpen = true;
+            const envelope = document.getElementById('envelope-stage'); const letter = document.getElementById('letter-stage'); const rect = envelope.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2; const centerY = rect.top + rect.height / 2;
+            for(let i=0; i<40; i++) { coverParticles.push(new DreamParticle(centerX, centerY, true)); }
+            envelope.style.transition = "transform 0.2s ease-in, opacity 0.2s ease"; envelope.style.transform = "scale(0.8)"; envelope.style.opacity = "0";
+            setTimeout(() => { envelope.style.display = 'none'; letter.style.display = 'flex'; startTypewriter(); }, 200);
+        }
+
+        function startTypewriter() {
+            const el = document.getElementById('letter-content'); el.innerHTML = '<span class="cursor"></span>'; let i = 0; const speed = 30; 
+            function type() {
+                if (i < fullLetterText.length) {
+                    let char = fullLetterText.charAt(i); if (char === '\n') char = '<br>'; const cursor = el.querySelector('.cursor'); const span = document.createElement('span'); span.innerHTML = char; el.insertBefore(span, cursor); i++; let delay = speed; if(char === '.' || char === ',' || char === '。') delay = speed * 8; setTimeout(type, delay + (Math.random()*20));
+                } else { setTimeout(() => { document.getElementById('btn-briefing').classList.add('btn-visible'); }, 500); }
+            }
+            type();
+        }
+
+        // --- Mechanics Page Logic Additions ---
+        
+        // 1. Pulse Canvas
+        let pulseCtx, pulseCanvas;
+        let pulseTime = 0;
+
+        function initPulseLine() {
+            pulseCanvas = document.getElementById('pulse-canvas');
+            if(!pulseCanvas) return;
+            pulseCanvas.width = window.innerWidth;
+            pulseCanvas.height = window.innerHeight;
+            pulseCtx = pulseCanvas.getContext('2d');
+            loopPulse();
+        }
+
+        function loopPulse() {
+            const activeSection = document.querySelector('.game-section.active').id;
+            if (activeSection === 'slide-mechanics') {
+                pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
+                pulseCtx.beginPath();
+                const centerY = pulseCanvas.height / 2;
+                const amplitude = 50; const frequency = 0.01; const speed = 0.05;
+                for (let x = 0; x < pulseCanvas.width; x++) { let y = centerY; y += Math.sin(x * frequency + pulseTime) * amplitude; pulseCtx.lineTo(x, y); }
+                pulseCtx.strokeStyle = 'rgba(162, 210, 255, 0.4)'; pulseCtx.lineWidth = 2; pulseCtx.stroke(); pulseTime += speed;
+            }
+            requestAnimationFrame(loopPulse);
+        }
+
+        window.popBubble = function(el) {
+            const rect = el.getBoundingClientRect(); const centerX = rect.left + rect.width/2; const centerY = rect.top + rect.height/2;
+            for(let i=0; i<20; i++) {
+                const p = document.createElement('div'); p.classList.add('particle-burst'); document.body.appendChild(p);
+                p.style.left = centerX + 'px'; p.style.top = centerY + 'px';
+                const angle = Math.random() * Math.PI * 2; const dist = Math.random() * 100 + 50; const tx = Math.cos(angle) * dist; const ty = Math.sin(angle) * dist;
+                p.animate([ { transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 } ], { duration: 600 + Math.random() * 400, easing: 'cubic-bezier(0, .9, .57, 1)' }).onfinish = () => p.remove();
+            }
+            el.style.transform = "scale(0)"; setTimeout(() => { el.style.opacity = "0"; }, 200);
+            const brickWord = document.getElementById('memory-brick-word'); if(brickWord) brickWord.classList.add('brick-highlight');
+            const hint = document.querySelector('.click-hint'); if(hint) hint.style.opacity = 0;
+        };
+
+        // --- 4. 导航与地图核心逻辑 ---
+        const historyStack = ['slide-cover'];
+        // 找到 navigateTo 函数，修改如下：
+            function navigateTo(targetId) {
+                document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(targetId).classList.add('active');
+                
+                if(targetId !== historyStack[historyStack.length-1]) historyStack.push(targetId);
+                
+                const backBtn = document.querySelector('.back-btn');
+                backBtn.style.display = targetId === 'slide-cover' ? 'none' : 'block';
+
+                // --- 音频切换逻辑：增加用户交互兼容 ---
+                const handleAudio = async (trackKey) => {
+                    try {
+                        await AudioManager.play(trackKey);
+                    } catch (e) {
+                        console.log("音频播放受阻，等待交互");
+                    }
+                };
+
+                if (targetId === 'slide-cover') {
+                    handleAudio('pre');
+                }
+                else if (targetId === 'void') { 
+                    handleAudio('map');
+                    setTimeout(resizeMap, 100);
+                    initGPS();
+                    initMemoryCompass();
+                    initMarkers();
+                } 
+                // 关键修复：确保进入重建页时触发
+                else if (targetId === 'reconstruction') { 
+                    handleAudio('end'); // 播放最后一页音乐
+                    
+                    setTimeout(() => { 
+                        if(camera) { 
+                            camera.aspect = window.innerWidth/window.innerHeight; 
+                            camera.updateProjectionMatrix(); 
+                            renderer.setSize(window.innerWidth, window.innerHeight); 
+                        } 
+                        initThree(); 
+                    }, 100);
+                }
+            }
+        function goBack() { if(historyStack.length > 1) { historyStack.pop(); navigateTo(historyStack[historyStack.length-1]); } }
+        
+        // --- 5. GPS / LBS 系统 ---
+        const MAP_BOUNDS = { topLat: 48.139650, bottomLat: 48.138450, leftLng: 11.564600, rightLng: 11.567100 };
+        const userCursor = document.getElementById('user-cursor'); const gpsStatus = document.getElementById('gps-status-text');
+        
+        // 模拟位置，用于电脑测试 (鼠标位置)
+        let simulatedUserX = 50, simulatedUserY = 50; 
+
+        function initGPS() {
+            if (!navigator.geolocation) { gpsStatus.innerText = "ERR: NO GPS MODULE"; return; }
+            navigator.geolocation.watchPosition((position) => {
+                    const lat = position.coords.latitude; const lng = position.coords.longitude; gpsStatus.innerText = `GPS ACTIVE: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    const xPercent = (lng - MAP_BOUNDS.leftLng) / (MAP_BOUNDS.rightLng - MAP_BOUNDS.leftLng); const yPercent = (MAP_BOUNDS.topLat - lat) / (MAP_BOUNDS.topLat - MAP_BOUNDS.bottomLat); 
+                    if (xPercent >= -0.1 && xPercent <= 1.1 && yPercent >= -0.1 && yPercent <= 1.1) { 
+                        userCursor.style.display = 'block'; 
+                        userCursor.style.left = (xPercent * 100) + '%'; 
+                        userCursor.style.top = (yPercent * 100) + '%';
+                        // 更新全局坐标供碰撞检测使用
+                        simulatedUserX = xPercent * 100;
+                        simulatedUserY = yPercent * 100;
+                    }
+                },
+                (error) => { console.warn("GPS ERROR:", error); let msg = "SIGNAL LOSS"; if(error.code === 1) msg = "GPS PERMISSION DENIED"; gpsStatus.innerText = "ERR: " + msg; }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            );
+        }
+
+        // ================= STACHUS 智能交互核心 V3.0 (最终修复版) =================
+
+        const dreams = [
             {
-                id: "ERR_ARCHIVE_A",
-                title: "THE UNDERGROUND LOOP",
-                img: "./1.jpg", 
-                human: "\"I've worked down here for fifteen years. Sometimes it feels like there is no day or night...\"",
-                history: "Fact: Built in 1970, Stachus Passagen was Europe's largest underground mall.",
-                ai: "SYSTEM ERROR 1970-XX // LOCATION: Sub-level 2 // All exits are fake screens."
+                id: 1,
+                title: "The Bookstore",
+                dreamText: "I opened a picture book about New Zealand, and a salty sea breeze suddenly blew out from page 42, messing up my hair. I saw seawater overflowing from the pages, instantly submerging the carpet beneath my feet. The bookshelves turned into towering coral reefs, and other customers became schools of swimming fish. I hugged that picture book like a piece of driftwood, drifting aimlessly between Literature and Philosophy, while the lights overhead turned into the distant stars of the Southern Hemisphere.",
+                subTitle: "Subconscious Memory: Not Buying",
+                memoryText: "It was pouring outside. I didn't actually want to buy a book; I just went in to hide from the rain. I hid in the travel section, holding a picture book pretending to read, but actually, I was smelling the paper. I don't know why, but the smell of printing ink mixed with coffee made me feel incredibly safe. It felt like as long as I didn't go out, the rain couldn't drench my heart.",
+                archiveYear: "ARCHIVE 1979",
+                archiveText: "Hugendubel opened this multi-story flagship store at Stachus, introducing the concept of 'Reading Islands'. It was not just a bookstore, but a spiritual shelter in the noisy city center.",
+                fragmentName: "Paper Sea"
             },
             {
-                id: "ERR_ARCHIVE_B",
-                title: "THE FLUID GHOST",
-                img: "./2.jpg",
-                human: "\"If you come here at 4 AM, the fountain sounds different. Like whispering.\"",
-                history: "Fact: The fountain was constructed in 1972 for the Olympics.",
-                ai: "FLUID MEMORY ANALYSIS // SOURCE: 18th-Century Residual Emotion."
+                id: 2,
+                title: "The Fountain",
+                dreamText: "I squatted down to tie my shoelace, but my fingertips tapped against a hard solid. The splashing water froze in mid-air, turning into clusters of transparent glass thorns. I saw golden fish sealed inside these static water columns, their tails still swaying. The bubbles they breathed out were solid too, feeling like cold pearls. In that moment, the entire summer of the square was preserved in this giant amber.",
+                subTitle: "Subconscious Memory: Ice Cold",
+                memoryText: "Uh... I just remember the water being extremely cold. My shoelace was loose, so I squatted down to tie it, and my finger touched the water. For a second I thought: 'This is too cold, did someone pee in it?' Then I just walked away.",
+                archiveYear: "ARCHIVE 1972",
+                archiveText: "Designed by architect Bernhard Winkler for the Munich Olympics. The loud sound of the water was created as an auditory barrier to mask the noise of the busy surrounding traffic.",
+                fragmentName: "Liquid Whisper"
             },
             {
-                id: "ERR_ARCHIVE_C",
-                title: "IDENTITY WAR",
-                img: "./3.jpg",
-                human: "\"Karl? Who is Karl? This is Stachus. 'Karl' is just a name forced on us...\"",
-                history: "Fact: Renamed 'Karlsplatz' in 1797, but locals stubbornly use 'Stachus'.",
-                ai: "IDENTITY CONFLICT // CURRENT LAYER: Karlsplatz (Official). BASE CODE: Stachus (Deep)."
+                id: 3,
+                title: "Karlstor",
+                dreamText: "The white mark on the wall looked loose. Curious, I picked at it with my fingernail and pulled out a long white yarn. As I pulled, the magnificent stone gate started to unravel like an old sweater. The bricks became soft and collapsed, turning into a pile of white fluff at my feet. Through the hole I unraveled in the city gate, I saw the moon from three hundred years ago.",
+                subTitle: "Subconscious Memory: White Ash",
+                memoryText: "There was a white mark on the wall, like someone smashed a powder compact there. I was waiting for someone and got annoyed, so I kept scratching that white mark. I scratched for like five minutes, getting ash all under my nails. That's all I remember.",
+                archiveYear: "ARCHIVE 1302",
+                archiveText: "Part of Munich's second city wall fortification. Severely damaged by bombing during WWII, its current appearance is a simplified reconstruction from the post-war era.",
+                fragmentName: "Weightless Stone"
             },
             {
-                id: "ERR_ARCHIVE_D",
-                title: "THE DELETED WALL",
-                img: "./4.jpg",
-                human: "\"The old maps show a wall here. But now I only see shops...\"",
-                history: "Fact: Medieval fortifications were demolished in the 18th century.",
-                ai: "DEFENSE SYSTEM: OFFLINE // GHOST WALL RESIDUE DETECTED."
+                id: 4,
+                title: "Fast Food Corner",
+                dreamText: "I bit into the crust, but what flowed out wasn't apple filling, but scorching neon magma. It glowed, dripping from the corner of my mouth onto the ground, instantly corroding the concrete. I opened my mouth trying to exhale the heat, but breathed out clouds of pink, sweet steam. The golden 'M' sign flickered in the mist, like a tempting candy volcano erupting.",
+                subTitle: "Subconscious Memory: Scorching Magma",
+                memoryText: "I just remember that apple pie burned me to death. I took a bite, and the filling was like lava, sticking right to the roof of my mouth. I was standing in the wind breathing out heat like an idiot, tears coming out from the burn. It tasted like hot saccharin.",
+                archiveYear: "ARCHIVE 1971",
+                archiveText: "The year American fast-food culture entered Munich. This place transformed from a traditional Bavarian living circle into an international commercial crossroad.",
+                fragmentName: "Sugar Crystal"
+            },
+            {
+                id: 5,
+                title: "Traffic Light",
+                dreamText: "The battery icon on my phone screen turned into a red hourglass, sand flowing fast. As it dropped to 3%, passersby's faces blurred; at 2%, the traffic lights began to melt like candles. I held my phone in terror, feeling like I wasn't holding a device, but the last light sustaining this world. If it went out, the sun would never rise again.",
+                subTitle: "Subconscious Memory: 4% Battery",
+                memoryText: "My phone had 4% battery left. I stared dead at that red battery bar, not looking around at all. I was thinking, if he doesn't show up before my phone dies, I'm going across the street to buy a McFlurry and going home. Seriously, only that 4% filled my mind.",
+                archiveYear: "ARCHIVE 1755",
+                archiveText: "The name Stachus comes from a pub called 'Beim Stachus', owned by Eustachius Föderl. Although officially named Karlsplatz, locals have only called it Stachus for 200 years.",
+                fragmentName: "Condensed Wait"
+            },
+            {
+                id: 6,
+                title: "The 44 Stone Bollards",
+                dreamText: "When I counted to the 12th bollard, I sat down to rest. Suddenly, the texture underneath wasn't rough granite, but warm, smooth ivory. The ground of Stachus instantly turned into a black and white chessboard. I realized I wasn't sitting on a stone block, but a giant chess piece. The tram opposite was a 'Rook' charging forward, and I was a forgotten 'Pawn' in the corner, waiting for an invisible giant hand to pick me up.",
+                subTitle: "Subconscious Memory: Cold Butt",
+                memoryText: "Those stone blocks are exactly knee-height. I was tired and wanted to sit, but in winter, it was freezing cold, made me shiver. I started counting how many there were in the circle. I got interrupted by a skater kid halfway through and forgot the count. Just remember my butt was cold.",
+                archiveYear: "ARCHIVE 1972",
+                archiveText: "Part of the pedestrian zone plan, 44 rhythmically placed stone bollards were designed to physically separate pedestrians from tram tracks. They stand like a row of silent guards protecting the square's boundary.",
+                fragmentName: "The 45th Pawn"
+            },
+            {
+                id: 7,
+                title: "Tram Tracks",
+                dreamText: "The screech of the tram turning drilled into my mouth. In that instant, all my teeth turned into miniature tuning forks, vibrating crazily with that frequency. The rails on the ground no longer looked like metal, but giant taut strings. The massive tram was a bow, playing a bass note on the cello of the city that made my bones tingle and stars dance in my eyes.",
+                subTitle: "Subconscious Memory: Tooth Ache",
+                memoryText: "That sound, screech—screech—especially when turning, that metal-on-metal sound, made my teeth ache. Seriously, just thinking about it now makes my back molars feel... sour. It was so piercing.",
+                archiveYear: "ARCHIVE 1876",
+                archiveText: "Munich's first horse-drawn tram departed from here. Since then, this place has been the heart of the city's public transportation.",
+                fragmentName: "The Blue Spark"
+            },
+            {
+                id: 8,
+                title: "The Escalator",
+                dreamText: "The green shoelace on the person opposite me suddenly moved. Like a flexible little snake, it grew windingly through the gaps of the escalator, instantly turning into giant green seaweed. They passed through the void in the middle of the escalator, gently wrapping around my wrist, pulling me towards the unknown depths. The air became humid and salty; I heard the low hum of whales in the distance. We were swimming towards the city's seabed.",
+                subTitle: "Subconscious Memory: Green Shoelace",
+                memoryText: "Every time I go down the escalator, I stare at the person's shoes opposite me. Yesterday it was a guy with green shoelaces, untied. I just kept staring at that lace swinging around, thinking: 'Don't get caught, don't get caught'... then I reached the bottom and forgot.",
+                archiveYear: "ARCHIVE 1970",
+                archiveText: "Part of the 'Stachus Bauwerk' project. At the time, it was Europe's largest underground construction project, completely changing the surface traffic flow.",
+                fragmentName: "Displaced Compass"
+            },
+            {
+                id: 9,
+                title: "The Pigeons",
+                dreamText: "That pigeon was hopping on one leg, extremely rhythmic, like a wind-up toy. I lay on the ground to observe closely and found it wasn't missing a leg. Its other leg was actually stepping on ripples in the air—every time it landed, it stepped out a blue ripple in mid-air. It is actually a traveler crossing two dimensions; left foot in Munich, right foot on the other end of the Galaxy.",
+                subTitle: "Subconscious Memory: One-Legged Hop",
+                memoryText: "There was a pigeon with only one leg. Really, it hopped, hop-hop. I was eating bread and dropped a crumb, and it hopped over to eat it. I stared at that one-legged pigeon for a long time, wondering how it sleeps? That's what I was thinking about.",
+                archiveYear: "ARCHIVE 19th Century",
+                archiveText: "They are the most faithful witnesses of urbanization. With the expansion of Karlsplatz, these rock pigeons began to thrive here, relying on human symbiosis.",
+                fragmentName: "Who's Feather"
             }
         ];
 
-        const termStage = document.getElementById('fullscreen-stage');
-        function openTerminal(index) {
-            const data = archives[index];
-            if(!data) return;
-            document.getElementById('term-id').innerText = data.id;
-            document.getElementById('term-title').innerText = data.title;
-            document.getElementById('term-title').setAttribute('data-text', data.title);
-            document.getElementById('term-img').src = data.img;
-            document.getElementById('term-human').innerText = data.human;
-            document.getElementById('term-history').innerText = data.history;
-            document.getElementById('term-ai').innerText = data.ai;
-            termStage.classList.add('active');
-            document.body.classList.add('fullscreen-mode');
-        }
-        function closeTerminal() {
-            termStage.classList.remove('active');
-            document.body.classList.remove('fullscreen-mode');
+        // 1. 定义梦泡位置 (0-100%)
+       // 位置定义 (Updated Coordinates)
+        const dreamPositions = [
+            {t:80, l:52}, // 1. 书店 (已移至 4.麦当劳 左下方)
+            {t:50, l:48}, // 2. 喷泉 (不变，作为参照点)
+            {t:60, l:75}, // 3. 卡尔门 (不变)
+            {t:75, l:60}, // 4. 麦当劳 (不变，作为参照点)
+            {t:30, l:30}, // 5. 红绿灯 (不变)
+            {t:43, l:54}, // 6. 石墩 (已移至原位置与 2.喷泉 的中点)
+            {t:55, l:25}, // 7. 电车轨道 (不变)
+            {t:70, l:40}, // 8. 地下扶梯 (不变)
+            {t:42, l:40}  // 9. 鸽子 (已移至 2.喷泉 左上方)
+        ];
+
+        let currentDreamIndex = -1; 
+        let collectedCount = 0;
+        let isCracking = false; 
+        let isCollecting = false;
+
+        function initMemoryCompass() {
+            const compass = document.getElementById('memory-compass');
+            compass.innerHTML = '<div class="compass-ring"></div>';
+            for(let i=0; i<9; i++) {
+                const dot = document.createElement('div'); dot.classList.add('compass-dot');
+                const angle = (i / 9) * Math.PI * 2; const r = 28;
+                dot.style.transform = `translate(${Math.cos(angle)*r}px, ${Math.sin(angle)*r}px)`;
+                dot.id = `compass-dot-${i}`; compass.appendChild(dot);
+            }
+            const label = document.createElement('div'); label.className = 'compass-label'; label.id = 'compass-label'; label.innerText = 'COLLECTED: 0/9'; compass.appendChild(label);
+            compass.style.opacity = 1;
         }
 
-        // ================= MAP CANVAS LOGIC =================
-        const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); let trails = []; let mouseX = -1000, mouseY = -1000; 
-        window.addEventListener('resize', resizeMap); function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; } resizeMap(); loopMap();
-        document.getElementById('void').addEventListener('mousemove', (e) => { 
-            const rect = mapCanvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top; 
-            trails.push({ x: mouseX + (Math.random()-0.5)*10, y: mouseY + (Math.random()-0.5)*10, life: 1.0, size: Math.random() * 4 + 2, color: '#ff0000' }); 
-            if(trails.length > 100) trails.shift(); 
-        });
+        // 2. 初始化梦泡 DOM
+        function initMarkers() {
+            const container = document.getElementById('marker-container');
+            container.innerHTML = '';
+            
+            dreamPositions.forEach((pos, i) => {
+                const mk = document.createElement('div');
+                mk.classList.add('marker');
+                mk.id = `marker-${i}`;
+                mk.style.top = pos.t + '%';
+                mk.style.left = pos.l + '%';
+                mk.dataset.index = i;
+                
+                // 初始状态：半透明，稍微缩小
+                mk.style.opacity = '0'; 
+                mk.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                container.appendChild(mk);
+            });
+            console.log("/// Markers Initialized");
+        }
+
+        // 3. 距离检测与显形逻辑 (每帧调用)
+        function checkProximity() {
+            // 只有在地图页且没有打开弹窗时才计算
+            if(!document.getElementById('void').classList.contains('active')) return;
+            if(document.getElementById('fullscreen-stage').classList.contains('active')) return;
+
+            const markers = document.querySelectorAll('.marker');
+            markers.forEach((mk, i) => {
+                // 如果已经收集了，就保持隐藏
+                if(mk.classList.contains('collected')) return;
+
+                const pos = dreamPositions[i];
+                const dist = Math.sqrt(Math.pow(pos.t - simulatedUserY, 2) + Math.pow(pos.l - simulatedUserX, 2));
+                
+                // 判定距离：18% 范围内开始显形
+                if(dist < 18) {
+                    mk.style.opacity = '1';
+                    mk.style.transform = 'translate(-50%, -50%) scale(1)';
+                    mk.classList.add('revealed');
+                    if(dist < 5 && !mk.dataset.vibrated) {
+                        if(navigator.vibrate) navigator.vibrate(5);
+                        mk.dataset.vibrated = "true";
+                    }
+                } else {
+                    mk.style.opacity = '0';
+                    mk.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                    mk.classList.remove('revealed');
+                    mk.dataset.vibrated = "";
+                }
+            });
+        }
+
+        // 4. 打开梦境 (进入窥视孔模式)
+        function openDream(index) {
+            if(document.getElementById('fullscreen-stage').classList.contains('active')) return;
+            
+            console.log(`/// OPENING DREAM ${index}`);
+            currentDreamIndex = index;
+            const d = dreams[index];
+            const id = index + 1; 
+            
+            // 1. 填充标题
+            const titleEl = document.querySelector('.glitch-title'); 
+            if(titleEl) titleEl.innerText = d.title;
+
+            // 图片逻辑 (PNG)
+            const dreamImgName = `${id}${id}.png`; 
+            const dreamImgDiv = document.querySelector('.dream-img-placeholder');
+            
+            // ★★★ 修复关键：先清空里面的文字，再设背景 ★★★
+            dreamImgDiv.innerHTML = ''; 
+            dreamImgDiv.style.backgroundImage = `url('${dreamImgName}')`; 
+
+            const quoteEl = document.querySelector('.dream-quote');
+            if(quoteEl) {
+                quoteEl.className = 'dream-quote scroll-content'; 
+                quoteEl.innerText = d.dreamText;
+            }
+
+            // 重置状态
+            resetModalState();
+
+            // 视觉处理
+            const wrapper = document.getElementById('map-zoom-wrapper');
+            const targetL = dreamPositions[index].l;
+            const targetT = dreamPositions[index].t;
+            wrapper.style.transform = `scale(2.5) translate(${50 - targetL}%, ${50 - targetT}%)`;
+
+            setTimeout(() => { 
+                document.getElementById('fullscreen-stage').classList.add('active'); 
+                startAmbientBubbles(); 
+            }, 500);
+        }
+
+        function closeDream() {
+            // 修复：如果正在播放破碎动画，禁止关闭，防止逻辑冲突
+            if(isCracking && document.querySelector('.memory-story-card').style.opacity !== '1') return;
+            
+            document.getElementById('fullscreen-stage').classList.remove('active');
+            document.getElementById('map-zoom-wrapper').style.transform = 'scale(1) translate(0, 0)';
+            if(bubbleInterval) clearInterval(bubbleInterval);
+            setTimeout(resetModalState, 600);
+        }
+
+        // 5. 状态重置辅助函数
+        function resetModalState() {
+            const peephole = document.querySelector('.dream-peephole');
+            const storyCard = document.querySelector('.memory-story-card');
+            const rewardCard = document.querySelector('.reward-card');
+            const contentLayer = document.querySelector('.dream-content-layer');
+            const btn = document.getElementById('dream-trigger-btn');
+
+            peephole.style.display = 'flex'; peephole.style.opacity = '1'; peephole.style.transform = 'scale(1)';
+            contentLayer.style.opacity = '1';
+            storyCard.classList.remove('show'); storyCard.style.opacity = ''; storyCard.style.pointerEvents = '';
+            rewardCard.classList.remove('show'); rewardCard.style.opacity = ''; rewardCard.style.transform = '';
+            btn.classList.remove('holding'); btn.style.opacity = '1'; btn.style.transform = 'scale(1)';
+
+            isCracking = false; isDreamHolding = false; isCollecting = false;
+        }
+
+        // 6. 全局智能点击监听
+        window.addEventListener('click', (e) => {
+            if(!document.getElementById('void').classList.contains('active')) return;
+            if(document.getElementById('fullscreen-stage').classList.contains('active')) return;
+
+            // 忽略 residue-crystal 的点击 (因为它自己有 onclick 事件)
+            if(e.target.closest('.residue-crystal')) return;
+
+            const rect = document.getElementById('void').getBoundingClientRect();
+            const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+            const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+
+            let closestDist = 999; let targetIndex = -1;
+            dreamPositions.forEach((pos, i) => {
+                const marker = document.getElementById(`marker-${i}`);
+                if(marker && marker.classList.contains('collected')) return; // 忽略已收集的
+                const dist = Math.sqrt(Math.pow(pos.t - clickY, 2) + Math.pow(pos.l - clickX, 2));
+                if(dist < closestDist) { closestDist = dist; targetIndex = i; }
+            });
+
+            if(targetIndex !== -1 && closestDist < 15) {
+                e.preventDefault(); e.stopPropagation();
+                simulatedUserX = dreamPositions[targetIndex].l;
+                simulatedUserY = dreamPositions[targetIndex].t;
+                const cursor = document.getElementById('user-cursor');
+                cursor.style.left = simulatedUserX + '%'; cursor.style.top = simulatedUserY + '%';
+                cursor.style.transition = 'all 0.3s ease-out';
+                createTouchRipple(e.clientX, e.clientY);
+                openDream(targetIndex);
+            }
+        }, { capture: true });
+
+        function createTouchRipple(x, y) {
+            const ripple = document.createElement('div');
+            ripple.style.position = 'fixed'; ripple.style.left = x + 'px'; ripple.style.top = y + 'px';
+            ripple.style.width = '2px'; ripple.style.height = '2px';
+            ripple.style.background = 'rgba(255, 238, 187, 0.9)'; ripple.style.boxShadow = '0 0 10px var(--dream-gold)';
+            ripple.style.borderRadius = '50%'; ripple.style.pointerEvents = 'none'; ripple.style.zIndex = '9999';
+            document.body.appendChild(ripple);
+            const anim = ripple.animate([ { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%, -50%) scale(30)', opacity: 0 } ], { duration: 500, easing: 'ease-out' });
+            anim.onfinish = () => ripple.remove();
+        }
+
+        // ================= 疗愈交互逻辑 (长按与收集) =================
+
+        let dreamHoldTimer = null; let isDreamHolding = false; let dreamProgress = 0;
+        const DREAM_HOLD_DURATION = 2000; let particleInterval = null; let bubbleInterval = null;
+
+        // 启动彩虹泡泡
+        function startAmbientBubbles() {
+            if(bubbleInterval) clearInterval(bubbleInterval);
+            const peephole = document.querySelector('.dream-peephole');
+            
+            bubbleInterval = setInterval(() => {
+                if(!document.getElementById('fullscreen-stage').classList.contains('active')) {
+                    clearInterval(bubbleInterval); return;
+                }
+                const b = document.createElement('div');
+                b.classList.add('rainbow-bubble');
+                const size = Math.random() * 30 + 10;
+                b.style.width = size + 'px'; b.style.height = size + 'px';
+                b.style.left = (Math.random() * 100) + '%'; b.style.top = (Math.random() * 100) + '%';
+                const angle = Math.random() * Math.PI * 2; const dist = 100 + Math.random() * 100;
+                b.style.setProperty('--tx', Math.cos(angle) * dist + 'px'); b.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+                b.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), ${Math.random()>0.5 ? 'var(--dream-cyan)' : 'var(--dream-purple)'} 60%, transparent)`;
+                b.style.animationDuration = (4 + Math.random() * 4) + 's';
+                peephole.appendChild(b);
+                setTimeout(() => b.remove(), 8000);
+            }, 400); 
+        }
+
+        // --- 修复版：长按开始 (防卡死机制) ---
+        function startDreamHold(e) {
+    if(e) {
+        e.preventDefault(); 
+        e.stopPropagation(); 
+    }
+            
+            // ★★★ 防卡死检测：如果状态被锁住但卡片并没显示，强制重置 ★★★
+            const storyCard = document.querySelector('.memory-story-card');
+            if(isCracking && !storyCard.classList.contains('show')) {
+                isCracking = false;
+                console.warn("/// FORCE UNLOCK: State was stuck");
+            }
+            
+            if(isCracking) return;
+            
+            isDreamHolding = true;
+            const btn = document.getElementById('dream-trigger-btn'); 
+            if(btn) btn.classList.add('holding');
+            
+            if(navigator.vibrate) navigator.vibrate(10);
+            spawnConvergenceParticles(); 
+            
+            let startTime = Date.now();
+            function checkHold() {
+                if(!isDreamHolding) return;
+                let elapsed = Date.now() - startTime; 
+                dreamProgress = elapsed / DREAM_HOLD_DURATION;
+                
+                if(elapsed >= DREAM_HOLD_DURATION) { 
+                    finishDreamHold(); 
+                } else { 
+                    requestAnimationFrame(checkHold); 
+                }
+            }
+            checkHold();
+        }
+
+        function endDreamHold() {
+            if(!isDreamHolding) return;
+            isDreamHolding = false;
+            const btn = document.getElementById('dream-trigger-btn'); if(btn) btn.classList.remove('holding');
+            if(particleInterval) { clearTimeout(particleInterval); particleInterval = null; }
+        }
+
+        function finishDreamHold() {
+            isDreamHolding = false; isCracking = true;
+            if(navigator.vibrate) navigator.vibrate([50, 50, 100]);
+            const btn = document.getElementById('dream-trigger-btn');
+            btn.classList.remove('holding'); btn.style.transform = 'scale(1.5)'; btn.style.opacity = '0';
+
+            const layer = document.querySelector('.dream-content-layer');
+            const peephole = document.querySelector('.dream-peephole');
+            layer.style.transition = 'opacity 1s ease'; layer.style.opacity = 0;
+            peephole.style.transition = 'transform 1.2s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s';
+            peephole.style.transform = 'scale(2)'; peephole.style.opacity = 0;
+
+            setTimeout(() => { peephole.style.display = 'none'; showRefinedMemoryCard(); }, 800);
+        }
+
+        function spawnConvergenceParticles() {
+            if(!isDreamHolding) return;
+            const btn = document.getElementById('dream-trigger-btn');
+            const p = document.createElement('div'); p.classList.add('convergence-particle');
+            const angle = Math.random() * Math.PI * 2; const dist = 120 + Math.random() * 100;
+            const startX = Math.cos(angle) * dist + 'px'; const startY = Math.sin(angle) * dist + 'px';
+            const midX = (Math.cos(angle + 0.5) * (dist * 0.3)) + 'px'; const midY = (Math.sin(angle + 0.5) * (dist * 0.3)) + 'px';
+            p.style.setProperty('--start-x', startX); p.style.setProperty('--start-y', startY);
+            p.style.setProperty('--mid-x', midX); p.style.setProperty('--mid-y', midY);
+            btn.appendChild(p); setTimeout(() => p.remove(), 800);
+            let nextDelay = 80 - (dreamProgress * 60); if(nextDelay < 10) nextDelay = 10;
+            particleInterval = setTimeout(spawnConvergenceParticles, nextDelay);
+        }
+
+        // --- 优化版：显示记忆卡片 (排版升级) ---
+        // --- 修复版：显示记忆卡片 ---
+        function showRefinedMemoryCard() {
+    const card = document.querySelector('.memory-story-card'); 
+    const d = dreams[currentDreamIndex];
+    const id = currentDreamIndex + 1;
+
+    // 图片路径
+    const memImgName = `${id}${id}${id}.png`;
+    const imgDiv = card.querySelector('.card-img-placeholder');
+    imgDiv.style.backgroundImage = `url('${memImgName}')`;
+
+    // 填充文本
+    const textContainer = card.querySelector('.card-text');
+    textContainer.className = 'card-text scroll-content'; 
+    textContainer.innerHTML = `
+        <div style="text-align: center; margin-bottom: 10px;">
+            <span class="memory-section-title">${d.subTitle}</span>
+        </div>
+        <p class="memory-main-text">${d.memoryText}</p>
+        <div class="archive-block">
+            <span class="archive-tag">/// ${d.archiveYear}</span>
+            <p class="archive-content">${d.archiveText}</p>
+        </div>
+        <div style="height: 20px;"></div>
+    `;
+
+    // 强制显示按钮
+    const btn = card.querySelector('.card-btn');
+    if(btn) {
+        btn.style.display = 'block';
+        btn.innerText = "Peek into the Secret";
+    }
+
+    card.classList.add('show');
+    setTimeout(() => { isCracking = false; }, 800);
+    initCardAtmosphere(card);
+}
+
+        function initCardAtmosphere(card) {
+            const old = card.querySelectorAll('.card-dust'); old.forEach(o => o.remove());
+            const createSpeck = () => {
+                if(!card.classList.contains('show')) return;
+                const s = document.createElement('div'); s.classList.add('card-dust');
+                s.style.left = (Math.random() * 100) + '%'; 
+                // 修正：更大的粒子尺寸
+                s.style.width = (Math.random() * 6 + 4) + 'px'; 
+                s.style.height = s.style.width;
+                s.style.animationDuration = (3 + Math.random() * 4) + 's'; card.appendChild(s); setTimeout(() => s.remove(), 7000);
+            };
+            for(let i=0; i<10; i++) createSpeck();
+            const loop = setInterval(() => { if(!card.classList.contains('show')) { clearInterval(loop); return; } createSpeck(); }, 600);
+        }
+
+        function revealFragment() {
+            const storyCard = document.querySelector('.memory-story-card');
+            storyCard.classList.remove('show'); storyCard.style.pointerEvents = 'none';
+            
+            const rewardCard = document.querySelector('.reward-card');
+            const d = dreams[currentDreamIndex];
+            const id = currentDreamIndex + 1;
+
+            // ★★★ 修改处：这里改成了 .png ★★★
+            // 格式：1111.png
+            const fragImgName = `${id}${id}${id}${id}.png`;
+            
+            const imgPlaceholder = rewardCard.querySelector('.card-img-placeholder');
+            imgPlaceholder.style.display = 'none'; 
+            
+            let fragContainer = rewardCard.querySelector('.fragment-container-dynamic');
+            if(!fragContainer) {
+                fragContainer = document.createElement('div');
+                fragContainer.className = 'fragment-container-dynamic';
+                fragContainer.style.display = 'flex';
+                fragContainer.style.flexDirection = 'column';
+                fragContainer.style.alignItems = 'center';
+                fragContainer.style.width = '100%';
+                rewardCard.insertBefore(fragContainer, rewardCard.children[1]); 
+            }
+            
+            fragContainer.innerHTML = `
+                <div class="fragment-icon" style="background-image: url('${fragImgName}')"></div>
+                <div class="fragment-name" style="font-family:var(--font-title); font-size:1.2rem; margin-bottom:5px; color:#fff;">${d.fragmentName}</div>
+                <div style="font-family:var(--font-tech); font-size:0.7rem; color:var(--dream-gold); opacity:0.8; margin-bottom: 20px;">FRAGMENT 0${id}</div>
+                
+                <button class="action-btn" onclick="collectDream()" style="
+                    opacity: 1; transform: translateY(0); pointer-events: auto;
+                    margin-top: 0; padding: 12px 30px; font-size: 0.75rem; min-width: auto;
+                ">
+                    COLLECT FRAGMENT
+                </button>
+            `;
+            
+            const oldText = rewardCard.querySelector('#fragment-name-text');
+            if(oldText) oldText.style.display = 'none';
+
+            setTimeout(() => { rewardCard.classList.add('show'); }, 300);
+        }
+
+        function collectDream() {
+            if (isCollecting) return; 
+            isCollecting = true;
+            
+            const card = document.querySelector('.reward-card');
+            
+            // 动画效果：卡片飞向右上角指南针
+            card.style.transition = "all 0.8s ease-in"; 
+            // 简单向上飞出淡出，模拟飞入罗盘
+            card.style.transform = `translate(100px, -300px) scale(0.1)`; 
+            card.style.opacity = 0;
+            
+            setTimeout(() => {
+                // 1. 更新 UI 计数器
+                const dotId = `compass-dot-${collectedCount}`;
+                const dot = document.getElementById(dotId);
+                if(dot) dot.classList.add('active');
+                
+                collectedCount++;
+                document.getElementById('compass-label').innerText = `COLLECTED: ${collectedCount}/9`;
+                
+                // 2. 地图标记变化：气泡 -> 记忆残留 (Residue)
+                const marker = document.getElementById(`marker-${currentDreamIndex}`);
+                if(marker) {
+                    marker.style.display = 'none'; // 隐藏原始大光圈
+                    marker.classList.add('collected'); // 标记为已收集
+                    
+                    // 在原地创建残留水晶
+                    const container = document.getElementById('marker-container');
+                    const residue = document.createElement('div');
+                    residue.className = 'residue-crystal';
+                    residue.style.top = marker.style.top; 
+                    residue.style.left = marker.style.left;
+                    residue.innerHTML = `<div class="residue-body"></div><div class="residue-ring"></div>`;
+                    
+                    // 绑定回顾事件
+                    const savedIndex = currentDreamIndex; 
+                    // 确保点击穿透和事件冒泡正确
+                    residue.onclick = (e) => { 
+                        e.preventDefault(); e.stopPropagation(); 
+                        reviewMemory(savedIndex); 
+                    };
+                    residue.ontouchstart = (e) => { 
+                        e.preventDefault(); e.stopPropagation(); 
+                        reviewMemory(savedIndex); 
+                    };
+                    
+                    container.appendChild(residue);
+                }
+                
+                // 3. 检查是否通关并关闭弹窗
+                checkProgress(); 
+                closeDream();
+                
+            }, 800);
+        }
+        
+        
+
+        // 逻辑更新：Review Memory (再次点击水晶回顾)
+        function reviewMemory(index) {
+            if(document.getElementById('fullscreen-stage').classList.contains('active')) return;
+            const d = dreams[index];
+            const stage = document.getElementById('fullscreen-stage');
+            const storyCard = document.querySelector('.memory-story-card');
+            
+            currentDreamIndex = index; // 必须更新当前索引，以便后续逻辑正确
+            document.querySelector('.dream-peephole').style.display = 'none';
+            
+            // 复用 showRefinedMemoryCard 的逻辑来填充内容，但隐藏按钮
+            showRefinedMemoryCard();
+            storyCard.querySelector('.card-btn').style.display = 'none'; 
+            
+            stage.classList.add('active');
+        }
+
+        function checkProgress() { 
+            if(collectedCount >= 9) { setTimeout(() => { document.getElementById('completion-card').classList.add('visible'); }, 1000); } 
+        }
+        function finishAndReconstruct() {
+            document.getElementById('completion-card').classList.remove('visible');
+            navigateTo('slide-revelation');
+        }
+
+        // --- 7. 地图 Canvas 逻辑 ---
+        const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); const voidSection = document.getElementById('void'); 
+        let mouseX = -1000, mouseY = -1000;
+        window.addEventListener('resize', resizeMap); function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; }
+        
+        function handleInput(x, y) { 
+            const rect = mapCanvas.getBoundingClientRect(); 
+            mouseX = x - rect.left; 
+            mouseY = y - rect.top; 
+            
+            // 这两行是关键：它们决定了手指位置是否被判定为“你在那里”
+            simulatedUserX = (mouseX / mapCanvas.width) * 100; 
+            simulatedUserY = (mouseY / mapCanvas.height) * 100;
+        }
+        
+        voidSection.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
+        voidSection.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                handleInput(touch.clientX, touch.clientY);
+            }, {passive: false});
+
+            voidSection.addEventListener('touchmove', (e) => {
+                // 阻止手机默认的滚动行为，这样手指滑动时地图不会上下乱跳
+                e.preventDefault(); 
+                if(e.touches.length > 0) {
+                    const touch = e.touches[0];
+                    handleInput(touch.clientX, touch.clientY);
+                }
+            }, {passive: false});
+
+            voidSection.addEventListener('touchend', () => {
+                // 如果想让手指离开后灯熄灭，可以把 mouseX 设回 -1000
+                // mouseX = -1000; mouseY = -1000;
+            });
+        
         function loopMap() { 
             requestAnimationFrame(loopMap); 
-            mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height); 
-            mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(0,0,0,0.95)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
+            checkProximity(); 
+            mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(10, 15, 40, 0.96)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
             if (mouseX > -100) { 
                 mapCtx.globalCompositeOperation = 'destination-out'; 
                 let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 50, mouseX, mouseY, 250); 
                 gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
                 mapCtx.beginPath(); mapCtx.arc(mouseX, mouseY, 250, 0, Math.PI*2); mapCtx.fillStyle = gradient; mapCtx.fill(); 
-            } 
-            mapCtx.globalCompositeOperation = 'source-over'; 
-            for(let i=0; i<trails.length; i++) { 
-                let p = trails[i]; mapCtx.fillStyle = '#ff0000'; mapCtx.globalAlpha = p.life; 
-                mapCtx.beginPath(); mapCtx.arc(p.x, p.y, p.size, 0, Math.PI*2); mapCtx.fill(); 
-                p.life -= 0.02; 
-            } 
-            mapCtx.globalAlpha = 1.0; 
+            }
+            mapCtx.globalCompositeOperation = 'source-over';
         }
+        loopMap();
 
-        // ================= 3D RECONSTRUCTION LOGIC (OPTIMIZED) =================
-        let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse;
-        // 旋转相关变量
-        let targetRotationY = 0, targetRotationX = 0; 
-        let isDragging = false; 
-        let previousMousePosition = { x: 0, y: 0 };
-        // 自动旋转速度 (顺时针)
-        const autoRotateSpeed = -0.002; 
-        // 累计的旋转量
-        let totalRotationY = 0;
-
+        // --- 8. 3D 逻辑 ---
+        let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse; let targetRotationY = 0, targetRotationX = 0; let isDragging = false; let previousMousePosition = { x: 0, y: 0 }; const autoRotateSpeed = -0.001; let isAutoRotating = false; let autoFocusTargetY = 0; let hoveredObject = null;
         document.getElementById('memory-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') submitMemory(); });
-        function submitMemory() { 
-            const input = document.getElementById('memory-input'); const val = input.value; if(!val) return;
-            const btn = document.querySelector('.submit-btn'); btn.innerText = "PROCESSING..."; 
-            const container = document.getElementById('particles-container'); const particle = document.createElement('div'); particle.classList.add('floating-text'); particle.innerText = val; particle.style.left = '50%'; particle.style.top = '20%'; container.appendChild(particle); setTimeout(() => { particle.remove(); }, 4000);
-            setTimeout(() => { 
-                activateMemory(val);
-                btn.innerText = "INJECT"; input.value = ""; input.placeholder = "DATA SAVED"; 
-            }, 500); 
-        }
-
+        function submitMemory() { const input = document.getElementById('memory-input'); const val = input.value; if(!val) return; const btn = document.querySelector('.submit-btn'); btn.innerText = "SAVING..."; const container = document.getElementById('particles-container'); const particle = document.createElement('div'); particle.classList.add('floating-text'); particle.innerText = val; particle.style.left = '50%'; particle.style.top = '25%'; container.appendChild(particle); setTimeout(() => { particle.remove(); }, 5000); setTimeout(() => { activateMemory(val); btn.innerText = "INJECT"; input.value = ""; input.placeholder = "SAVED"; }, 600); }
+        
         function initThree() {
-            const container = document.getElementById('three-container');
-            scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x020202, 0.012);
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 35, 60); camera.lookAt(0, 10, 0); 
-            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight); container.appendChild(renderer.domElement);
-
-            memoryGroup = new THREE.Group(); scene.add(memoryGroup); pointsMesh = new THREE.Group(); memoryGroup.position.y = -15;
-            raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
-
-            generateStructure(); loadSavedMemories();
-
-            window.addEventListener('keydown', (e) => { if ((e.key === 'Delete' || e.key === 'Backspace') && hoveredObject) removeMemory(hoveredObject); });
-            
-            // 鼠标拖动旋转逻辑优化
-            container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
-            document.addEventListener('mouseup', () => { isDragging = false; });
-            document.addEventListener('mousemove', (e) => {
-                const rect = container.getBoundingClientRect();
-                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1; 
-                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-                
-                if (isDragging) {
-                    const deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
-                    // 拖动时增加偏移量
-                    targetRotationY += deltaMove.x * 0.005; 
-                    targetRotationX += deltaMove.y * 0.005;
-                    previousMousePosition = { x: e.clientX, y: e.clientY };
+            const container = document.getElementById('three-container'); if(container.children.length > 0) return;
+            const isMobile = window.innerWidth < 768; scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x0b0c15, 0.005); 
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); camera.position.set(0, isMobile ? 40 : 35, isMobile ? 90 : 60); camera.lookAt(0, 10, 0); 
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true }); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); renderer.setSize(window.innerWidth, window.innerHeight); container.appendChild(renderer.domElement);
+            memoryGroup = new THREE.Group(); scene.add(memoryGroup); pointsMesh = new THREE.Group(); pointsMesh.position.y = -15; memoryGroup.position.y = -15; raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
+            generateStructure(isMobile); loadSavedMemories();
+            function updateMouseVector(clientX, clientY) { const rect = container.getBoundingClientRect(); mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1; mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1; const tooltip = document.getElementById('memory-3d-tooltip'); tooltip.style.left = clientX + 'px'; tooltip.style.top = clientY + 'px'; }
+            container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; }); document.addEventListener('mouseup', () => { isDragging = false; }); document.addEventListener('mousemove', (e) => { updateMouseVector(e.clientX, e.clientY); if (isDragging) { targetRotationY += (e.clientX - previousMousePosition.x) * 0.005; targetRotationX += (e.clientY - previousMousePosition.y) * 0.005; previousMousePosition = { x: e.clientX, y: e.clientY }; } });
+            container.addEventListener('touchstart', (e) => {
+                if(e.touches.length === 1) {
+                    isDragging = true;
+                    const touch = e.touches[0];
+                    previousMousePosition = { x: touch.clientX, y: touch.clientY };
+                    updateMouseVector(touch.clientX, touch.clientY);
                 }
-                
-                const tooltip = document.getElementById('memory-3d-tooltip');
-                tooltip.style.left = e.clientX + 20 + 'px'; tooltip.style.top = e.clientY + 20 + 'px';
-            });
+            }, {passive: false});
 
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                // 1. 计算鼠标距离中心的程度 (0.0 - 1.0)
-                // 距离越远，explosionFactor 越大
-                const distToCenter = Math.min(Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y), 1.0);
-                // 设置阈值，只有鼠标稍微离开中心一点才开始炸
-                const threshold = 0.2; 
-                let explosionFactor = 0;
-                if(distToCenter > threshold) {
-                    explosionFactor = (distToCenter - threshold) / (1.0 - threshold);
+            container.addEventListener('touchmove', (e) => {
+                if(isDragging && e.touches.length === 1) {
+                    e.preventDefault(); // 禁止 3D 绘图时页面上下滚动
+                    const touch = e.touches[0];
+                    // 增加滑动灵敏度适配手机
+                    targetRotationY += (touch.clientX - previousMousePosition.x) * 0.008;
+                    targetRotationX += (touch.clientY - previousMousePosition.y) * 0.008;
+                    previousMousePosition = { x: touch.clientX, y: touch.clientY };
+                    updateMouseVector(touch.clientX, touch.clientY);
                 }
-                // 使用缓动让 explosionFactor 稍微平滑一点，或者让它更加剧烈 (Power curve)
-                explosionFactor = Math.pow(explosionFactor, 2) * 1.5; // 1.5 是爆炸范围倍率
+            }, {passive: false});
 
-                // 2. 旋转逻辑：自动旋转 + 鼠标拖拽
-                // 始终增加自动旋转的基础值
-                if(!isDragging) {
-                    // 当不拖拽时，targetRotationY 也会随着时间缓慢减少，实现自动旋转
-                    targetRotationY += autoRotateSpeed;
-                }
-                // 应用旋转，带阻尼感
-                if(pointsMesh) {
-                    // 平滑插值
-                    pointsMesh.rotation.y += (targetRotationY - pointsMesh.rotation.y) * 0.1;
-                    pointsMesh.rotation.x += (targetRotationX - pointsMesh.rotation.x) * 0.1;
-                    memoryGroup.rotation.copy(pointsMesh.rotation); 
-
-                    // 3. 粒子位置更新 (爆炸效果)
-                    const positions = pointsMesh.geometry.attributes.position.array;
-                    const initials = pointsMesh.geometry.attributes.initialPosition.array;
-                    const randomDirs = pointsMesh.geometry.attributes.randomDirection.array; // 获取预计算的随机方向
-
-                    for(let i = 0; i < positions.length; i += 3) {
-                        const ox = initials[i]; 
-                        const oy = initials[i+1]; 
-                        const oz = initials[i+2];
-
-                        // 核心：基于 explosionFactor 插值
-                        // 目标位置 = 原始位置 + (随机方向 * 爆炸强度 * 屏幕缩放因子)
-                        const randX = randomDirs[i];
-                        const randY = randomDirs[i+1];
-                        const randZ = randomDirs[i+2];
-
-                        // 星空感：让它们飞得很远 (500单位)
-                        const flyDist = 300 * explosionFactor;
-
-                        // 另外加上一点微弱的 noise 保持原有呼吸感
-                        const time = Date.now() * 0.001;
-                        const breath = 0.5 * Math.sin(time + ox);
-
-                        positions[i] = ox + (randX * flyDist) + breath;
-                        positions[i+1] = oy + (randY * flyDist) + breath;
-                        positions[i+2] = oz + (randZ * flyDist) + breath;
-                    }
-                    pointsMesh.geometry.attributes.position.needsUpdate = true;
-                }
-
-                // 4. Memory Crystals 也要稍微跟随炸开，但保持可交互
-                memoryGroup.children.forEach((mesh, i) => {
-                     mesh.rotation.x += 0.01; mesh.rotation.y += 0.02;
-                     if (mesh.userData.initialPos) {
-                         const init = mesh.userData.initialPos;
-                         // Memory 也会基于同样的逻辑稍微散开，但没粒子那么远，以免找不到
-                         const flyDist = 50 * explosionFactor; 
-                         // 简单的径向散开
-                         const dir = new THREE.Vector3(init.x, init.y, init.z).normalize();
-                         
-                         mesh.position.x = init.x + dir.x * flyDist;
-                         mesh.position.y = init.y + dir.y * flyDist;
-                         mesh.position.z = init.z + dir.z * flyDist;
-                     }
-                });
-
-                // Raycaster Logic
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(memoryGroup.children, true);
-                const tooltip = document.getElementById('memory-3d-tooltip');
-                if (intersects.length > 0) {
-                    let crystalMesh = intersects[0].object;
-                    while(crystalMesh.parent && crystalMesh.parent !== memoryGroup) { crystalMesh = crystalMesh.parent; }
-                    hoveredObject = crystalMesh; document.body.style.cursor = 'pointer';
-                    tooltip.style.opacity = 1; document.getElementById('tooltip-3d-content').innerText = crystalMesh.userData.text;
-                    crystalMesh.scale.setScalar(1.5 + Math.sin(Date.now()*0.02)*0.2); 
-                } else {
-                    hoveredObject = null; tooltip.style.opacity = 0; document.body.style.cursor = 'default';
-                    memoryGroup.children.forEach(child => child.scale.setScalar(1));
-                }
-                renderer.render(scene, camera);
+            function animate() { 
+                requestAnimationFrame(animate); 
+                const distToCenter = Math.min(Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y), 1.0); const threshold = 0.2; let explosionFactor = 0; if(distToCenter > threshold) { explosionFactor = Math.pow((distToCenter - threshold) / (1.0 - threshold), 2) * 1.5; } 
+                if (isAutoRotating) { targetRotationY += (autoFocusTargetY - targetRotationY) * 0.05; if(Math.abs(targetRotationY - autoFocusTargetY) < 0.01) isAutoRotating = false; } else if(!isDragging) { targetRotationY += autoRotateSpeed; } 
+                if(pointsMesh) { pointsMesh.rotation.y += (targetRotationY - pointsMesh.rotation.y) * 0.1; pointsMesh.rotation.x += (targetRotationX - pointsMesh.rotation.x) * 0.1; memoryGroup.rotation.copy(pointsMesh.rotation); const positions = pointsMesh.geometry.attributes.position.array; const initials = pointsMesh.geometry.attributes.initialPosition.array; const randomDirs = pointsMesh.geometry.attributes.randomDirection.array; for(let i = 0; i < positions.length; i += 3) { const ox = initials[i]; const oy = initials[i+1]; const oz = initials[i+2]; const randX = randomDirs[i]; const randY = randomDirs[i+1]; const randZ = randomDirs[i+2]; const flyDist = 300 * explosionFactor; const time = Date.now() * 0.001; const breath = 0.5 * Math.sin(time + ox); positions[i] = ox + (randX * flyDist) + breath; positions[i+1] = oy + (randY * flyDist) + breath; positions[i+2] = oz + (randZ * flyDist) + breath; } pointsMesh.geometry.attributes.position.needsUpdate = true; } 
+                memoryGroup.children.forEach((mesh) => { mesh.rotation.x += 0.01; mesh.rotation.y += 0.02; }); raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(memoryGroup.children, true); const tooltip = document.getElementById('memory-3d-tooltip'); 
+                if (intersects.length > 0) { let crystalMesh = intersects[0].object; while(crystalMesh.parent && crystalMesh.parent !== memoryGroup) { crystalMesh = crystalMesh.parent; } hoveredObject = crystalMesh; document.body.style.cursor = 'pointer'; tooltip.style.opacity = 1; const memId = crystalMesh.userData.id; const memText = crystalMesh.userData.text; tooltip.innerHTML = `<div id="tooltip-3d-content" style="font-size:1.1rem; line-height:1.4;">${memText}</div><div style="font-size:0.7rem; color:var(--dream-purple); margin-top:8px; margin-bottom:15px; font-family:var(--font-body); letter-spacing: 1px; text-transform:uppercase;">[ Memory Fragment ]</div><button class="delete-single-btn" onmousedown="event.stopPropagation()" onclick="deleteSingleMemory('${memId}')">Delete</button>`; crystalMesh.scale.setScalar(1.5 + Math.sin(Date.now()*0.02)*0.2); } else { hoveredObject = null; tooltip.style.opacity = 0; document.body.style.cursor = 'default'; memoryGroup.children.forEach(child => child.scale.setScalar(1)); } renderer.render(scene, camera); 
             }
-            animate();
-            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+            animate(); window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         }
+        function getParticleTexture() { const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d'); ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI*2); ctx.fillStyle = '#ffffff'; ctx.fill(); const texture = new THREE.Texture(canvas); texture.needsUpdate = true; return texture; }
+        function generateStructure(isMobile) { const positions = []; const colors = []; const initials = []; const randomDirs = []; const baseRadius = 45; const groundLevel = -15; function getRandomDir() { const v = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)); v.normalize(); return v; } function addPoint(x, y, z) { positions.push(x, y, z); initials.push(x, y, z); colors.push(0.7, 0.7, 0.75); const dir = getRandomDir(); randomDirs.push(dir.x, dir.y, dir.z); } for(let i=0; i<2500; i++) { const a = (Math.random() - 0.5) * 0.5; const h = groundLevel + Math.random() * 25; const d = Math.random() * 8; if (Math.abs(a) < 0.08 && h < -5) continue; const r = baseRadius - d - 2; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); } const wallCount = 4000; for(let i=0; i<wallCount; i++) { const side = Math.random() > 0.5 ? 1 : -1; const a = (0.28 + Math.random() * (Math.PI/1.7 - 0.28)) * side; const h = groundLevel + Math.random() * 35; const t = Math.random() * 4; const r = baseRadius + t; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); } for(let i = 0; i < 1200; i++) { const theta = Math.random() * Math.PI * 2; const rRatio = Math.sqrt(Math.random()); const x = 18 * rRatio * Math.cos(theta); const z = 30 * rRatio * Math.sin(theta); const y = groundLevel + 0.5; addPoint(x, y, z); } for(let i = 0; i < 800; i++) { const a = -Math.PI/1.5 + Math.random() * (Math.PI*1.3); const r = baseRadius + Math.random() * 40; const x = Math.cos(a) * r; const z = Math.sin(a) * r; if ((x*x)/(900) + (z*z)/(324) < 1.5) continue; addPoint(x, groundLevel, z); } const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('initialPosition', new THREE.Float32BufferAttribute(initials, 3)); geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.setAttribute('randomDirection', new THREE.Float32BufferAttribute(randomDirs, 3)); const material = new THREE.PointsMaterial({ size: 0.7, vertexColors: true, transparent: true, opacity: 0.6, map: getParticleTexture(), depthWrite: false, sizeAttenuation: true }); pointsMesh = new THREE.Points(geometry, material); scene.add(pointsMesh); }
+        function saveMemories(text, x, y, z, colorHex) { let existing = JSON.parse(localStorage.getItem('stachus_dreams')) || []; const id = Date.now() + Math.random().toString(36).substr(2, 9); existing.push({ id, text, x, y, z, colorHex }); localStorage.setItem('stachus_dreams', JSON.stringify(existing)); return id; }
+        function loadSavedMemories() { let saved = JSON.parse(localStorage.getItem('stachus_dreams')) || []; saved.forEach(mem => { if(!mem.id) mem.id = 'legacy_' + Math.random(); createMemoryCrystal(mem.text, mem.x, mem.y, mem.z, mem.colorHex, mem.id); }); }
+        function createMemoryCrystal(text, x, y, z, colorHex, id) { const geo = new THREE.IcosahedronGeometry(2.5, 0); const mat = new THREE.MeshBasicMaterial({ color: colorHex, wireframe: true, transparent: true, opacity: 0.8 }); const mesh = new THREE.Mesh(geo, mat); const glowGeo = new THREE.SphereGeometry(1.3, 16, 16); const glowMat = new THREE.MeshBasicMaterial({ color: colorHex }); const glowMesh = new THREE.Mesh(glowGeo, glowMat); mesh.add(glowMesh); mesh.position.set(x, y, z); mesh.userData = { text: text, initialPos: {x, y, z}, id: id }; memoryGroup.add(mesh); }
+        function getDreamColor() { const colors = [0xffdd00, 0x00f7ff, 0xbd00ff, 0xff0055]; return colors[Math.floor(Math.random()*colors.length)]; }
+        window.activateMemory = function(text) { if(!pointsMesh) return; const positions = pointsMesh.geometry.attributes.initialPosition.array; let attempts = 0; while(attempts < 5000) { const idx = Math.floor(Math.random() * (positions.length/3)); let x = positions[idx*3]; let y = positions[idx*3+1]; let z = positions[idx*3+2]; const radius = Math.sqrt(x*x + z*z); if(y > -16 && y < 15 && radius < 52 && radius > 5) { const randomColor = getDreamColor(); const id = saveMemories(text, x, y, z, randomColor); createMemoryCrystal(text, x, y, z, randomColor, id); autoFocusTargetY = -Math.atan2(x, z); isAutoRotating = true; return; } attempts++; } };
+        window.deleteSingleMemory = function(id) { const target = memoryGroup.children.find(m => m.userData.id === id); if(target) { let scale = 1; function shrink() { scale -= 0.1; target.scale.setScalar(scale); if(scale > 0) requestAnimationFrame(shrink); else { memoryGroup.remove(target); if(target.geometry) target.geometry.dispose(); if(target.material) target.material.dispose(); } } shrink(); } let saved = JSON.parse(localStorage.getItem('stachus_dreams')) || []; saved = saved.filter(m => m.id !== id && m.id !== undefined); localStorage.setItem('stachus_dreams', JSON.stringify(saved)); document.getElementById('memory-3d-tooltip').style.opacity = 0; };
+        window.clearAllMemories = function() { if(!confirm("Are you sure you want to forget everything?")) return; while(memoryGroup.children.length > 0){ const mesh = memoryGroup.children[0]; memoryGroup.remove(mesh); if(mesh.geometry) mesh.geometry.dispose(); if(mesh.material) mesh.material.dispose(); } localStorage.removeItem('stachus_dreams'); alert("All memories have been washed away by the rain."); };
 
-        function getParticleTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d');
-            ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
-            const texture = new THREE.Texture(canvas); texture.needsUpdate = true; return texture;
-        }
-
-        function generateStructure() {
-            const positions = []; const colors = []; const initials = []; const randomDirs = []; // 新增随机方向数组
-            const baseRadius = 45; const groundLevel = -15;
-            
-            // 辅助函数：生成一个归一化的随机 3D 向量，用于爆炸方向
-            function getRandomDir() {
-                const v = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5));
-                v.normalize();
-                return v;
-            }
-
-            function addPoint(x, y, z) { 
-                positions.push(x, y, z); 
-                initials.push(x, y, z); 
-                colors.push(0.8, 0.8, 0.85); 
-                
-                // 为每个点生成一个固定的随机爆炸方向
-                const dir = getRandomDir();
-                randomDirs.push(dir.x, dir.y, dir.z);
-            }
-
-            for(let i=0; i<2500; i++) { const a = (Math.random() - 0.5) * 0.5; const h = groundLevel + Math.random() * 25; const d = Math.random() * 8; if (Math.abs(a) < 0.08 && h < -5) continue; const r = baseRadius - d - 2; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); }
-            const wallCount = 4000;
-            for(let i=0; i<wallCount; i++) { const side = Math.random() > 0.5 ? 1 : -1; const a = (0.28 + Math.random() * (Math.PI/1.7 - 0.28)) * side; const h = groundLevel + Math.random() * 35; const t = Math.random() * 4; const r = baseRadius + t; const x = Math.cos(a) * r; const z = Math.sin(a) * r; const y = h; addPoint(x, y, z); }
-            for(let i = 0; i < 1200; i++) { const theta = Math.random() * Math.PI * 2; const rRatio = Math.sqrt(Math.random()); const x = 18 * rRatio * Math.cos(theta); const z = 30 * rRatio * Math.sin(theta); const y = groundLevel + 0.5; addPoint(x, y, z); }
-            for(let i = 0; i < 800; i++) { const a = -Math.PI/1.5 + Math.random() * (Math.PI*1.3); const r = baseRadius + Math.random() * 40; const x = Math.cos(a) * r; const z = Math.sin(a) * r; if ((x*x)/(900) + (z*z)/(324) < 1.5) continue; addPoint(x, groundLevel, z); }
-            
-            const geometry = new THREE.BufferGeometry(); 
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); 
-            geometry.setAttribute('initialPosition', new THREE.Float32BufferAttribute(initials, 3)); 
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            // 绑定随机方向属性
-            geometry.setAttribute('randomDirection', new THREE.Float32BufferAttribute(randomDirs, 3));
-
-            const material = new THREE.PointsMaterial({ size: 0.7, vertexColors: true, transparent: true, opacity: 0.5, map: getParticleTexture(), depthWrite: false, sizeAttenuation: true });
-            pointsMesh = new THREE.Points(geometry, material); scene.add(pointsMesh); pointsMesh.position.y = -15;
-        }
-
-        function saveMemories(text, x, y, z, colorHex) {
-            let existing = JSON.parse(localStorage.getItem('stachus_memories')) || [];
-            existing.push({ text, x, y, z, colorHex });
-            localStorage.setItem('stachus_memories', JSON.stringify(existing));
-        }
-        function loadSavedMemories() {
-            let saved = JSON.parse(localStorage.getItem('stachus_memories')) || [];
-            saved.forEach(mem => { createMemoryCrystal(mem.text, mem.x, mem.y, mem.z, mem.colorHex); });
-        }
-        function removeMemory(mesh) {
-            if (!mesh) return;
-            memoryGroup.remove(mesh);
-            let saved = JSON.parse(localStorage.getItem('stachus_memories')) || [];
-            const updated = saved.filter(m => m.text !== mesh.userData.text);
-            localStorage.setItem('stachus_memories', JSON.stringify(updated));
-            hoveredObject = null; document.body.style.cursor = 'default'; document.getElementById('memory-3d-tooltip').style.opacity = 0;
-        }
-        window.purgeMemories = function() {
-            if(confirm("WARNING: SYSTEM PURGE?")) { localStorage.removeItem('stachus_memories'); while(memoryGroup.children.length > 0){ memoryGroup.remove(memoryGroup.children[0]); } }
-        };
-
-        function createMemoryCrystal(text, x, y, z, colorHex) {
-            const geo = new THREE.IcosahedronGeometry(1.5, 0);
-            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.8 });
-            const mesh = new THREE.Mesh(geo, mat);
-            const glowGeo = new THREE.SphereGeometry(0.8, 16, 16);
-            const glowMat = new THREE.MeshBasicMaterial({ color: colorHex });
-            const glowMesh = new THREE.Mesh(glowGeo, glowMat);
-            mesh.add(glowMesh);
-            mesh.position.set(x, y, z); mesh.userData = { text: text, initialPos: {x, y, z} }; 
-            memoryGroup.add(mesh);
-        }
-
-        window.activateMemory = function(text) {
-            if(!pointsMesh) return;
-            const positions = pointsMesh.geometry.attributes.position.array;
-            let attempts = 0;
-            while(attempts < 500) {
-                const idx = Math.floor(Math.random() * (positions.length/3));
-                const x = positions[idx*3]; const y = positions[idx*3+1]; const z = positions[idx*3+2];
-                if(y > -14 && y < 30) {
-                    const randomColor = Math.random() * 0xffffff;
-                    createMemoryCrystal(text, x, y, z, randomColor);
-                    saveMemories(text, x, y, z, randomColor);
-                    return;
-                }
-                attempts++;
-            }
-        };
-
-        initThree();
+        initGPS();
     </script>
 </body>
 </html>
