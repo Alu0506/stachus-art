@@ -766,16 +766,24 @@
 
     /* 3. 限制文字区域高度 + 开启滚动 */
     /* 这样字再多也不会把按钮挤出屏幕 */
+    /* 3. 限制文字区域高度 + 开启流畅滚动 */
     .dream-quote.scroll-content {
         font-size: 0.9rem !important;
         line-height: 1.5 !important;
         margin-bottom: 5px !important;
         
-        flex: 1 !important; /* 占据剩余空间 */
-        max-height: 120px !important; /* 限制最大高度 */
-        overflow-y: auto !important; /* 内容多时显示滚动条 */
-        -webkit-overflow-scrolling: touch; /* iOS 顺滑滚动 */
+        flex: 1 !important; 
+        max-height: 120px !important; 
+        
+        /* ★★★ 核心修复点 ★★★ */
+        overflow-y: auto !important; 
+        -webkit-overflow-scrolling: touch; /* 开启 iOS 惯性滚动 */
+        touch-action: pan-y; /* 告诉浏览器：这里专门处理垂直滑动，别瞎拦截 */
+        
         padding: 0 5px !important;
+        /* 增加 z-index 确保它在最上层，容易被点到 */
+        position: relative;
+        z-index: 10;
     }
 
     /* 4. 按钮防粘连 */
@@ -993,7 +1001,12 @@
             <div class="dream-content-layer">
                 <div class="glitch-title">The Dream Title</div>
                 <div class="dream-img-placeholder">[ Abstraction ]</div>
-                <div class="dream-quote" id="dream-quote">"Quote here..."</div>
+                <div class="dream-quote scroll-content" id="dream-quote" 
+                    ontouchmove="event.stopPropagation()" 
+                    ontouchstart="event.stopPropagation()"
+                    onclick="event.stopPropagation()">
+                    "Quote here..."
+                </div>
             </div>
             
             <div class="crack-btn" id="dream-trigger-btn"
