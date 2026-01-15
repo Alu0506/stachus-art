@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
     <title>STACHUS: DREAM ARCHITECT</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -266,13 +266,22 @@
         @keyframes rippleOut { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.5); opacity: 0; } }
 
         /* 5. 弹窗容器 */
+       /* --- 5. 弹窗容器 (改为 Flexbox 布局) --- */
         #fullscreen-stage { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); 
-            z-index: 10000; display: flex; align-items: center; justify-content: center; 
+            position: fixed; inset: 0; 
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); 
+            z-index: 10000; 
+            /* 改动点：使用 Flex 居中 */
+            display: none; /* 默认隐藏，JS 控制显示时会变成 display: flex (由上面的 Media Query 或 JS 控制) */
+            align-items: center; justify-content: center; 
+            
             opacity: 0; pointer-events: none; transition: opacity 0.5s; 
         }
-        #fullscreen-stage.active { opacity: 1; pointer-events: auto !important; }
-        
+        #fullscreen-stage.active { 
+            display: flex; /* 激活时用 Flex */
+            opacity: 1; pointer-events: auto !important; 
+        }
+                
         .stage-close-btn {
             position: absolute; top: 20px; right: 20px; z-index: 20;
             background: rgba(255,255,255,0.1); width: 32px; height: 32px; border-radius: 50%;
@@ -642,103 +651,104 @@
     background-color: rgba(0,0,0,0.2);
 }
 
-/* ================= MOBILE OPTIMIZATION (ADD THIS AT THE END) ================= */
-@media screen and (max-width: 768px) {
+/* ================= 移动端专项适配 (Mobile Optimization) ================= */
+@media (max-width: 768px) {
+    /* --- 1. 全局字体与排版调整 --- */
+    html { -webkit-text-size-adjust: 100%; }
     
-    /* --- 1. 全局字体与布局调整 --- */
-    .dream-title { font-size: 15vw; line-height: 1.1; }
-    .subtitle { font-size: 0.6rem; letter-spacing: 2px; }
-    
-    /* --- 2. 剧情页/信封页适配 (解决按钮看不见的问题) --- */
-    #slide-briefing, #letter-stage {
-        height: 100%; 
-        padding: 20px;
-        justify-content: flex-start; /*以此保证内容从顶部开始 */
-        overflow-y: auto; /* 允许垂直滚动 */
+    .dream-title { 
+        font-size: 3.5rem !important; /* 缩小巨大的标题 */
+        line-height: 1.1 !important;
     }
     
-    /* 调整打字机容器，防止太高 */
+    /* --- 2. 玩法说明页 (Mechanics) 防溢出 --- */
+    #slide-mechanics {
+        padding: 20px 15px !important;
+        justify-content: flex-start !important; /* 从顶部开始排，防止居中导致上下都切边 */
+        overflow-y: auto !important; /* 允许小屏幕滚动 */
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .mech-container { 
+        width: 100% !important;
+        gap: 15px !important; /* 减少间距 */ 
+    }
+    
+    .mech-zone {
+        margin-bottom: 20px !important;
+        padding: 10px !important;
+    }
+    
+    .blur-reveal-text {
+        font-size: 1rem !important; /* 缩小说明文字 */
+        line-height: 1.5 !important;
+    }
+    
+    /* 缩小中间的气泡，给上下留空间 */
+    .interactive-bubble {
+        width: 60px !important; height: 60px !important;
+    }
+    
+    /* 确保底部的开始按钮始终可见且不被挤扁 */
+    .singularity-btn {
+        margin-top: 10px !important;
+        padding: 15px 30px !important;
+        flex-shrink: 0 !important; 
+    }
+
+    /* --- 3. 信件页 (Letter) 滚动修复 --- */
+    /* 修复信件太长在手机上无法看完的问题 */
     .typewriter-container {
-        padding: 20px;
-        margin-top: 60px; /* 给顶部留空间 */
-        margin-bottom: 20px;
-        min-height: auto;
-        max-height: 60vh; /* 限制最大高度 */
-        overflow-y: auto; /* 文字过多可滚动 */
+        max-height: 55vh !important; /* 限制高度 */
+        overflow-y: auto !important; /* 允许内部滚动 */
+        padding: 25px !important;
+        margin-bottom: 20px !important;
     }
     
-    .letter-text { font-size: 0.9rem; line-height: 1.6; }
-    
-    /* 确保按钮在移动端始终可见且易按 */
-    .action-btn {
-        padding: 15px 30px;
-        font-size: 0.8rem;
-        margin-top: 10px;
-        margin-bottom: 40px; /* 底部留白防止被系统手势条遮挡 */
-        width: 80%;
+    #btn-briefing {
+        margin-top: 10px !important;
+        flex-shrink: 0 !important;
     }
 
-    /* --- 3. 地图页适配 (左右滑动 + 标记缩小) --- */
-    #void {
-        overflow-x: auto; /* 允许横向滑动 */
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch; /* 平滑滚动 */
-    }
-
-    #map-zoom-wrapper {
-        width: 160vw; /* 地图宽度放大到屏幕的 1.6 倍，展示更多细节 */
-        height: 100%;
-        position: relative;
-        left: 0;
-        transform-origin: left center;
-    }
-    
-    /* 修复 Canvas 大小，使其跟随容器宽度 */
-    #map-canvas, #map-bg, #aurora-layer {
-        width: 100% !important; /* 强制填满 160vw */
-        height: 100% !important;
-    }
-
-    /* 缩小梦泡标记，防止拥挤 */
-    .marker {
-        width: 40px; height: 40px;
-    }
-    .marker::after { inset: -10px; } /* 缩小热区 */
-
-    /* --- 4. 交互弹窗适配 (解决重叠与居中) --- */
+    /* --- 4. 弹窗居中修复 (安全版) --- */
+    /* 强制让弹窗使用 Flex 布局居中，解决手机上位置偏左上角的问题 */
     #fullscreen-stage {
-        padding: 10px;
-        align-items: center; /* 垂直居中 */
+        display: flex !important; /* 覆盖原本的 display:block */
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
     }
     
-    /* 窥视孔适配 */
-    .dream-peephole {
-        width: 90vw; height: 90vw;
-        max-width: 350px; max-height: 350px;
-        padding: 20px;
-    }
-    .glitch-title { font-size: 1.2rem; margin-bottom: 10px; }
-    .dream-img-placeholder { height: 120px; }
-    .dream-quote { font-size: 0.8rem; line-height: 1.4; height: 80px; overflow-y: auto;}
-
-    /* 记忆卡片适配 */
+    /* 调整记忆卡片尺寸 */
     .memory-story-card {
-        width: 90vw;
-        max-height: 80vh; /* 防止超出屏幕高度 */
-        padding: 20px;
+        width: 92vw !important;
+        max-height: 80vh !important;
+        /* 移除绝对定位，依靠 Flex 居中 */
+        position: relative !important; 
+        top: auto !important; left: auto !important;
+        transform: scale(0.95) !important;
+        margin: 0 !important;
     }
-    .card-img-placeholder { height: 140px; }
-    .scroll-content { padding: 0 10px 20px 10px; }
     
-    /* 奖励卡片适配 */
-    .reward-card {
-        width: 80vw;
-        aspect-ratio: auto;
-        height: auto;
-        padding: 30px 20px;
+    .memory-story-card.show {
+        transform: scale(1) !important;
+    }
+
+    /* 修复卡片内文字溢出 */
+    .card-text {
+        flex: 1;
+        overflow-y: auto !important; /* 允许文字滚动 */
+        max-height: 35vh !important;
+        padding-right: 10px;
+    }
+    
+    /* 缩小图片给文字留地盘 */
+    .card-img-placeholder {
+        height: 150px !important;
+        flex-shrink: 0;
     }
 }
-
    </style>
 </head>
 <body>
@@ -1745,25 +1755,19 @@ const AudioManager = {
             if(particleInterval) { clearTimeout(particleInterval); particleInterval = null; }
         }
 
-       function finishDreamHold() {
-            isDreamHolding = false; 
-            isCracking = true;
+        function finishDreamHold() {
+            isDreamHolding = false; isCracking = true;
             if(navigator.vibrate) navigator.vibrate([50, 50, 100]);
-            
             const btn = document.getElementById('dream-trigger-btn');
-            btn.classList.remove('holding'); 
-            
-            // 隐藏窥视孔 (Peephole)
+            btn.classList.remove('holding'); btn.style.transform = 'scale(1.5)'; btn.style.opacity = '0';
+
+            const layer = document.querySelector('.dream-content-layer');
             const peephole = document.querySelector('.dream-peephole');
-            peephole.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            peephole.style.opacity = 0;
-            peephole.style.transform = 'scale(1.5)';
-            
-            // 延迟后彻底隐藏 DOM 并显示记忆卡片
-            setTimeout(() => { 
-                peephole.style.display = 'none'; 
-                showRefinedMemoryCard(); 
-            }, 500);
+            layer.style.transition = 'opacity 1s ease'; layer.style.opacity = 0;
+            peephole.style.transition = 'transform 1.2s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.8s';
+            peephole.style.transform = 'scale(2)'; peephole.style.opacity = 0;
+
+            setTimeout(() => { peephole.style.display = 'none'; showRefinedMemoryCard(); }, 800);
         }
 
         function spawnConvergenceParticles() {
@@ -1783,55 +1787,41 @@ const AudioManager = {
         // --- 优化版：显示记忆卡片 (排版升级) ---
         // --- 修复版：显示记忆卡片 ---
         function showRefinedMemoryCard() {
-            const card = document.querySelector('.memory-story-card'); 
-            const rewardCard = document.querySelector('.reward-card');
-            
-            // 确保其他卡片关闭
-            rewardCard.classList.remove('show');
-            
-            const d = dreams[currentDreamIndex];
-            const id = currentDreamIndex + 1;
-            const memImgName = `${id}${id}${id}.png`;
-            
-            const imgDiv = card.querySelector('.card-img-placeholder');
-            imgDiv.style.backgroundImage = `url('${memImgName}')`;
+    const card = document.querySelector('.memory-story-card'); 
+    const d = dreams[currentDreamIndex];
+    const id = currentDreamIndex + 1;
 
-            // 填充内容
-            const textContainer = card.querySelector('.card-text');
-            textContainer.innerHTML = `
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <span class="memory-section-title">${d.subTitle}</span>
-                </div>
-                <p class="memory-main-text">${d.memoryText}</p>
-                <div class="archive-block">
-                    <span class="archive-tag">/// ${d.archiveYear}</span>
-                    <p class="archive-content">${d.archiveText}</p>
-                </div>
-                <div style="height: 40px;"></div>
-            `;
+    // 图片路径
+    const memImgName = `${id}${id}${id}.png`;
+    const imgDiv = card.querySelector('.card-img-placeholder');
+    imgDiv.style.backgroundImage = `url('${memImgName}')`;
 
-            const btn = card.querySelector('.card-btn');
-            if(btn) {
-                btn.style.display = 'block';
-                btn.innerText = "Peek into the Secret";
-            }
+    // 填充文本
+    const textContainer = card.querySelector('.card-text');
+    textContainer.className = 'card-text scroll-content'; 
+    textContainer.innerHTML = `
+        <div style="text-align: center; margin-bottom: 10px;">
+            <span class="memory-section-title">${d.subTitle}</span>
+        </div>
+        <p class="memory-main-text">${d.memoryText}</p>
+        <div class="archive-block">
+            <span class="archive-tag">/// ${d.archiveYear}</span>
+            <p class="archive-content">${d.archiveText}</p>
+        </div>
+        <div style="height: 20px;"></div>
+    `;
 
-            // 核心修复：重置位置并显示
-            card.style.display = 'flex'; // 确保是 flex 布局
-            // 强制居中
-            card.style.top = '50%';
-            card.style.left = '50%';
-            card.style.transform = 'translate(-50%, -50%) scale(0.9)'; 
-            
-            // 触发动画
-            requestAnimationFrame(() => {
-                card.classList.add('show');
-                card.style.transform = 'translate(-50%, -50%) scale(1)';
-            });
+    // 强制显示按钮
+    const btn = card.querySelector('.card-btn');
+    if(btn) {
+        btn.style.display = 'block';
+        btn.innerText = "Peek into the Secret";
+    }
 
-            isCracking = false; 
-            initCardAtmosphere(card);
-        }
+    card.classList.add('show');
+    setTimeout(() => { isCracking = false; }, 800);
+    initCardAtmosphere(card);
+}
 
         function initCardAtmosphere(card) {
             const old = card.querySelectorAll('.card-dust'); old.forEach(o => o.remove());
@@ -1899,15 +1889,14 @@ const AudioManager = {
             
             const card = document.querySelector('.reward-card');
             
-            // 动画：向右上角飞出并缩小
-            card.style.transition = "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)"; 
-            // 使用 fixed 定位逻辑的偏移
-            card.style.transform = `translate(40vw, -40vh) scale(0.1)`; 
+            // 动画效果：卡片飞向右上角指南针
+            card.style.transition = "all 0.8s ease-in"; 
+            // 简单向上飞出淡出，模拟飞入罗盘
+            card.style.transform = `translate(100px, -300px) scale(0.1)`; 
             card.style.opacity = 0;
             
             setTimeout(() => {
-                // ... (原有的计数器更新代码保持不变) ...
-                
+                // 1. 更新 UI 计数器
                 const dotId = `compass-dot-${collectedCount}`;
                 const dot = document.getElementById(dotId);
                 if(dot) dot.classList.add('active');
@@ -1915,34 +1904,36 @@ const AudioManager = {
                 collectedCount++;
                 document.getElementById('compass-label').innerText = `COLLECTED: ${collectedCount}/9`;
                 
+                // 2. 地图标记变化：气泡 -> 记忆残留 (Residue)
                 const marker = document.getElementById(`marker-${currentDreamIndex}`);
                 if(marker) {
-                    marker.style.display = 'none'; 
-                    marker.classList.add('collected'); 
+                    marker.style.display = 'none'; // 隐藏原始大光圈
+                    marker.classList.add('collected'); // 标记为已收集
                     
+                    // 在原地创建残留水晶
                     const container = document.getElementById('marker-container');
                     const residue = document.createElement('div');
                     residue.className = 'residue-crystal';
-                    // 确保 Residue 位置正确 (使用百分比)
-                    residue.style.top = dreamPositions[currentDreamIndex].t + '%'; 
-                    residue.style.left = dreamPositions[currentDreamIndex].l + '%';
-                    
+                    residue.style.top = marker.style.top; 
+                    residue.style.left = marker.style.left;
                     residue.innerHTML = `<div class="residue-body"></div><div class="residue-ring"></div>`;
                     
-                    // 重新绑定触摸事件，防止点不中
-                    residue.addEventListener('touchstart', (e) => { 
-                        e.preventDefault(); e.stopPropagation(); 
-                        reviewMemory(currentDreamIndex); 
-                    }, {passive: false});
-                    
+                    // 绑定回顾事件
+                    const savedIndex = currentDreamIndex; 
+                    // 确保点击穿透和事件冒泡正确
                     residue.onclick = (e) => { 
                         e.preventDefault(); e.stopPropagation(); 
-                        reviewMemory(currentDreamIndex); 
+                        reviewMemory(savedIndex); 
+                    };
+                    residue.ontouchstart = (e) => { 
+                        e.preventDefault(); e.stopPropagation(); 
+                        reviewMemory(savedIndex); 
                     };
                     
                     container.appendChild(residue);
                 }
                 
+                // 3. 检查是否通关并关闭弹窗
                 checkProgress(); 
                 closeDream();
                 
@@ -1977,80 +1968,52 @@ const AudioManager = {
         }
 
         // --- 7. 地图 Canvas 逻辑 ---
-       // --- 7. 地图 Canvas 逻辑 (手机适配版) ---
-        const mapCanvas = document.getElementById('map-canvas'); 
-        const mapCtx = mapCanvas.getContext('2d'); 
-        const voidSection = document.getElementById('void'); 
-        const zoomWrapper = document.getElementById('map-zoom-wrapper');
-
+        const mapCanvas = document.getElementById('map-canvas'); const mapCtx = mapCanvas.getContext('2d'); const voidSection = document.getElementById('void'); 
         let mouseX = -1000, mouseY = -1000;
-
-        // 调整 Canvas 尺寸以匹配 CSS 中设定的 160vw (手机端) 或 100vw (电脑端)
-        function resizeMap() { 
-            const rect = zoomWrapper.getBoundingClientRect();
-            mapCanvas.width = rect.width; 
-            mapCanvas.height = rect.height; 
-        }
-        window.addEventListener('resize', resizeMap);
-
-        // 核心坐标转换函数
-        function handleInput(clientX, clientY) { 
-            // 获取 Canvas 元素在视口中的实时位置（会自动计算滚动偏移）
+        window.addEventListener('resize', resizeMap); function resizeMap() { mapCanvas.width = window.innerWidth; mapCanvas.height = window.innerHeight; }
+        
+        function handleInput(x, y) { 
             const rect = mapCanvas.getBoundingClientRect(); 
+            mouseX = x - rect.left; 
+            mouseY = y - rect.top; 
             
-            // 计算相对于 Canvas 内部的坐标
-            mouseX = clientX - rect.left; 
-            mouseY = clientY - rect.top; 
-            
-            // 转换为百分比，用于碰撞检测
+            // 这两行是关键：它们决定了手指位置是否被判定为“你在那里”
             simulatedUserX = (mouseX / mapCanvas.width) * 100; 
             simulatedUserY = (mouseY / mapCanvas.height) * 100;
         }
-
-        // 触摸事件监听 (支持滑动地图的同时移动光标)
-        zoomWrapper.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
-
-        zoomWrapper.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            handleInput(touch.clientX, touch.clientY);
-        }, {passive: false});
-
-        zoomWrapper.addEventListener('touchmove', (e) => {
-            // 允许地图横向滚动，但同时也更新光标位置
-            // 注意：这里不要 preventDefault，否则无法滑动地图
-            if(e.touches.length > 0) {
+        
+        voidSection.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
+        voidSection.addEventListener('touchstart', (e) => {
                 const touch = e.touches[0];
                 handleInput(touch.clientX, touch.clientY);
-            }
-        }, {passive: false});
+            }, {passive: false});
 
-        // 更新 Canvas 绘制逻辑，确保遮罩位置准确
+            voidSection.addEventListener('touchmove', (e) => {
+                // 阻止手机默认的滚动行为，这样手指滑动时地图不会上下乱跳
+                e.preventDefault(); 
+                if(e.touches.length > 0) {
+                    const touch = e.touches[0];
+                    handleInput(touch.clientX, touch.clientY);
+                }
+            }, {passive: false});
+
+            voidSection.addEventListener('touchend', () => {
+                // 如果想让手指离开后灯熄灭，可以把 mouseX 设回 -1000
+                // mouseX = -1000; mouseY = -1000;
+            });
+        
         function loopMap() { 
             requestAnimationFrame(loopMap); 
-            checkProximity(); // 距离检测
-            
-            // 绘制深色背景
-            mapCtx.globalCompositeOperation = 'source-over'; 
-            mapCtx.fillStyle = 'rgba(10, 15, 40, 0.96)'; 
-            mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
-            
-            // 绘制擦除效果 (光标)
-            if (mouseX > -500) { // 只要有坐标就绘制
+            checkProximity(); 
+            mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(10, 15, 40, 0.96)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
+            if (mouseX > -100) { 
                 mapCtx.globalCompositeOperation = 'destination-out'; 
-                let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 30, mouseX, mouseY, 180); // 手机端稍微调小光圈
-                gradient.addColorStop(0, 'rgba(255,255,255,1)'); 
-                gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
-                mapCtx.beginPath(); 
-                mapCtx.arc(mouseX, mouseY, 180, 0, Math.PI*2); 
-                mapCtx.fillStyle = gradient; 
-                mapCtx.fill(); 
+                let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 50, mouseX, mouseY, 250); 
+                gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
+                mapCtx.beginPath(); mapCtx.arc(mouseX, mouseY, 250, 0, Math.PI*2); mapCtx.fillStyle = gradient; mapCtx.fill(); 
             }
             mapCtx.globalCompositeOperation = 'source-over';
         }
-        // 确保进入地图时调整一次大小
-        document.getElementById('btn-mechanics').addEventListener('click', () => {
-            setTimeout(resizeMap, 200);
-        });
         loopMap();
 
         // --- 8. 3D 逻辑 ---
@@ -2073,6 +2036,28 @@ const AudioManager = {
                     const touch = e.touches[0];
                     previousMousePosition = { x: touch.clientX, y: touch.clientY };
                     updateMouseVector(touch.clientX, touch.clientY);
+                }
+            }, {passive: false});
+            // --- 插入到 initThree 函数内部，监听器区域 ---
+
+            // 增加触摸支持 (从 Process 版本移植)
+            container.addEventListener('touchstart', (e) => {
+                if(e.touches.length === 1) {
+                    isDragging = true;
+                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            }, {passive: false});
+
+            container.addEventListener('touchmove', (e) => {
+                if(isDragging && e.touches.length === 1) {
+                    e.preventDefault(); // 防止旋转模型时页面跟着滚动
+                    const deltaMove = {
+                        x: e.touches[0].clientX - previousMousePosition.x,
+                        y: e.touches[0].clientY - previousMousePosition.y
+                    };
+                    targetRotationY += deltaMove.x * 0.01; // 调整灵敏度
+                    targetRotationX += deltaMove.y * 0.01;
+                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
                 }
             }, {passive: false});
 
