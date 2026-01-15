@@ -748,7 +748,7 @@
         height: 150px !important;
         flex-shrink: 0;
     }
-    /* ================= 新增：梦泡内部空间深度优化 (Map Bubble Fix) ================= */
+/* ================= 新增：梦泡内部空间深度优化 (Map Bubble Fix) ================= */
     
     /* 1. 调整窥视孔容器：增加弹性布局的间隔，减少内边距 */
     .dream-peephole {
@@ -784,38 +784,8 @@
         flex-shrink: 0 !important;
         transform: scale(0.95); /* 稍微缩小一点点按钮，视觉更平衡 */
     }
-    /* --- 信件页提示文字 (默认隐藏，手机显示) --- */
-.scroll-hint-mobile {
-    display: none; /* 电脑端不显示 */
-}
 
-@media (max-width: 768px) {
-    .scroll-hint-mobile {
-        display: block;
-        font-family: var(--font-tech);
-        font-size: 0.65rem;
-        color: var(--dream-gold);
-        opacity: 0.6;
-        margin-bottom: 8px;
-        letter-spacing: 1px;
-        text-align: center;
-        width: 100%;
-        animation: blink 4s infinite; /* 缓慢闪烁提醒 */
-    }
 
-    /* --- 强制显示滚动条 (Visual Scrollbar) --- */
-    /* 这样用户能直接看到右侧有个条，知道可以滑 */
-    .typewriter-container::-webkit-scrollbar {
-        width: 4px !important; /* 细条 */
-        background: rgba(255,255,255,0.05) !important;
-        display: block !important;
-    }
-    .typewriter-container::-webkit-scrollbar-thumb {
-        background: var(--dream-gold) !important;
-        border-radius: 2px !important;
-        opacity: 0.5;
-    }
-}
 }
    </style>
 </head>
