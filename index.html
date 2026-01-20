@@ -2056,40 +2056,19 @@ const AudioManager = {
                 // mouseX = -1000; mouseY = -1000;
             });
         
-        // --- 替换原有的 loopMap 函数 ---
         function loopMap() { 
             requestAnimationFrame(loopMap); 
             checkProximity(); 
-            
-            // 1. 先画全黑遮罩
-            mapCtx.globalCompositeOperation = 'source-over'; 
-            mapCtx.fillStyle = 'rgba(10, 15, 40, 0.96)'; 
-            mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
-            
-            // 2. 计算“手电筒”的像素中心点
-            // 核心修改：将百分比坐标 (simulatedUserX/Y) 转换为画布像素坐标
-            // 这样无论是 GPS 还是鼠标改变了 simulatedUserX/Y，这里都能响应
-            let lightX = (simulatedUserX / 100) * mapCanvas.width;
-            let lightY = (simulatedUserY / 100) * mapCanvas.height;
-
-            // 3. 只要坐标在画面内，就挖洞（擦除黑色）
-            // 为了防止初始化时(50,50)直接亮起，可以加一个状态判断，或者默认就亮在中间
-            if (simulatedUserX >= 0 && simulatedUserX <= 100) { 
+            mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(10, 15, 40, 0.96)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
+            if (mouseX > -100) { 
                 mapCtx.globalCompositeOperation = 'destination-out'; 
-                
-                // 使用计算出来的 lightX, lightY 代替原来的 mouseX, mouseY
-                let gradient = mapCtx.createRadialGradient(lightX, lightY, 50, lightX, lightY, 250); 
-                gradient.addColorStop(0, 'rgba(255,255,255,1)'); 
-                gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
-                
-                mapCtx.beginPath(); 
-                mapCtx.arc(lightX, lightY, 250, 0, Math.PI*2); 
-                mapCtx.fillStyle = gradient; 
-                mapCtx.fill(); 
+                let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 50, mouseX, mouseY, 250); 
+                gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
+                mapCtx.beginPath(); mapCtx.arc(mouseX, mouseY, 250, 0, Math.PI*2); mapCtx.fillStyle = gradient; mapCtx.fill(); 
             }
-            
             mapCtx.globalCompositeOperation = 'source-over';
         }
+        loopMap();
 
         // --- 8. 3D 逻辑 ---
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse; let targetRotationY = 0, targetRotationX = 0; let isDragging = false; let previousMousePosition = { x: 0, y: 0 }; const autoRotateSpeed = -0.001; let isAutoRotating = false; let autoFocusTargetY = 0; let hoveredObject = null;
