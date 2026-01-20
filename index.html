@@ -2055,20 +2055,56 @@ const AudioManager = {
                 // 如果想让手指离开后灯熄灭，可以把 mouseX 设回 -1000
                 // mouseX = -1000; mouseY = -1000;
             });
+            
         
+        // --- 替换原有的 loopMap 函数 ---
         function loopMap() { 
+            // 1. 保持心跳：必须放在第一行
             requestAnimationFrame(loopMap); 
-            checkProximity(); 
-            mapCtx.globalCompositeOperation = 'source-over'; mapCtx.fillStyle = 'rgba(10, 15, 40, 0.96)'; mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height); 
-            if (mouseX > -100) { 
-                mapCtx.globalCompositeOperation = 'destination-out'; 
-                let gradient = mapCtx.createRadialGradient(mouseX, mouseY, 50, mouseX, mouseY, 250); 
-                gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
-                mapCtx.beginPath(); mapCtx.arc(mouseX, mouseY, 250, 0, Math.PI*2); mapCtx.fillStyle = gradient; mapCtx.fill(); 
+            
+            // 2. 安全检查：如果坐标还没生成，就先不执行后面的逻辑，防止报错
+            // (这能救回你的遮罩和梦泡)
+            if (typeof simulatedUserX === 'undefined' || typeof simulatedUserY === 'undefined') {
+                return; 
             }
-            mapCtx.globalCompositeOperation = 'source-over';
+
+            // 3. 运行距离检测 (让梦泡显示)
+            try {
+                checkProximity(); 
+            } catch(e) {
+                console.warn("Proximity Check Error");
+            }
+            
+            // 4. 绘制遮罩 (让地图变黑 + 手电筒)
+            const canvas = document.getElementById('map-canvas');
+            const ctx = canvas.getContext('2d');
+
+            // 绘制全黑背景
+            ctx.globalCompositeOperation = 'source-over'; 
+            ctx.fillStyle = 'rgba(10, 15, 40, 0.96)'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height); 
+
+            // 计算手电筒位置
+            let lightX = (simulatedUserX / 100) * canvas.width;
+            let lightY = (simulatedUserY / 100) * canvas.height;
+
+            // 只有当坐标有效时，才挖洞 (开灯)
+            if (!isNaN(lightX) && !isNaN(lightY)) { 
+                ctx.globalCompositeOperation = 'destination-out'; 
+                
+                let gradient = ctx.createRadialGradient(lightX, lightY, 50, lightX, lightY, 250); 
+                gradient.addColorStop(0, 'rgba(255,255,255,1)'); 
+                gradient.addColorStop(1, 'rgba(255,255,255,0)'); 
+                
+                ctx.beginPath(); 
+                ctx.arc(lightX, lightY, 250, 0, Math.PI*2); 
+                ctx.fillStyle = gradient; 
+                ctx.fill(); 
+            }
+            
+            // 恢复混合模式
+            ctx.globalCompositeOperation = 'source-over';
         }
-        loopMap();
 
         // --- 8. 3D 逻辑 ---
         let scene, camera, renderer, pointsMesh, memoryGroup, raycaster, mouse; let targetRotationY = 0, targetRotationX = 0; let isDragging = false; let previousMousePosition = { x: 0, y: 0 }; const autoRotateSpeed = -0.001; let isAutoRotating = false; let autoFocusTargetY = 0; let hoveredObject = null;
@@ -2148,6 +2184,8 @@ const AudioManager = {
         window.clearAllMemories = function() { if(!confirm("Are you sure you want to forget everything?")) return; while(memoryGroup.children.length > 0){ const mesh = memoryGroup.children[0]; memoryGroup.remove(mesh); if(mesh.geometry) mesh.geometry.dispose(); if(mesh.material) mesh.material.dispose(); } localStorage.removeItem('stachus_dreams'); alert("All memories have been washed away by the rain."); };
 
         initGPS();
+
+         loopMap();
     </script>
 </body>
 </html>
