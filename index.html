@@ -831,7 +831,7 @@
             <div class="title-container dream-blur-in">
                 <h1 class="dream-title" id="main-title">Stachus<br>Dreams</h1>
                 <div id="subtitle-rotator" class="subtitle" style="min-height: 20px; transition: opacity 1s;">
-                    An Architect's Guide to the Urban Soul
+                    The Abscence of City's Memory
                 </div>
             </div>
             
@@ -845,7 +845,7 @@
                     <div class="hold-icon"></div>
                 </div>
                 <div class="hold-hint">Hold to Connect</div>
-                <p class="audio-cue" id="audio-cue">"The world outside is noisy,<br>but here, only the wind remains."</p>
+                <p class="audio-cue" id="audio-cue">Please enable audio<br>to fully immerse yourself.</p>
             </div>
         </section>
 
@@ -1306,7 +1306,7 @@ const AudioManager = {
 
         function showRevelation() {
             const stage = document.getElementById('revelation-stage'); stage.style.opacity = '1'; const container = document.getElementById('revelation-container');
-            const lines = [ "The city has Urban Amnesia.", "Modern noise has drowned out the ancient soul.", "You are the only cure." ];
+            const lines = [ "The city has Urban Amnesia.", "Modern noise has drowned out the ancient soul.", "Memories are the only cure." ];
             let delay = 1000;
             lines.forEach((text) => { setTimeout(() => { container.innerHTML = ''; const p = document.createElement('p'); p.classList.add('rev-line'); p.innerText = text; container.appendChild(p); void p.offsetWidth; p.classList.add('show'); }, delay); delay += 4000; });
             setTimeout(() => { stage.style.transition = 'opacity 1.5s'; stage.style.opacity = '0'; setTimeout(() => { stage.style.display = 'none'; showEnvelope(); }, 1500); }, delay + 1500);
